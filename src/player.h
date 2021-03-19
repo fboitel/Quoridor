@@ -1,14 +1,14 @@
 #ifndef _QUOR_PLAYER_H_
 #define _QUOR_PLAYER_H_
 
-#include "move.h"
 #include "graph.h"
+#include "move.h"
 
 /* Access to player informations
  * RETURNS:
  * - the player name as an [a-zA-Z0-9 -_]* string
  */
-char const* get_player_name();
+char const *get_player_name();
 
 /* Player initialization
  * PARAM:
@@ -23,7 +23,7 @@ char const* get_player_name();
      rounded up
  * - initialize has never been called before
  */
-void initialize(enum color_t id, struct graph_t* graph, size_t num_walls);
+void initialize(enum color_t id, struct graph_t *graph, size_t num_walls);
 
 /* Computes next move
  * PARAM:
