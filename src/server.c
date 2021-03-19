@@ -1,9 +1,11 @@
+#include <dlfcn.h>          // to use dynamic libs
 #include <gsl/gsl_matrix.h> // for matrix
 #include <stdlib.h>
 #include <string.h>         // for strcmp
 #include <unistd.h>         // to check file existence
+#include "graph.h"
+#include "move.h"
 #include "player.h"         // temporary
-
 
 enum board_shape_t {
 	SQUARE, TORIC, H, SNAKE, INVALID_SHAPE = -1
@@ -37,7 +39,7 @@ enum board_shape_t parse_board_shape(char *t) {
 	}
 }
 
-void usage(char* exec_path, char *message) {
+void usage(char *exec_path, char *message) {
 	if (message != NULL) {
 		fprintf(stderr, "%s\n\n", message);
 	}
@@ -103,8 +105,11 @@ void parse_args(int argc, char **argv) {
 	}
 }
 
-int main(int argc, char *argv[]) {
+int gameOver() {
+	return 0;
+}
 
+int main(int argc, char *argv[]) {
 	parse_args(argc, argv);
 
 	// init a new matrix size of 3x3
@@ -113,6 +118,26 @@ int main(int argc, char *argv[]) {
 	// free the matrix
 	gsl_matrix_free(board);
 
+	// TODO : calcul numWall depending on size and board shape
+	int numWall = 10;
+
+	// TODO : init random start player
+	int active_player = 1;
+
+	/*
+	// open players libs
+	void *libPLayer1 = dlopen(player_1_path, RTLD_LAZY);
+	libPLayer1->initialize(BLACK, board, numWall);
+
+	void *libPLayer2 = dlopen(player_2_path, RTLD_LAZY);
+	libPLayer1->initialize(WHITE, board, numWall);
+
+	while ( !gameOver() ) {
+		if ( active_player == 1 ) {
+			struct move_t last_move =
+		}
+	}
+  */
 	/* pseudo code for game loop
 	start_player = random()
 	for each player p
