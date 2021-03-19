@@ -11,8 +11,8 @@ enum board_shape_t {
 	SQUARE, TORIC, H, SNAKE, INVALID_SHAPE = -1
 };
 
-int board_size = 10;
-enum board_shape_t boardShape = SQUARE;
+int board_size = -1;
+enum board_shape_t board_shape = INVALID_SHAPE;
 char *player_1_path = NULL;
 char *player_2_path = NULL;
 
@@ -51,6 +51,11 @@ void parse_args(int argc, char **argv) {
 		char *arg = argv[i];
 
 		if (!strcmp(arg, "-m")) {
+			if (board_size != -1) {
+				usage(argv[0], "\"-m\" option can't be used multiple times.");
+				exit(EXIT_FAILURE);
+			}
+
 			++i;
 
 			if (i == argc) {
@@ -64,6 +69,11 @@ void parse_args(int argc, char **argv) {
 			}
 
 		} else if (!strcmp(arg, "-t")) {
+			if (board_shape != INVALID_SHAPE) {
+				usage(argv[0], "\"-t\" option can't be used multiple times.");
+				exit(EXIT_FAILURE);
+			}
+
 			++i;
 
 			if (i == argc) {
@@ -71,7 +81,7 @@ void parse_args(int argc, char **argv) {
 				exit(EXIT_FAILURE);
 			}
 
-			if ((boardShape = parse_board_shape(argv[i])) == INVALID_SHAPE) {
+			if ((board_shape = parse_board_shape(argv[i])) == INVALID_SHAPE) {
 				usage(argv[0], "Board shape must be \"c\", \"t\", \"h\" or \"s\".");
 				exit(EXIT_FAILURE);
 			}
@@ -102,6 +112,32 @@ void parse_args(int argc, char **argv) {
 	if (player_2_path == NULL) {
 		usage(argv[0], "Not enough players.");
 		exit(EXIT_FAILURE);
+	}
+
+	if (board_shape == INVALID_SHAPE) {
+		board_shape = SQUARE;
+	}
+
+	if (board_size == -1) {
+		board_size = 15;
+	} else {
+		switch (board_shape) {
+			case TORIC:
+			case H:
+				if (board_shape % 3 != 0) {
+					usage(argv[0], "Using this shape, board size must be a multiple of 3.");
+					exit(EXIT_FAILURE);
+				}
+				break;
+			case SNAKE:
+				if (board_shape % 5 != 0) {
+					usage(argv[0], "Using this shape, board size must be a multiple of 5.");
+					exit(EXIT_FAILURE);
+				}
+				break;
+			default:
+				break;
+		}
 	}
 }
 
