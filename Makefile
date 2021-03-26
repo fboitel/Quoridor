@@ -11,7 +11,7 @@ build: build/server
 test: build/alltests
 
 install: build/server build/alltests
-	cp $^ $(ARGS)
+	cp $^ install
 
 clean:
 	find build install -type f -not -name .keep | xargs rm -rf
