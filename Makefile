@@ -1,4 +1,4 @@
-CFLAGS=-Iheaders
+CFLAGS=-Iheaders -I$(GSL_PATH) -lgsl -lcblas
 CC=gcc
 
 
@@ -18,7 +18,7 @@ clean:
 
 
 build/server: build/server.o
-	$(CC) $(CFLAGS) -lgsl -lcblas -ldl $^ -o $@
+	$(CC) $(CFLAGS) -ldl $^ -o $@
 
 build/alltests: build/tests.o
 	$(CC) $(CFLAGS) $^ -o $@
