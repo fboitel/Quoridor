@@ -2,6 +2,6 @@
 #include <stdlib.h>
 
 int main() {
-	printf("Tests go here.");
+	printf("Tests go here.\n");
 	return EXIT_SUCCESS;
 }
