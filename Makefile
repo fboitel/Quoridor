@@ -1,12 +1,34 @@
-#this is a makefile
-
 CFLAGS=-Iheaders -lgsl -lcblas
-.PHONY: clean all
+CC=gcc
+
+
+.PHONY: all build test install clean
+
+all: build test
+
+build: build/server
+
+test: build/alltests
+
+install: build/server build/alltests
+	cp $^ $(ARGS)
 
 clean:
-	rm quor
+	find build install -type f -not -name .keep | xargs rm -rf
 
-all: quor
 
-quor: src/server.c headers/player.h
-	gcc $(CFLAGS) $< -o $@
+build/server: build/server.o
+	$(CC) $(CFLAGS) $^ -o $@
+
+build/alltests: build/tests.o
+	$(CC) $(CFLAGS) $^ -o $@
+
+
+build/tests.o: tests/tests.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+build/server.o: src/server.c headers/player.h
+	$(CC) $(CFLAGS) -c $< -o $@
+
+build/player.o: src/player.c headers/player.h
+	$(CC) $(CFLAGS) -c $< -o $@
