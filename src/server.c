@@ -1,8 +1,8 @@
 #include "../headers/graph.h"
 #include "../headers/move.h"
 #include <dlfcn.h>          // to use dynamic libs
-#include <gsl/gsl_matrix.h> // for matrix
-#include <gsl/gsl_matrix_double.h>
+#include <gsl_matrix.h> // for matrix
+#include <gsl_matrix_double.h>
 #include <stdlib.h>
 #include <string.h> // for strcmp
 #include <unistd.h> // to check file existence
