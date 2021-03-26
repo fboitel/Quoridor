@@ -1,7 +1,6 @@
 GSL_PATH ?= gsl
-CFLAGS = -Iheaders -I$(GSL_PATH)/include -L$(GSL_PATH)/lib  -g -lgsl -lgslcblas
+CFLAGS = -Iheaders -I$(GSL_PATH)/include -L$(GSL_PATH)/lib -g -lgsl -lgslcblas
 LFLAGS = -fPIC -shared
-EFLAGS = -lgsl -lgslcblas
 CC = gcc
 
 .PHONY: all build test run_server run_tests install clean
@@ -20,7 +19,7 @@ run_tests: build/alltests
 	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/alltests
 
 install: build/server build/alltests
-	cp $^ $(ARGS)
+	cp $^ install
 
 clean:
 	find build install -type f -not -name .keep | xargs rm -rf
