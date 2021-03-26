@@ -1,6 +1,6 @@
 GSL_PATH ?= gsl
 CFLAGS = -Iheaders -I$(GSL_PATH)/include -L$(GSL_PATH)/lib -lgsl -lgslcblas -g
-LFLAGS = -Iheaders -fPIC -shared
+LFLAGS = -fPIC -shared
 CC = gcc
 
 .PHONY: all build test run_server run_tests install clean
@@ -38,7 +38,7 @@ build/server.o: src/server.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 build/player.so: src/player.c headers/player.h
-	$(CC) $(LFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $(LFLAGS) $< -o $@
 
 runGame: build/server build/player.so
 	./build/server ./build/player.so ./build/player.so

@@ -1,12 +1,14 @@
-#include "graph.h"
 #include "move.h"
 #include <stdio.h>
 #include <dlfcn.h>          // to use dynamic libs
 #include <gsl/gsl_matrix.h> // for matrix
 #include <gsl/gsl_matrix_double.h>
+#include "graph.h"
+
 #include <stdlib.h>
 #include <string.h> // for strcmp
 #include <unistd.h> // to check file existence
+#include <time.h> // for random
 
 enum board_shape_t { SQUARE, TORIC, H, SNAKE, INVALID_SHAPE = -1 };
 
@@ -193,6 +195,8 @@ int isWinning(int activePlayer) {
 int main(int argc, char *argv[]) {
   parse_args(argc, argv);
 
+  srand(time(NULL));
+
   loadLibs();
 
   // init a new matrix size of 3x3
@@ -201,13 +205,13 @@ int main(int argc, char *argv[]) {
   struct graph_t board = {0};
 
   // free the matrix
-   //gsl_matrix_free(NULL);
+   gsl_matrix_alloc(3,3);
 
   // TODO : calcul numWall depending on size and board shape
   int numWall = 10;
 
   // TODO : init random start player
-  int activePlayer = 1;
+  int activePlayer = rand()%2;
 
   // init players
   initializePlayer1(BLACK, &board, numWall);
