@@ -10,7 +10,8 @@ struct player_t {
 
 static struct player_t player;
 
-enum direction_t { HORIZONTAL, VERTICAL, NO = -1};
+enum direction_t { HORIZONTAL, VERTICAL, NO = -1 };
+enum orientation_t { NORTH = 1, SOUTH = 2, WEST = 3, EAST = 4, MAX_DIRECTION = 5, ERROR_DIRECTION = -1};
 
 // Copy a graph
 struct graph_t* graph_copy(struct graph_t* graph) {
@@ -20,14 +21,14 @@ struct graph_t* graph_copy(struct graph_t* graph) {
     copy->o = gsl_spmatrix_alloc(graph->o->size1, graph->o->size2);
     gsl_spmatrix_memcpy(copy->t, graph->t);
     gsl_spmatrix_memcpy(copy->o, graph->o);
-    
+
     return copy;
 }
 
 //// Move function ////
 
 // Return adjacent vertices of the given vertex on a SQUARE square
-void get_adjacents(int arr[4], int i) {
+void get_adjacents(int arr[], int i) {
     int n = player.graph->t->size1;
 
     arr[0] = i >= n ? i - n : -1;
@@ -37,12 +38,12 @@ void get_adjacents(int arr[4], int i) {
 }
 
 // Fill an array with the reachable vertices (-1 if vertices is not reachable)
-int find_available_move(int arr[4], int i) {
+int find_available_move(int arr[], int i) {
     int counter = 0;
-    int adj[4];
+    int adj[MAX_DIRECTION - 1];
     get_adjacents(adj, player.pos);
 
-    for (int k = 0; k < 4; k++) {
+    for (int k = 0; k < MAX_DIRECTION - 1; k++) {
         if (adj[k] != -1) {
             int m = gsl_spmatrix_get(player.graph->t, i, adj[k]);
             arr[k] = m != 0 ? adj[k] : -1;
@@ -54,38 +55,33 @@ int find_available_move(int arr[4], int i) {
 
 // Do a move
 size_t move() {
-    int available_moves[4];
+    int available_moves[MAX_DIRECTION - 1];
     int nb_move = find_available_move(available_moves, player.pos);
     if (nb_move == 0)
         return -1;
 
     int m;
     do {
-        m = available_moves[rand() % 4];
+        m = available_moves[rand() % (MAX_DIRECTION - 1)];
     } while (m != -1);
     return m;
 }
 
 //// Edge functions ////
 
-/*
-// Return the relative position between two vertices
+// Return the direction of an edge
 int find_direction(struct edge_t e) {
-    struct coords fr = get_coords(e.fr);
-    struct coords to = get_coords(e.to);
+    int n = player.graph->t->size1;
+    int d = e.to - e.fr;
 
-    if (fr.i > to.i)
-        return 1;
-    else if (fr.i < to.i)
-        return 2;
-    else if (fr.j > to.j)
-        return 3;
-    else if (fr.j < to.j)
-        return 4;
-    else
-        return -1;
+    return
+        d == -1 ? WEST  :
+        d == 1  ? EAST  :
+        d == -n ? NORTH :
+        d == n  ? SOUTH :
+        ERROR_DIRECTION;
 }
-*/
+
 
 // Add edges in the graph
 void no_wall(struct edge_t e[]) {
@@ -96,17 +92,26 @@ void no_wall(struct edge_t e[]) {
 void put_wall(struct edge_t e[]) {
     int n = player.graph->t->size1;
     int direction = NO;
+    int v = -1;
     do {
-    int v = rand() % (n * n);
-    int adj[4];
-    get_adjacents(adj, v);
-    if (adj[0] != -1 && adj[1] != -1)
-        direction = VERTICAL;
-    if (adj[2] != -1 && adj[3] != -1)
-        direction = HORIZONTAL;
-    } while(direction == -1);
+        v = rand() % (n * n);
+        int availables[MAX_DIRECTION - 1];
+        find_available_move(availables, v);
 
-    // PUT THE WALL
+        if (availables[0] != -1 && availables[1] != -1)
+            direction = VERTICAL;
+        if (availables[2] != -1 && availables[3] != -1)
+            direction = HORIZONTAL;
+    } while (direction == -1);
+
+    if (direction == VERTICAL) {
+        gsl_spmatrix_set(player.graph->t, v, v - 1, EAST);
+        gsl_spmatrix_set(player.graph->t, v, v + 1, WEST);
+    }
+    else {
+        gsl_spmatrix_set(player.graph->t, v, v - n, NORTH);
+        gsl_spmatrix_set(player.graph->t, v, v + n, SOUTH);
+    }
 
     player.num_walls--;
 }
@@ -114,21 +119,21 @@ void put_wall(struct edge_t e[]) {
 int opposite(int d) {
     switch (d)
     {
-    case 1:
-        return 2;
-    case 2:
-        return 1;
-    case 3:
-        return 4;
-    case 4:
-        return 3;
+    case NORTH:
+        return SOUTH;
+    case SOUTH:
+        return NORTH;
+    case WEST:
+        return EAST;
+    case EAST:
+        return WEST;
     default:
-        return -1;
+        return ERROR_DIRECTION;
     }
 }
 
 void update_graph(struct edge_t e[]) {
-    int direction = 0; // TODO //find_direction(e[0]);
+    int direction = find_direction(e[0]);
 
     for (int k = 0; k < 2; k++) {
         gsl_spmatrix_set(player.graph->t, e[k].fr, e[k].to, direction);
@@ -169,7 +174,7 @@ struct move_t play(struct move_t previous_move) {
         m = move();
     }
 
-    return (struct move_t) { m, e, t, c };
+    return (struct move_t) { m, { e[0], e[1] }, t, c };
 }
 
 void finalize() {
