@@ -147,12 +147,12 @@ int gameOver = 0;
 void (*initializePlayer1)(enum color_t id, struct graph_t *graph,
                           size_t num_walls);
 struct move_t (*playPlayer1)(struct move_t previous_move);
-void finalizePlayer1();
+void (*finalizePlayer1)();
 
 void (*initializePlayer2)(enum color_t id, struct graph_t *graph,
                           size_t num_walls);
 struct move_t (*playPlayer2)(struct move_t previous_move);
-void finalizePlayer2();
+void (*finalizePlayer2)();
 
 int loadLibs() {
   // open players libs
