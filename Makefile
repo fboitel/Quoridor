@@ -3,9 +3,7 @@ CFLAGS = -Iheaders -I$(GSL_PATH)/include -L$(GSL_PATH)/lib -g -lgsl -lgslcblas
 LFLAGS = -fPIC -shared
 CC = gcc
 
-.PHONY: all build test run_server run_tests install clean
-
-all: build test
+.PHONY: build test run_server run_tests install clean
 
 build: build/server
 
