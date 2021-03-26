@@ -1,4 +1,5 @@
 /.idea/
+/gsl/
 
 /build/*
 !/build/.keep

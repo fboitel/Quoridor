@@ -1,5 +1,6 @@
-CFLAGS=-Iheaders -I$(GSL_PATH)/include -L$(GSL_PATH)/lib -lgsl -lgslcblas
-CC=gcc
+GSL_PATH ?= gsl
+CFLAGS = -Iheaders -I$(GSL_PATH)/include -L$(GSL_PATH)/lib -lgsl -lgslcblas
+CC = gcc
 
 
 .PHONY: all build test run_server run_tests install clean
