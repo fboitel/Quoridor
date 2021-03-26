@@ -1,5 +1,6 @@
-#include "../headers/graph.h"
-#include "../headers/move.h"
+#include "graph.h"
+#include "move.h"
+#include <stdio.h>
 #include <dlfcn.h>          // to use dynamic libs
 #include <gsl/gsl_matrix.h> // for matrix
 #include <gsl/gsl_matrix_double.h>
@@ -155,15 +156,31 @@ struct move_t (*playPlayer2)(struct move_t previous_move);
 void (*finalizePlayer2)();
 
 int loadLibs() {
-  // open players libs
+ // open players libs
   // TODO : check fails
-  void *libPlayer1 = dlopen(player_1_path, RTLD_LAZY);
-  *(void **)(initializePlayer1) = dlsym(libPlayer1, "initialise");
+  void *libPlayer1 = dlopen(player_1_path, RTLD_NOW);
+  char *error = dlerror();
+
+  if (error != NULL) {
+      printf("aaaaa + %s \n", error);
+      exit(EXIT_FAILURE);
+  }
+
+ // *(void **)(initializePlayer1) = dlsym(libPlayer1, "initialize");
   *(struct move_t **)(playPlayer1) = dlsym(libPlayer1, "play");
   *(void **)(finalizePlayer1) = dlsym(libPlayer1, "finalize");
 
-  void *libPlayer2 = dlopen(player_1_path, RTLD_LAZY);
-  *(void **)(initializePlayer2) = dlsym(libPlayer2, "initialise");
+  void *libPlayer2 = dlopen(player_2_path, RTLD_LAZY);
+
+    if (error != NULL) {
+      printf("%s\n", error);
+      exit(EXIT_FAILURE);
+  }
+   if (libPlayer1 == NULL) {
+      printf("Path to player's 2 library is unreachable.\n");
+        exit(EXIT_FAILURE);
+  }
+  *(void **)(initializePlayer2) = dlsym(libPlayer2, "initialize");
   *(struct move_t **)(playPlayer2) = dlsym(libPlayer2, "play");
   *(void **)(finalizePlayer2) = dlsym(libPlayer2, "finalize");
 }
@@ -176,7 +193,6 @@ int isWinning(int activePlayer) {
 int main(int argc, char *argv[]) {
   parse_args(argc, argv);
 
-  // TODO : check fails
   loadLibs();
 
   // init a new matrix size of 3x3
@@ -185,7 +201,7 @@ int main(int argc, char *argv[]) {
   struct graph_t board = {0};
 
   // free the matrix
-  // gsl_matrix_free(board);
+   //gsl_matrix_free(NULL);
 
   // TODO : calcul numWall depending on size and board shape
   int numWall = 10;
@@ -224,4 +240,6 @@ int main(int argc, char *argv[]) {
   for each player p
      p->finalize()
      */
-}
+
+     printf("PARTIE TERMINEE");
+     }
