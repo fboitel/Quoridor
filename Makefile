@@ -1,4 +1,4 @@
-CFLAGS=-Iheaders -I$(GSL_PATH) -ldl -lgsl -lcblas
+CFLAGS=-Iheaders -L$(GSL_PATH) -ldl -lgsl -lcblas
 CC=gcc
 
 
