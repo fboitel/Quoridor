@@ -1,4 +1,4 @@
-CFLAGS=-Iheaders -I$(GSL_PATH)/include -L$(GSL_PATH)/lib -lgsl
+CFLAGS=-Iheaders -I$(GSL_PATH)/include -L$(GSL_PATH)/lib -lgsl -lgslcblas
 CC=gcc
 
 
