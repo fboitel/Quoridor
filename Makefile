@@ -1,6 +1,6 @@
-CFLAGS=-Iheaders -I$(GSL_PATH)/include -L$(GSL_PATH)/lib -lgsl -lgslcblas
+CFLAGS=-Iheaders -I$(GSL_PATH)/include -L$(GSL_PATH)/lib -lgsl -g
+LFLAGS=-Iheaders -fPIC -shared 
 CC=gcc
-
 
 .PHONY: all build test install clean
 
@@ -11,7 +11,7 @@ build: build/server
 test: build/alltests
 
 install: build/server build/alltests
-	cp $^ install
+	cp $^ $(ARGS)
 
 clean:
 	find build install -type f -not -name .keep | xargs rm -rf
@@ -27,8 +27,11 @@ build/alltests: build/tests.o
 build/tests.o: tests/tests.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-build/server.o: src/server.c headers/player.h
+build/server.o: src/server.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-build/player.o: src/player.c headers/player.h
-	$(CC) $(CFLAGS) -c $< -o $@
+build/player.so: src/player.c headers/player.h
+	$(CC) $(LFLAGS) $< -o $@
+
+runGame: build/server build/player.so
+	./build/server ./build/player.so ./build/player.so
