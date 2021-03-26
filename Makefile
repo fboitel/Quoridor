@@ -21,7 +21,7 @@ build/server: build/server.o
 	$(CC) $(CFLAGS) $^ -o $@ -ldl
 
 build/alltests: build/tests.o
-	$(CC) $(CFLAGS) $^ -o $@
+	$(CC) $(CFLAGS) $^ -o $@ -lgcov
 
 
 build/tests.o: tests/tests.c
