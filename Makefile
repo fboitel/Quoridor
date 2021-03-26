@@ -8,7 +8,6 @@ CC = gcc
 all: build test
 
 build: build/server
-	gcc --version
 
 test: build/alltests
 
