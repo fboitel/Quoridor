@@ -2,8 +2,8 @@
 #define _QUOR_GRAPH_H_
 
 #include <stddef.h>
-#include <gsl_spmatrix.h>
-#include <gsl_spblas.h>
+#include <gsl/gsl_spmatrix.h>
+#include <gsl/gsl_spblas.h>
 
 #include "move.h"
 
