@@ -1,4 +1,4 @@
-CFLAGS=-Iheaders -lgsl -lcblas
+CFLAGS=-Iheaders
 CC=gcc
 
 
@@ -18,7 +18,7 @@ clean:
 
 
 build/server: build/server.o
-	$(CC) $(CFLAGS) $^ -o $@
+	$(CC) $(CFLAGS) -lgsl -lcblas -ldl $^ -o $@
 
 build/alltests: build/tests.o
 	$(CC) $(CFLAGS) $^ -o $@
