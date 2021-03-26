@@ -25,7 +25,7 @@ build/alltests: build/tests.o
 
 
 build/tests.o: tests/tests.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@ -ftest-coverage
 
 build/server.o: src/server.c headers/player.h
 	$(CC) $(CFLAGS) -c $< -o $@
