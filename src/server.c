@@ -1,249 +1,124 @@
 #include "move.h"
+#include "graph.h"
+#include "board.h"
+#include "opt.h"
 #include <stdio.h>
 #include <dlfcn.h>          // to use dynamic libs
 #include <gsl/gsl_matrix.h> // for matrix
 #include <gsl/gsl_matrix_double.h>
-#include "graph.h"
 
 #include <stdlib.h>
-#include <string.h> // for strcmp
 #include <unistd.h> // to check file existence
 #include <time.h> // for random
 
-enum board_shape_t { SQUARE, TORIC, H, SNAKE, INVALID_SHAPE = -1 };
+extern char* player_1_path;
+extern char* player_2_path;
 
-int board_size = -1;
-enum board_shape_t board_shape = INVALID_SHAPE;
-char *player_1_path = NULL;
-char *player_2_path = NULL;
+void (*P1_initialize)(enum color_t id, struct graph_t* graph,
+    size_t num_walls);
+struct move_t(*P1_play)(struct move_t previous_move);
+void (*P1_finalize)();
 
-enum board_shape_t parse_board_shape(char *t) {
-  if (strlen(t) != 1) {
-    return INVALID_SHAPE;
-  }
+void (*P2_initialize)(enum color_t id, struct graph_t* graph,
+    size_t num_walls);
+struct move_t(*P2_play)(struct move_t previous_move);
+void (*P2_finalize)();
 
-  switch (*t) {
-  case 'c':
-    return SQUARE;
-
-  case 't':
-    return TORIC;
-
-  case 'h':
-    return H;
-
-  case 's':
-    return SNAKE;
-
-  default:
-    return INVALID_SHAPE;
-  }
-}
-
-void usage(char *exec_path, char *message) {
-  if (message != NULL) {
-    fprintf(stderr, "%s\n\n", message);
-  }
-  fprintf(stderr,
-          "Usage: %s [-m SIZE] [-t SHAPE] <PLAYER_1_PATH> <PLAYER_2_PATH>\n",
-          exec_path);
-}
-
-void parse_args(int argc, char **argv) {
-  for (int i = 1; i < argc; ++i) {
-    char *arg = argv[i];
-
-    if (!strcmp(arg, "-m")) {
-      if (board_size != -1) {
-        usage(argv[0], "\"-m\" option can't be used multiple times.");
-        exit(EXIT_FAILURE);
-      }
-
-      ++i;
-
-      if (i == argc) {
-        usage(argv[0], "\"-m\" option must be followed by the board size.");
-        exit(EXIT_FAILURE);
-      }
-
-      if ((board_size = atoi(argv[i])) <= 0) {
-        usage(argv[0], "Board size must be a strictly positive number.");
-        exit(EXIT_FAILURE);
-      }
-
-    } else if (!strcmp(arg, "-t")) {
-      if (board_shape != INVALID_SHAPE) {
-        usage(argv[0], "\"-t\" option can't be used multiple times.");
-        exit(EXIT_FAILURE);
-      }
-
-      ++i;
-
-      if (i == argc) {
-        usage(argv[0], "\"-t\" option must be followed by the board shape.");
-        exit(EXIT_FAILURE);
-      }
-
-      if ((board_shape = parse_board_shape(argv[i])) == INVALID_SHAPE) {
-        usage(argv[0], "Board shape must be \"c\", \"t\", \"h\" or \"s\".");
-        exit(EXIT_FAILURE);
-      }
-
-    } else {
-      if (player_2_path != NULL) {
-        printf(argv[0], "There is too much players.");
-        exit(EXIT_FAILURE);
-      }
-
-      if (access(argv[i], F_OK)) {
-        char *message_start = "File \"";
-        char *message_end = "\" doesn't exists.";
-        char message[strlen(message_start) + strlen(argv[i]) +
-                     strlen(message_end) + 1];
-        sprintf(message, "%s%s%s", message_start, argv[i], message_end);
-        usage(argv[0], message);
-        exit(EXIT_FAILURE);
-      }
-
-      if (player_1_path == NULL) {
-        player_1_path = argv[i];
-      } else {
-        player_2_path = argv[i];
-      }
-    }
-  }
-
-  if (player_2_path == NULL) {
-    usage(argv[0], "Not enough players.");
-    exit(EXIT_FAILURE);
-  }
-
-  if (board_shape == INVALID_SHAPE) {
-    board_shape = SQUARE;
-  }
-
-  if (board_size == -1) {
-    board_size = 15;
-  } else {
-    switch (board_shape) {
-    case TORIC:
-    case H:
-      if (board_shape % 3 != 0) {
-        usage(argv[0], "Using this shape, board size must be a multiple of 3.");
-        exit(EXIT_FAILURE);
-      }
-      break;
-    case SNAKE:
-      if (board_shape % 5 != 0) {
-        usage(argv[0], "Using this shape, board size must be a multiple of 5.");
-        exit(EXIT_FAILURE);
-      }
-      break;
-    default:
-      break;
-    }
-  }
-}
-
-int gameOver = 0;
-
-void (*initializePlayer1)(enum color_t id, struct graph_t *graph,
-                          size_t num_walls);
-struct move_t (*playPlayer1)(struct move_t previous_move);
-void (*finalizePlayer1)();
-
-void (*initializePlayer2)(enum color_t id, struct graph_t *graph,
-                          size_t num_walls);
-struct move_t (*playPlayer2)(struct move_t previous_move);
-void (*finalizePlayer2)();
-
-int loadLibs() {
- // open players libs
-  // TODO : check fails
-  void *libPlayer1 = dlopen(player_1_path, RTLD_NOW);
-  char *error = dlerror();
-
-  if (error != NULL) {
-      printf("aaaaa + %s \n", error);
-      exit(EXIT_FAILURE);
-  }
-
- // *(void **)(initializePlayer1) = dlsym(libPlayer1, "initialize");
-  *(struct move_t **)(playPlayer1) = dlsym(libPlayer1, "play");
-  *(void **)(finalizePlayer1) = dlsym(libPlayer1, "finalize");
-
-  void *libPlayer2 = dlopen(player_2_path, RTLD_LAZY);
+// Open players libs
+int load_libs(void) {
+    // TODO : check fails
+    void* P1_lib = dlopen(player_1_path, RTLD_NOW);
+    char* error = dlerror();
 
     if (error != NULL) {
-      printf("%s\n", error);
-      exit(EXIT_FAILURE);
-  }
-   if (libPlayer1 == NULL) {
-      printf("Path to player's 2 library is unreachable.\n");
+        fprintf(stderr, "%s\n", error);
         exit(EXIT_FAILURE);
-  }
-  *(void **)(initializePlayer2) = dlsym(libPlayer2, "initialize");
-  *(struct move_t **)(playPlayer2) = dlsym(libPlayer2, "play");
-  *(void **)(finalizePlayer2) = dlsym(libPlayer2, "finalize");
+    }
+
+    P1_initialize = dlsym(P1_lib, "initialize");
+    P1_play = dlsym(P1_lib, "play");
+    P1_finalize = dlsym(P1_lib, "finalize");
+
+    void* P2_lib = dlopen(player_2_path, RTLD_LAZY);
+
+    if (error != NULL) {
+        fprintf(stderr, "%s\n", error);
+        exit(EXIT_FAILURE);
+    }
+    if (P1_lib == NULL) {
+        printf("Path to player's 2 library is unreachable.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    P2_initialize = dlsym(P2_lib, "initialize");
+    P2_play = dlsym(P2_lib, "play");
+    P2_finalize = dlsym(P2_lib, "finalize");
+
+    return EXIT_SUCCESS;
 }
 
-int isWinning(int activePlayer) {
-  // TODO : check with board
-  return 1;
+
+int is_winning(int active_player) {
+    // TODO : check with board
+    return 1;
 }
 
-int main(int argc, char *argv[]) {
-  parse_args(argc, argv);
+void update(struct graph_t* graph, struct move_t move) {
+    if (move.t == WALL)
+        add_edges(graph, move.e);
+}
 
-  srand(time(NULL));
+int main(int argc, char* argv[]) {
+    parse_args(argc, argv);
+    printf("Args parsed\n");
 
-  loadLibs();
+    srand(time(NULL));
 
-  // init a new matrix size of 3x3
-  // gsl_matrix *board = gsl_matrix_alloc(3, 3);
-  // TODO : ini a new board depending on parameters
-  struct graph_t board = {0};
+    // Load players
+    load_libs();
+    printf("Libs loaded\n");
 
-  // free the matrix
-   gsl_matrix_alloc(3,3);
+    // Initialize a new board of size m and shape t
+    // TODO : init a new board depending on parameters
+    size_t m = 3;
+    struct graph_t* board = graph_init(m, SQUARE);
+    printf("Board created\n");
 
-  // TODO : calcul numWall depending on size and board shape
-  int numWall = 10;
+    // TODO : compute num_walls depending on size and board shape
+    int num_walls = 10;
 
-  // TODO : init random start player
-  int activePlayer = rand()%2;
+    // Init random starting player
+    int active_player = rand() % 2;
 
-  // init players
-  initializePlayer1(BLACK, &board, numWall);
-  initializePlayer2(WHITE, &board, numWall);
+    // init players
+    P1_initialize(BLACK, board, num_walls);
+    P2_initialize(WHITE, board, num_walls);
+    printf("Players initialized\n");
 
-  // todo init move
-  struct move_t last_move;
-  while (!gameOver) {
-    if (activePlayer == 1) {
-      last_move = playPlayer1(last_move);
-    } else {
-      last_move = playPlayer2(last_move);
+    // Initialize the first move as a move to the intial place
+    struct move_t last_move = {
+        .m = m / 2 + active_player == BLACK ? 0 : m * (m - 1),
+        .c = active_player,
+        .e = { no_edge(), no_edge() },
+        .t = MOVE
+    };
+
+    // Game loop
+    bool game_over = false;
+    while (!game_over) {
+        // Play
+        last_move = active_player == BLACK ? P1_play(last_move) : P2_play(last_move);
+        // Update the graph if a player has put a wall
+        update(board, last_move);
+        // Check if a player has won
+        if (is_winning(active_player))
+            game_over = true;
     }
-    if (isWinning(activePlayer)) {
-      gameOver = 1;
-    }
-  }
-  finalizePlayer1();
-  finalizePlayer2();
 
-  /* pseudo code for game loop
-  start_player = random()
-  for each player p
-          p->initialize(p == start_player ? BLACK : WHITE, graph, num_walls)
-  while true
-     p = compute_next_player()
-     move = p->play(move)
-     if is_winning()
-            break
-  for each player p
-     p->finalize()
-     */
+    P1_finalize();
+    P2_finalize();
+    graph_free(board);
 
-     printf("PARTIE TERMINEE");
-     }
+    printf("GAME OVER\n");
+    return EXIT_SUCCESS;
+}
