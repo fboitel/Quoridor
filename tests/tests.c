@@ -1,7 +1,9 @@
+#include "tests.h"
 #include <stdio.h>
 #include <stdlib.h>
 
 int main() {
-	printf("Tests go here.\n");
+	test_player_main();
+
 	return EXIT_SUCCESS;
 }
