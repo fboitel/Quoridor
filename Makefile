@@ -24,10 +24,10 @@ clean:
 
 
 build/server: build/server.o build/opt.o build/board.o
-	$(CC) -ldl $^ -o $@ $(CFLAGS) $(GSLFLAGS)
+	$(CC) $^ -o $@ $(GSLFLAGS) -ldl
 
 build/alltests: build/tests.o build/player_test.o build/player.o build/board.o build/opt.o
-	$(CC) -ldl $^ -o $@ --coverage $(CFLAGS) $(GSLFLAGS)
+	$(CC) $^ -o $@ --coverage $(GSLFLAGS) -ldl
 
 # TSTOBJ
 
