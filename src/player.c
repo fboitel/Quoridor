@@ -37,6 +37,7 @@ void initialize(enum color_t id, struct graph_t* graph, size_t num_walls) {
 }
 
 struct move_t play(struct move_t previous_move) {
+    (void) previous_move;
     size_t m;
     struct wall_t wall;
     enum movetype_t t;

@@ -58,9 +58,9 @@ int load_libs(void) {
 }
 
 
-int is_winning(int active_player) {
+int is_winning(enum color_t active_player) {
     // TODO : check with board
-    return 1;
+    return active_player;
 }
 
 void update(struct graph_t* graph, struct move_t move) {
@@ -88,7 +88,7 @@ int main(int argc, char* argv[]) {
     int num_walls = 10;
 
     // Init random starting player
-    int active_player = rand() % 2;
+    enum color_t active_player = rand() % 2;
 
     // init players
     P1_initialize(BLACK, board, num_walls);
@@ -113,6 +113,8 @@ int main(int argc, char* argv[]) {
         // Check if a player has won
         if (is_winning(active_player))
             game_over = true;
+        // Compute next player
+        active_player = 1 - active_player;
     }
 
     P1_finalize();

@@ -93,7 +93,6 @@ size_t get_reachables(const struct graph_t* graph, size_t v, size_t vertices[]) 
 // Get a random wall
 // May not work for other than SQUARE board
 struct wall_t random_wall(const struct graph_t* graph) {
-    int n = graph->t->size1;
     struct wall_t wall = no_wall();
 
     do {
