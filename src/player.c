@@ -60,26 +60,3 @@ struct move_t play(struct move_t previous_move) {
 void finalize(void) {
     // graph_free(player.graph);
 }
-
-// Debug
-void print_edge(struct edge_t e) {
-    if (e.fr == SIZE_MAX)
-        printf("No edge\n");
-    else
-        printf("%zu --> %zu\n", e.fr, e.to);
-}
-
-void print_move(struct move_t m) {
-    printf("Move debug\n");
-    printf("Player: %d\n", m.c);
-    printf("Type: %s\n", m.t == MOVE ? "move" : "wall");
-    printf("Position %zu\n", m.m);
-    printf("Edge:\n");
-    print_edge(m.e[0]);
-    print_edge(m.e[1]);
-}
-
-void print_player() {
-    printf("Player: %d\n", player.id);
-    printf("Position %zu\n", player.pos);
-}
