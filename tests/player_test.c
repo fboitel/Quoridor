@@ -24,6 +24,8 @@ void test_initialization(void) {
 
     finalize();
     // Free the board
+    graph_free(board);
+
     printf("\tOK\n");
 }
 
