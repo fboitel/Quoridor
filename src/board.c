@@ -35,8 +35,10 @@ void graph_free(struct graph_t* graph) {
 // Graph operations
 void add_edges(struct graph_t* graph, struct edge_t e[]) {
     for (int i = 0; i < 2; i++) {
+        if(!is_no_edge(e[i])) {
         gsl_spmatrix_set(graph->t, e[i].fr, e[i].to, -1);
         gsl_spmatrix_set(graph->t, e[i].to, e[i].fr, -1);
+        }
     }
 }
 
@@ -56,62 +58,32 @@ int opposite(int d) {
     }
 }
 
-// Check if a vertex dest is directly reachable (i.e at a distance of 1) from a vertex src
-bool is_reachable(const struct graph_t* graph, size_t src, size_t dest) {
-    // Check if dest actually exists in the graph
-    if (is_no_vertex(dest) || dest >= graph->num_vertices) {
-        return false;
-    }
-    // Check if there is an edge between src and dest
-    // TODO maybe check the validity of the direction ?
-    printf("%zu is reachable from %zu", dest, src);
-    if (gsl_spmatrix_get(graph->t, src, dest) <= 0)
-        return false;
-
-    return true;
+// Check if vertex dest is linked to vertex src (i.e there is an edge between them)
+bool is_linked(const struct graph_t* graph, size_t src, size_t dest) {
+    return gsl_spmatrix_get(graph->t, src, dest) > 0;
 }
 
-// Get all the reachables vertices from the vertex v
-// Fill an array with the reachable vertices (no_vertex() if vertex is not reachable)
-size_t get_reachables(const struct graph_t* graph, size_t v, size_t vertices[]) {
-    size_t reachables = 0;
-    size_t n = graph->t->size1;
-    vertices[NORTH] = v >= n ? v - n : no_vertex();
-    vertices[SOUTH] = v + n;
-    vertices[WEST] = v > 0 ? v - 1 : no_vertex();
-    vertices[EAST] = v + 1;
-
-    for (int i = 0; i < MAX_DIRECTION; i++) {
-        if (is_reachable(graph, v, vertices[i]))
-            reachables++;
-        else
-            vertices[i] = no_vertex();
+// Check if there is an adjacent vertex of v (i.e a vertex linked by an edge) in the direction d
+// Return it if so, else return no_vertex()
+size_t vertex_from_direction(const struct graph_t* graph, size_t v, enum direction_t d) {
+    for (size_t i = 0; i < graph->num_vertices; i++) {
+        if (gsl_spmatrix_get(graph->t, v, i) == d)
+            return i;
     }
-    return reachables;
+    return no_vertex();
 }
 
-// Get a random wall
-// May not work for other than SQUARE board
-struct wall_t random_wall(const struct graph_t* graph) {
-    struct wall_t wall = no_wall();
+// Get all the linked vertices from the vertex v
+// Fill an array with the linked vertices (no_vertex() if there is no vertex in the direction)
+size_t get_linked(const struct graph_t* graph, size_t v, size_t vertices[]) {
+    size_t linked = 0;
+    vertices[NO_DIRECTION] = v; // First one is himself
 
-    do {
-        size_t reachables[MAX_DIRECTION];
-        size_t v = rand() % graph->num_vertices;
-        get_reachables(graph, v, reachables);
-
-        // Check if we can put a whole wall
-        if (!is_no_vertex(reachables[WEST]) && !is_no_vertex(reachables[EAST])) {
-            wall.e1 = (struct edge_t){ v, reachables[WEST] };
-            wall.e2 = (struct edge_t){ v, reachables[EAST] };
-        }
-        else if (!is_no_vertex(reachables[NORTH]) && !is_no_vertex(reachables[SOUTH])) {
-            wall.e1 = (struct edge_t){ v, reachables[NORTH] };
-            wall.e2 = (struct edge_t){ v, reachables[SOUTH] };
-        }
-    } while (is_no_wall(wall));
-
-    return wall;
+    for (enum direction_t i = NO_DIRECTION + 1; i < MAX_DIRECTION; i++) {
+        vertices[i] = vertex_from_direction(graph, v, i);
+        linked += !is_no_vertex(vertices[i]);
+    }
+    return linked;
 }
 
 //// GARBAGE

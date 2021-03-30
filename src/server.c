@@ -14,13 +14,13 @@
 extern char* player_1_path;
 extern char* player_2_path;
 
-void (*P1_initialize)(enum color_t id, struct graph_t* graph,
-    size_t num_walls);
+void (*P1_initialize)(enum color_t id, struct graph_t* graph, size_t num_walls);
+char* (*P1_name)(void);
 struct move_t(*P1_play)(struct move_t previous_move);
 void (*P1_finalize)();
 
-void (*P2_initialize)(enum color_t id, struct graph_t* graph,
-    size_t num_walls);
+void (*P2_initialize)(enum color_t id, struct graph_t* graph, size_t num_walls);
+char* (*P2_name)(void);
 struct move_t(*P2_play)(struct move_t previous_move);
 void (*P2_finalize)();
 
@@ -36,6 +36,7 @@ int load_libs(void) {
     }
 
     P1_initialize = dlsym(P1_lib, "initialize");
+    P1_name = dlsym(P1_lib, "get_player_name");
     P1_play = dlsym(P1_lib, "play");
     P1_finalize = dlsym(P1_lib, "finalize");
 
@@ -51,6 +52,7 @@ int load_libs(void) {
     }
 
     P2_initialize = dlsym(P2_lib, "initialize");
+    P2_name = dlsym(P2_lib, "get_player_name");
     P2_play = dlsym(P2_lib, "play");
     P2_finalize = dlsym(P2_lib, "finalize");
 
@@ -60,7 +62,8 @@ int load_libs(void) {
 
 int is_winning(enum color_t active_player) {
     // TODO : check with board
-    return active_player;
+    (void) active_player;
+    return 1;
 }
 
 void update(struct graph_t* graph, struct move_t move) {
@@ -94,13 +97,15 @@ int main(int argc, char* argv[]) {
     P1_initialize(BLACK, board, num_walls);
     P2_initialize(WHITE, board, num_walls);
     printf("Players initialized\n");
-
+    printf("\n");
+    printf("%s vs %s\n", P1_name(), P2_name());
+    printf("%s begins\n", active_player == BLACK ? P1_name() : P2_name());
     // Initialize the first move as a move to the intial place
     struct move_t last_move = {
-        .m = m / 2 + active_player == BLACK ? 0 : m * (m - 1),
+        .m = SIZE_MAX,
         .c = active_player,
         .e = { no_edge(), no_edge() },
-        .t = MOVE
+        .t = NO_TYPE
     };
 
     // Game loop
@@ -113,14 +118,15 @@ int main(int argc, char* argv[]) {
         // Check if a player has won
         if (is_winning(active_player))
             game_over = true;
-        // Compute next player
+        else
         active_player = 1 - active_player;
     }
+    printf("GAME OVER\n");
+    printf("%s won\n", active_player == BLACK ? P1_name() : P2_name());
 
     P1_finalize();
     P2_finalize();
     graph_free(board);
 
-    printf("GAME OVER\n");
     return EXIT_SUCCESS;
 }

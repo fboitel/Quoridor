@@ -4,28 +4,10 @@
 #include "debug.h"
 
 struct player_t player;
-
-//// Move function ////
-
-// Do a move
-size_t move(void) {
-    size_t reachables[MAX_DIRECTION];
-    size_t nb_move = get_reachables(player.graph, player.pos, reachables);
-    if (nb_move == 0)
-        return NO_DIRECTION;
-
-    size_t v;
-    do {
-        v = rand() % MAX_DIRECTION;
-    } while (!reachables[v]);
-
-    return v;
-}
-
-//// Game functions ////
+extern char* name;
 
 char const* get_player_name(void) {
-    return player.name;
+    return name;
 }
 
 void initialize(enum color_t id, struct graph_t* graph, size_t num_walls) {
@@ -37,25 +19,18 @@ void initialize(enum color_t id, struct graph_t* graph, size_t num_walls) {
 }
 
 struct move_t play(struct move_t previous_move) {
-    (void) previous_move;
-    size_t m;
-    struct wall_t wall;
-    enum movetype_t t;
-    enum color_t c = player.id;
-
-    if (player.num_walls == 0) {
-        t = WALL;
-        m = player.pos;
-        wall = random_wall(player.graph);
-        player.num_walls--;
+    struct move_t move;
+    // Initial move
+    if (previous_move.t == NO_TYPE) {
+        move.c = player.id;
+        move.t = MOVE;
+        move.m = player.pos;
+    } else {
+        move = strat(player.graph, player.pos, previous_move);
+        // Decrease the wall counter if the player move is to put one
+        player.num_walls -= (move.t == WALL);
     }
-    else {
-        t = MOVE;
-        m = move();
-        wall = no_wall();
-    }
-
-    return (struct move_t) { m, { wall.e1, wall.e2 }, t, c };
+    return move;
 }
 
 void finalize(void) {
