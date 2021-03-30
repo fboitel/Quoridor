@@ -26,7 +26,7 @@ clean:
 build/server: build/server.o build/opt.o build/board.o
 	$(CC) $^ -o $@ $(GSLFLAGS) -ldl
 
-build/alltests: build/tests.o build/player_test.o build/player.o build/board.o build/opt.o
+build/alltests: build/tests.o build/player_test.o build/dummy.o build/player.o build/board.o build/opt.o
 	$(CC) $^ -o $@ --coverage $(GSLFLAGS) -ldl
 
 # TSTOBJ
@@ -51,10 +51,20 @@ build/board.o: src/board.c headers/board.h
 build/player.o: src/player.c headers/player.h
 	$(CC) -c $< -o $@ $(CFLAGS)
 
-# LIB
+build/dummy.o: tests/dummy.c
+	$(CC) -c $< -o $@ $(CFLAGS)
+
+
+# DYNAMIC LIBS
 
 build/player.so: src/player.c src/board.c
 	$(CC) $(LFLAGS) $^ -o $@ $(CFLAGS) $(GSLFLAGS)
 
-run-game: build/server build/player.so
-	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/server ./build/player.so ./build/player.so
+build/tom.so: src/tom.c src/player.c src/board.c
+	$(CC) $(LFLAGS) $^ -o $@ $(CFLAGS) $(GSLFLAGS)
+
+build/jerry.so: src/jerry.c src/player.c src/board.c
+	$(CC) $(LFLAGS) $^ -o $@ $(CFLAGS) $(GSLFLAGS)
+
+run-game: build/server build/tom.so build/jerry.so
+	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/server ./build/tom.so ./build/jerry.so
