@@ -6,9 +6,9 @@ CC = gcc
 
 .PHONY: build test run_server run_tests install clean
 
-build: build/server
+all: build
 
-test: build/alltests
+# SCRIPTS
 
 run-server: build/server
 	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/server $(ARGS)
@@ -16,12 +16,15 @@ run-server: build/server
 run-tests: build/alltests
 	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/alltests
 
-install: build/server build/alltests build/player.so
+install: build/server build/alltests build/tom.so build/jerry.so
 	cp $^ install
 
 clean:
 	find build install -type f -not -name .keep | xargs rm -rf
 
+build: build/server
+
+test: build/alltests
 
 build/server: build/server.o build/opt.o build/board.o
 	$(CC) $^ -o $@ $(GSLFLAGS) -ldl
@@ -56,9 +59,6 @@ build/dummy.o: tests/dummy.c
 
 
 # DYNAMIC LIBS
-
-build/player.so: src/player.c src/board.c
-	$(CC) $(LFLAGS) $^ -o $@ $(CFLAGS) $(GSLFLAGS)
 
 build/tom.so: src/tom.c src/player.c src/board.c
 	$(CC) $(LFLAGS) $^ -o $@ $(CFLAGS) $(GSLFLAGS)

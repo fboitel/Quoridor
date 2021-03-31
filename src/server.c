@@ -62,13 +62,18 @@ int load_libs(void) {
 
 int is_winning(enum color_t active_player) {
     // TODO : check with board
-    (void) active_player;
+    (void)active_player;
     return 1;
 }
 
 void update(struct graph_t* graph, struct move_t move) {
     if (move.t == WALL)
         add_edges(graph, move.e);
+}
+
+// Compute the next player
+enum color_t get_next_player(enum color_t player) {
+    return 1 - player;
 }
 
 int main(int argc, char* argv[]) {
@@ -119,7 +124,7 @@ int main(int argc, char* argv[]) {
         if (is_winning(active_player))
             game_over = true;
         else
-        active_player = 1 - active_player;
+            active_player = get_next_player(active_player);
     }
     printf("GAME OVER\n");
     printf("%s won\n", active_player == BLACK ? P1_name() : P2_name());
