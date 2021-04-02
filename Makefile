@@ -66,5 +66,8 @@ build/tom.so: src/tom.c src/player.c src/board.c
 build/jerry.so: src/jerry.c src/player.c src/board.c
 	$(CC) $(LFLAGS) $^ -o $@ $(CFLAGS) $(GSLFLAGS)
 
-run-game: build/server build/tom.so build/jerry.so
-	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/server ./build/tom.so ./build/jerry.so
+build/pablo.so: src/pablo.c src/player.c src/board.c
+	$(CC) $(LFLAGS) $^ -o $@ $(CFLAGS) $(GSLFLAGS)
+
+run-game: build/server build/tom.so build/pablo.so
+	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/server ./build/pablo.so ./build/tom.so
