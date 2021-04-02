@@ -56,5 +56,5 @@ void test_player_main(void) {
     TEST(test_get_player_name);
     // TEST(test_play_random);
 
-    printf("%s (%d/%d) --> %s\n\n", __func__, passed, total, passed == total ? "PASSED" : "FAILED");
+    SUMMARY();
 }
