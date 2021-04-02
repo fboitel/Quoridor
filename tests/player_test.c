@@ -24,7 +24,7 @@ static void setup(void) {
 }
 
 static void teardown(void) {
-    graph_free(player.graph);
+    graph_free(board);
     finalize();
 }
 
@@ -43,7 +43,7 @@ void test_initialization(void) {
 void test_get_player_name(void) {
     printf("%s", __func__);
 
-    if(strcmp(get_player_name(), name))
+    if(strcmp(get_player_name(), name) != 0)
         FAIL("Can not get player name");
 }
 
