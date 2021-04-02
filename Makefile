@@ -16,6 +16,10 @@ run-server: build/server
 run-tests: build/alltests
 	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/alltests
 
+run-game: build/server build/tom.so build/pablo.so
+	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/server ./build/pablo.so ./build/tom.so
+
+
 install: build/server build/alltests build/tom.so build/jerry.so
 	cp $^ install
 
@@ -27,47 +31,44 @@ build: build/server
 test: build/alltests
 
 build/server: build/server.o build/opt.o build/board.o
-	$(CC) $^ -o $@ $(GSLFLAGS) -ldl
+	@$(CC) $^ -o $@ $(GSLFLAGS) -ldl
 
 build/alltests: build/tests.o build/player_test.o build/dummy.o build/player.o build/board.o build/opt.o
-	$(CC) $^ -o $@ --coverage $(GSLFLAGS) -ldl
+	@$(CC) $^ -o $@ --coverage $(GSLFLAGS) -ldl
 
 # TSTOBJ
 
 build/tests.o: tests/tests.c
-	$(CC) -c $< -o $@ --coverage $(CFLAGS)
+	@$(CC) -c $< -o $@ --coverage $(CFLAGS)
 
 build/player_test.o: tests/player_test.c
-	$(CC) -c $< -o $@ --coverage $(CFLAGS)
+	@$(CC) -c $< -o $@ --coverage $(CFLAGS)
 
 # OBJ
 
 build/server.o: src/server.c
-	$(CC) -c $< -o $@ $(CFLAGS)
+	@$(CC) -c $< -o $@ $(CFLAGS)
 
 build/opt.o: src/opt.c headers/opt.h
-	$(CC) -c $< -o $@ $(CFLAGS)
+	@$(CC) -c $< -o $@ $(CFLAGS)
 
 build/board.o: src/board.c headers/board.h
-	$(CC) -c $< -o $@ $(CFLAGS)
+	@$(CC) -c $< -o $@ $(CFLAGS)
 
 build/player.o: src/player.c headers/player.h
-	$(CC) -c $< -o $@ $(CFLAGS)
+	@$(CC) -c $< -o $@ $(CFLAGS)
 
 build/dummy.o: tests/dummy.c
-	$(CC) -c $< -o $@ $(CFLAGS)
+	@$(CC) -c $< -o $@ $(CFLAGS)
 
 
 # DYNAMIC LIBS
 
 build/tom.so: src/tom.c src/player.c src/board.c
-	$(CC) $(LFLAGS) $^ -o $@ $(CFLAGS) $(GSLFLAGS)
+	@$(CC) $(LFLAGS) $^ -o $@ $(CFLAGS) $(GSLFLAGS)
 
 build/jerry.so: src/jerry.c src/player.c src/board.c
-	$(CC) $(LFLAGS) $^ -o $@ $(CFLAGS) $(GSLFLAGS)
+	@$(CC) $(LFLAGS) $^ -o $@ $(CFLAGS) $(GSLFLAGS)
 
 build/pablo.so: src/pablo.c src/player.c src/board.c
-	$(CC) $(LFLAGS) $^ -o $@ $(CFLAGS) $(GSLFLAGS)
-
-run-game: build/server build/tom.so build/pablo.so
-	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/server ./build/pablo.so ./build/tom.so
+	@$(CC) $(LFLAGS) $^ -o $@ $(CFLAGS) $(GSLFLAGS)
