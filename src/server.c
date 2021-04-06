@@ -14,11 +14,13 @@
 extern char* player_1_path;
 extern char* player_2_path;
 
+void* P1_lib;
 void (*P1_initialize)(enum color_t id, struct graph_t* graph, size_t num_walls);
 char* (*P1_name)(void);
 struct move_t(*P1_play)(struct move_t previous_move);
 void (*P1_finalize)();
 
+void* P2_lib;
 void (*P2_initialize)(enum color_t id, struct graph_t* graph, size_t num_walls);
 char* (*P2_name)(void);
 struct move_t(*P2_play)(struct move_t previous_move);
@@ -27,7 +29,7 @@ void (*P2_finalize)();
 // Open players libs
 int load_libs(void) {
     // TODO : check fails
-    void* P1_lib = dlopen(player_1_path, RTLD_NOW);
+    P1_lib = dlopen(player_1_path, RTLD_NOW);
     char* error = dlerror();
 
     if (error != NULL) {
@@ -40,7 +42,7 @@ int load_libs(void) {
     P1_play = dlsym(P1_lib, "play");
     P1_finalize = dlsym(P1_lib, "finalize");
 
-    void* P2_lib = dlopen(player_2_path, RTLD_LAZY);
+    P2_lib = dlopen(player_2_path, RTLD_LAZY);
 
     if (error != NULL) {
         fprintf(stderr, "%s\n", error);
@@ -132,6 +134,8 @@ int main(int argc, char* argv[]) {
     P1_finalize();
     P2_finalize();
     graph_free(board);
+    dlclose(P1_lib);
+    dlclose(P2_lib);
 
     return EXIT_SUCCESS;
 }
