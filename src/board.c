@@ -29,6 +29,7 @@ struct graph_t* graph_init(size_t m, enum shape_t shape) {
 void graph_free(struct graph_t* graph) {
     gsl_spmatrix_uint_free(graph->t);
     gsl_spmatrix_uint_free(graph->o);
+    free(graph);
 }
 
 
@@ -85,31 +86,3 @@ size_t get_linked(const struct graph_t* graph, size_t v, size_t vertices[]) {
     }
     return linked;
 }
-
-//// GARBAGE
-/*
-struct graph_t* graph_copy(struct graph_t* graph) {
-    struct graph_t* copy = malloc(sizeof(*copy));
-    copy->num_vertices = graph->num_vertices;
-    copy->t = gsl_spmatrix_alloc(graph->t->size1, graph->t->size2);
-    copy->o = gsl_spmatrix_alloc(graph->o->size1, graph->o->size2);
-    gsl_spmatrix_memcpy(copy->t, graph->t);
-    gsl_spmatrix_memcpy(copy->o, graph->o);
-
-    return copy;
-}
-*/
-
-/*
-// Return the direction of an edge
-int find_direction(struct graph_t* graph, struct edge_t e) {
-    int n = graph->t->size1;
-    int d = e.to - e.fr;
-
-    return
-        d == -1 ? WEST :
-        d == 1 ? EAST :
-        d == -n ? NORTH :
-        d == n ? SOUTH :
-        ERROR_DIRECTION;
-}*/
