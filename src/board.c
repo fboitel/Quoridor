@@ -10,8 +10,8 @@ struct graph_t* square_init(size_t m) {
 
     size_t n = m * m;
     graph->num_vertices = n;
-    graph->t = gsl_spmatrix_alloc(n, n);
-    graph->o = gsl_spmatrix_alloc(2, n);
+    graph->t = gsl_spmatrix_uint_alloc(n, n);
+    graph->o = gsl_spmatrix_uint_alloc(2, n);
 
     return graph;
 }
@@ -27,8 +27,8 @@ struct graph_t* graph_init(size_t m, enum shape_t shape) {
 }
 
 void graph_free(struct graph_t* graph) {
-    gsl_spmatrix_free(graph->t);
-    gsl_spmatrix_free(graph->o);
+    gsl_spmatrix_uint_free(graph->t);
+    gsl_spmatrix_uint_free(graph->o);
 }
 
 
@@ -36,8 +36,8 @@ void graph_free(struct graph_t* graph) {
 void add_edges(struct graph_t* graph, struct edge_t e[]) {
     for (int i = 0; i < 2; i++) {
         if(!is_no_edge(e[i])) {
-        gsl_spmatrix_set(graph->t, e[i].fr, e[i].to, -1);
-        gsl_spmatrix_set(graph->t, e[i].to, e[i].fr, -1);
+        gsl_spmatrix_uint_set(graph->t, e[i].fr, e[i].to, -1);
+        gsl_spmatrix_uint_set(graph->t, e[i].to, e[i].fr, -1);
         }
     }
 }
@@ -60,14 +60,14 @@ int opposite(int d) {
 
 // Check if vertex dest is linked to vertex src (i.e there is an edge between them)
 bool is_linked(const struct graph_t* graph, size_t src, size_t dest) {
-    return gsl_spmatrix_get(graph->t, src, dest) > 0;
+    return gsl_spmatrix_uint_get(graph->t, src, dest) > 0;
 }
 
 // Check if there is an adjacent vertex of v (i.e a vertex linked by an edge) in the direction d
 // Return it if so, else return no_vertex()
 size_t vertex_from_direction(const struct graph_t* graph, size_t v, enum direction_t d) {
     for (size_t i = 0; i < graph->num_vertices; i++) {
-        if (gsl_spmatrix_get(graph->t, v, i) == d)
+        if (gsl_spmatrix_uint_get(graph->t, v, i) == d)
             return i;
     }
     return no_vertex();
