@@ -160,7 +160,6 @@ void display_board(struct graph_t* board, size_t board_size) {
 }
 
 int main(int argc, char* argv[]) {
-
     // Parse arguments
     parse_args(argc, argv);
     printf("Args parsed\n");
