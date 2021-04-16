@@ -12,9 +12,11 @@ char const* get_player_name(void) {
 void initialize(enum color_t id, struct graph_t* graph, size_t num_walls) {
 	player.id = id;
 	player.graph = graph;
+	player.pos = SIZE_MAX; // default value for position
 	player.num_walls = num_walls;
 }
 
+// TODO should be implemented by client
 struct move_t make_first_move() {
 	struct move_t move;
 	move.c = player.id;
