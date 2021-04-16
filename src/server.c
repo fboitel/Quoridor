@@ -232,12 +232,9 @@ int main(int argc, char* argv[]) {
 
         // Check if a player has won
         if (is_winning(board, active_player, last_move)) {
-            printf("Win\n");
             winner = active_player;
             game_over = true;
-        }
-        else {
-            printf("Not win\n");
+        } else {
             active_player = get_next_player(active_player);
         }
     }
