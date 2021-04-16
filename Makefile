@@ -5,7 +5,7 @@ CC = gcc
 
 .PHONY: build test run_server run_tests install clean
 
-all: build
+all: build test
 
 # SCRIPTS
 
@@ -33,7 +33,7 @@ build/server: build/server.o build/opt.o build/board.o
 	$(CC) $^ -o $@ $(GSLFLAGS) -ldl
 
 build/alltests: build/tests.o build/player_test.o build/dummy.o build/player.o build/board.o build/opt.o
-	$(CC) $^ -o $@ --coverage $(GSLFLAGS) -ldl
+	$(CC) $^ -o $@  --coverage $(GSLFLAGS) -ldl
 
 # TSTOBJ
 
