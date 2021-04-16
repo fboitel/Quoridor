@@ -14,49 +14,52 @@
 extern char *player_1_path;
 extern char *player_2_path;
 
+void *P1_lib;
 void (*P1_initialize)(enum color_t id, struct graph_t *graph, size_t num_walls);
 char *(*P1_name)(void);
 struct move_t (*P1_play)(struct move_t previous_move);
 void (*P1_finalize)();
 
+void *P2_lib;
 void (*P2_initialize)(enum color_t id, struct graph_t *graph, size_t num_walls);
 char *(*P2_name)(void);
 struct move_t (*P2_play)(struct move_t previous_move);
+
 void (*P2_finalize)();
 
 // Open players libs
 int load_libs(void) {
-  // TODO : check fails
-  void *P1_lib = dlopen(player_1_path, RTLD_NOW);
-  char *error = dlerror();
+    // TODO : check fails
+    P1_lib = dlopen(player_1_path, RTLD_NOW);
+    char* error = dlerror();
 
-  if (error != NULL) {
-    fprintf(stderr, "%s\n", error);
-    exit(EXIT_FAILURE);
-  }
+    if (error != NULL) {
+        fprintf(stderr, "%s\n", error);
+        exit(EXIT_FAILURE);
+    }
 
-  P1_initialize = dlsym(P1_lib, "initialize");
-  P1_name = dlsym(P1_lib, "get_player_name");
-  P1_play = dlsym(P1_lib, "play");
-  P1_finalize = dlsym(P1_lib, "finalize");
+    P1_initialize = dlsym(P1_lib, "initialize");
+    P1_name = dlsym(P1_lib, "get_player_name");
+    P1_play = dlsym(P1_lib, "play");
+    P1_finalize = dlsym(P1_lib, "finalize");
 
-  void *P2_lib = dlopen(player_2_path, RTLD_LAZY);
+    P2_lib = dlopen(player_2_path, RTLD_LAZY);
 
-  if (error != NULL) {
-    fprintf(stderr, "%s\n", error);
-    exit(EXIT_FAILURE);
-  }
-  if (P1_lib == NULL) {
-    printf("Path to player's 2 library is unreachable.\n");
-    exit(EXIT_FAILURE);
-  }
+    if (error != NULL) {
+        fprintf(stderr, "%s\n", error);
+        exit(EXIT_FAILURE);
+    }
+    if (P1_lib == NULL) {
+        printf("Path to player's 2 library is unreachable.\n");
+        exit(EXIT_FAILURE);
+    }
 
-  P2_initialize = dlsym(P2_lib, "initialize");
-  P2_name = dlsym(P2_lib, "get_player_name");
-  P2_play = dlsym(P2_lib, "play");
-  P2_finalize = dlsym(P2_lib, "finalize");
+    P2_initialize = dlsym(P2_lib, "initialize");
+    P2_name = dlsym(P2_lib, "get_player_name");
+    P2_play = dlsym(P2_lib, "play");
+    P2_finalize = dlsym(P2_lib, "finalize");
 
-  return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }
 
 int is_winning(enum color_t active_player) {

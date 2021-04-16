@@ -32,7 +32,7 @@ void release(struct graph_t *graph, size_t weight[], size_t pos){
 size_t shorter(struct graph_t *graph, size_t weight[], enum color_t color, size_t n){
     size_t min = n*n*n;
     for (size_t i = 0; i < n; i++)
-        if (gsl_spmatrix_get(graph->o, color, i) == 1 && weight[i] < min)
+        if (gsl_spmatrix_uint_get(graph->o, color, i) == 1 && weight[i] < min)
             min = weight[i];
     return min;
 }
@@ -76,13 +76,13 @@ int get_possible_walls(struct graph_t *graph, struct edge_t posswall[MAX_POSSIBL
 
 //Put a wall on the graph
 void put_wall(struct graph_t *graph, struct edge_t wall[2]){
-    gsl_spmatrix_set(graph->t, wall[0].fr, wall[0].to, 0);
-    gsl_spmatrix_set(graph->t, wall[1].fr, wall[1].to, 0);
+    gsl_spmatrix_uint_set(graph->t, wall[0].fr, wall[0].to, 0);
+    gsl_spmatrix_uint_set(graph->t, wall[1].fr, wall[1].to, 0);
 }
 
 void remove_wall(struct graph_t *graph, struct edge_t wall[2], enum direction_t dir){
-    gsl_spmatrix_set(graph->t, wall[0].fr, wall[0].to, dir);
-    gsl_spmatrix_set(graph->t, wall[1].fr, wall[1].to, dir);
+    gsl_spmatrix_uint_set(graph->t, wall[0].fr, wall[0].to, dir);
+    gsl_spmatrix_uint_set(graph->t, wall[1].fr, wall[1].to, dir);
 }
 
 //Returns the best place to put a wall in order to rretarder the oponent
@@ -90,7 +90,7 @@ size_t get_the_better_wall_id(struct graph_t *graph, struct edge_t posswall[MAX_
     size_t dist = get_distance(graph, pos, color);
     size_t wall_id = IMPOSSIBLE_ID;
     for (size_t i = 0; i < nb_wall; i++){
-        enum direction_t dir = gsl_spmatrix_get(graph->t, posswall[i][0].fr, posswall[i][0].to);
+        enum direction_t dir = gsl_spmatrix_uint_get(graph->t, posswall[i][0].fr, posswall[i][0].to);
         put_wall(graph, posswall[i]);
         size_t new_dist = get_distance(graph, pos, color);
         if (new_dist < dist){
