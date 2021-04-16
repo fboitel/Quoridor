@@ -29,6 +29,8 @@ struct move_t play(struct move_t previous_move) {
         // Decrease the wall counter if the player move is to put one
         player.num_walls -= (move.t == WALL);
     }
+    printf("\n\nmove de %d : \nsommet : %ld\nwalls : (%ld, %ld) (%ld, %ld)\nmove type : %d\n\n\n", move.c, move.m, 
+            move.e[0].fr, move.e[0].to, move.e[1].fr, move.e[1].to, move.t);
     return move;
 }
 

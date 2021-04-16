@@ -241,31 +241,12 @@ int main(int argc, char* argv[]) {
             active_player = get_next_player(active_player);
         }
     }
-    printf("\n");
-  }
+    printf("GAME OVER\n");
+    printf("%s won\n", active_player == BLACK ? P1_name() : P2_name());
 
-  display_board(board, m);  
+    P1_finalize();
+    P2_finalize();
+    graph_free(board);
 
-  // Game loop
-  bool game_over = false;
-  while (!game_over) {
-    // Play
-    last_move =
-        active_player == BLACK ? P1_play(last_move) : P2_play(last_move);
-    // Update the graph if a player has put a wall
-    update(board, last_move);
-    // Check if a player has won
-    if (is_winning(active_player))
-      game_over = true;
-    else
-      active_player = get_next_player(active_player);
-  }
-  printf("GAME OVER\n");
-  printf("%s won\n", active_player == BLACK ? P1_name() : P2_name());
-
-  P1_finalize();
-  P2_finalize();
-  graph_free(board);
-
-  return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }

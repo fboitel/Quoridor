@@ -130,11 +130,13 @@ struct move_t strat(struct graph_t* graph, size_t v, struct move_t last_move){
         move.e[0].to = posswall[id_wall][0].to;
         move.e[1].fr = posswall[id_wall][1].fr;
         move.e[1].to = posswall[id_wall][1].to;
-        move.t = WALL;
+        move.t = 14;
     }
     else {//Move forward
         move.m = move_forward(graph, v, last_move);
-        move.t = MOVE;       
+        move.e[0] = no_edge();
+        move.e[1] = no_edge();
+        move.t = 55;       
     }
     move.c = 1 - last_move.c;
     return move;
