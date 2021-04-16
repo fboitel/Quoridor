@@ -3,13 +3,10 @@
 #include "move.h"
 #include "opt.h"
 #include <string.h>
-#include <dlfcn.h>          // to use dynamic libs
-#include <gsl/gsl_matrix.h> // for matrix
-#include <gsl/gsl_matrix_double.h>
+#include <dlfcn.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>   // for random
-#include <unistd.h> // to check file existence
+#include <time.h>
 
 extern char* player_1_path;
 extern char* player_2_path;
@@ -130,7 +127,7 @@ void display_board(struct graph_t* board, size_t board_size) {
         printf("0");
 
         if (i + 1 < board_size * board_size) {
-            int matrix_state_1 = gsl_spmatrix_uint_get(board->t, i, i + 1);
+            unsigned int matrix_state_1 = gsl_spmatrix_uint_get(board->t, i, i + 1);
             if (matrix_state_1 == 4) {
                 printf(" - ");
             }
@@ -140,7 +137,7 @@ void display_board(struct graph_t* board, size_t board_size) {
         }
 
         if (i + board_size < board_size * board_size) {
-            int matrix_state_2 = gsl_spmatrix_uint_get(board->t, i, i + board_size);
+            unsigned int matrix_state_2 = gsl_spmatrix_uint_get(board->t, i, i + board_size);
             if (matrix_state_2 == 2) {
                 strcat(next_line, "|   ");
             }
@@ -247,6 +244,8 @@ int main(int argc, char* argv[]) {
     P1_finalize();
     P2_finalize();
     graph_free(board);
+	dlclose(P1_lib);
+	dlclose(P2_lib);
 
     return EXIT_SUCCESS;
 }
