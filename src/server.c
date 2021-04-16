@@ -112,13 +112,13 @@ bool check(struct move_t mv, struct graph_t* board, enum color_t player) {
 }
 
 void display_board(struct graph_t* board, size_t board_size, size_t position_player_1, size_t position_player_2) {
-/*
- 5 = wall on east + next line
- 6 = wall on east
+	/*
+	 5 = wall on east + next line
+	 6 = wall on east
 
- 7 = wall on south + south right
- 8 = wall on south
-*/
+	 7 = wall on south + south right
+	 8 = wall on south
+	*/
 
 	// care about out of tab
 	char next_line[100] = "";
@@ -236,18 +236,17 @@ int main(int argc, char* argv[]) {
 							   .e = {no_edge(), no_edge()},
 							   .t = NO_TYPE };
 
+	/*
 	// display adj matrix
 	for (size_t i = 0; i < m * m; ++i) {
 		for (size_t j = 0; j < m * m; ++j) {
 			printf("% d ", gsl_spmatrix_uint_get(board->t, i, j));
 		}
 		printf("\n");
-	}
+	}*/
 
-	size_t position_player_1 = 0;
-	size_t position_player_2 = 0;
-
-	display_board(board, m, position_player_1, position_player_2);
+	size_t position_player_1 = -1;
+	size_t position_player_2 = -1;
 
 	// Game loop
 	bool game_over = false;
@@ -271,10 +270,21 @@ int main(int argc, char* argv[]) {
 		if (last_move.t == MOVE) {
 			if (active_player == BLACK) {
 				position_player_1 = last_move.m;
-			} else {
+			}
+			else {
 				position_player_2 = last_move.m;
 			}
 		}
+		/* TODO: update display
+		if (last_move.t == WALL) {
+			for (int i = 0; i < 2; i++) {
+				if (!is_no_edge(last_move.e[i])) {
+					size_t first_node = last_move.e[i].fr;
+					size_t second_node = last_move.e[i].to;
+					gsl_spmatrix_uint_set(board->t, i, j, )
+				}
+			}
+		}*/
 		display_board(board, m, position_player_1, position_player_2);
 
 		// Check if a player has won
@@ -290,9 +300,9 @@ int main(int argc, char* argv[]) {
 	printf("GAME OVER\n");
 	printf("%s won\n", winner == BLACK ? P1_name() : P2_name());
 
-    P1_finalize();
-    P2_finalize();
-    graph_free(board);
+	P1_finalize();
+	P2_finalize();
+	graph_free(board);
 	dlclose(P1_lib);
 	dlclose(P2_lib);
 
