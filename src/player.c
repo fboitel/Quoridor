@@ -52,7 +52,7 @@ struct move_t play(struct move_t previous_move) {
 	if (move.t == MOVE) {
 		player.pos = move.m;
 	} else {
-		player.num_walls--;
+		--player.num_walls;
 	}
 
 	printf("%s move to %zu\n", name, move.m);
