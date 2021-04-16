@@ -19,7 +19,7 @@ run-game: build/server build/tom.so build/pablo.so
 	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/server ./build/pablo.so ./build/tom.so
 
 
-install: build/server build/alltests build/tom.so build/jerry.so
+install: build/server build/alltests build/tom.so build/jerry.so build/pablo.so
 	cp $^ install
 
 clean:
