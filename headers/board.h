@@ -26,10 +26,10 @@ static inline bool is_no_wall(const struct edge_t wall[]) {
     return is_no_edge(wall[0]) && is_no_edge(wall[1]);
 }
 
-
 // Check if there is an adjacent vertex of v (i.e a vertex linked by an edge) in the direction d
 // Return it if so, else return no_vertex()
 size_t vertex_from_direction(const struct graph_t* graph, size_t v, enum direction_t d);
+
 // Check if vertex dest is linked to vertex src (i.e there is an edge between them)
 bool is_linked(const struct graph_t* graph, size_t src, size_t dest);
 
