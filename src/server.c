@@ -44,6 +44,7 @@ int load_libs(void) {
   P1_finalize = dlsym(P1_lib, "finalize");
 
   P2_lib = dlopen(player_2_path, RTLD_LAZY);
+  error = dlerror();
 
   if (error != NULL) {
     fprintf(stderr, "%s\n", error);
