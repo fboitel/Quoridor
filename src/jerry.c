@@ -7,7 +7,10 @@ char* name = "Jerry";
 // Move to the closest vertex to the finish
 size_t move_forward(struct graph_t* graph, size_t v, struct move_t last_move) {
     size_t linked[MAX_DIRECTION];
-    get_linked(graph, v, linked);
+    size_t num = get_linked(graph, v, linked);
+
+    if(num == 0)
+        fprintf(stderr, "ERROR: Player is blocked\n");
 
     // TODO get the closest to the finish
     return
