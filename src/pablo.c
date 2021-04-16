@@ -6,7 +6,7 @@
 #define IMPOSSIBLE_ID 10000
 char *name = "Pablo";
 
-//Pablo always does everithing possible to lengthen the path of his oponents 
+//Pablo always does everything possible to lengthen the path of his opponents
 
 //Initialise the parents and weights arrays
 void init_w_arrays(size_t weight[], size_t pos, size_t length){
