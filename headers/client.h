@@ -9,7 +9,7 @@ struct player_t {
     enum color_t id;
     struct graph_t* graph;
     size_t pos;          // Position
-    size_t num_walls; // Numbers of wall to place
+    size_t num_walls;    // Numbers of wall to place
 };
 
 // Return a move based on the client strategy

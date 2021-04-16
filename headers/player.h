@@ -4,7 +4,7 @@
 #include "graph.h"
 #include "move.h"
 
-/* Access to player informations
+/* Access to player information
  * RETURNS:
  * - the player name as an [a-zA-Z0-9 -_]* string
  */

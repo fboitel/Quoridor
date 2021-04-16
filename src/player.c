@@ -1,7 +1,6 @@
 #include "player.h"
 #include "client.h"
 #include "board.h"
-#include "debug.h"
 
 struct player_t player;
 extern char* name;
@@ -34,5 +33,5 @@ struct move_t play(struct move_t previous_move) {
 }
 
 void finalize(void) {
-    // graph_free(player.graph);
+    graph_free(player.graph);
 }

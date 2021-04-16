@@ -24,7 +24,6 @@ static void setup(void) {
 }
 
 static void teardown(void) {
-    graph_free(board);
     finalize();
 }
 

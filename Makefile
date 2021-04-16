@@ -80,5 +80,3 @@ build/jerry.so: build/jerry.o build/player.o build/board.o
 
 build/pablo.so: build/pablo.o build/player.o build/board.o
 	$(CC) -shared $^ -o $@ $(CFLAGS) $(GSLFLAGS)
-
-
