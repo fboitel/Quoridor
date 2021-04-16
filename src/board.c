@@ -44,16 +44,14 @@ struct graph_t *graph_init(size_t m, enum shape_t shape) {
   default:
     return square_init(m);
   }
+}
+
 void graph_free(struct graph_t* graph) {
     gsl_spmatrix_uint_free(graph->t);
     gsl_spmatrix_uint_free(graph->o);
     free(graph);
 }
 
-void graph_free(struct graph_t *graph) {
-  gsl_spmatrix_uint_free(graph->t);
-  gsl_spmatrix_uint_free(graph->o);
-}
 
 // Graph operations
 void add_edges(struct graph_t *graph, struct edge_t e[]) {
