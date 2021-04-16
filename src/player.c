@@ -8,40 +8,54 @@ extern char* name;
 static bool first_move = true;
 
 char const* get_player_name(void) {
-    return name;
+	return name;
 }
 
 void initialize(enum color_t id, struct graph_t* graph, size_t num_walls) {
-    player.id = id;
-    player.graph = graph;
+	player.id = id;
+	player.graph = graph;
 
-    for (size_t i = 0; i < graph->o->size2; i++) {
-        if (gsl_spmatrix_uint_get(graph->o, id, i) == 1) {
-            player.pos = i;
-            break;
-        }
-    }
-    player.num_walls = num_walls;
+	// Initial positions
+	// BLACK begin at top left and WHITE at bottom right
+	if (id == BLACK) {
+		for (size_t i = 0; i < graph->o->size2; i++) {
+			if (gsl_spmatrix_uint_get(graph->o, id, i) == 1) {
+				player.pos = i;
+				break;
+			}
+		}
+	}
+	else {
+		for (size_t i = graph->o->size2 - 1; i >= 0; i--) {
+			if (gsl_spmatrix_uint_get(graph->o, id, i) == 1) {
+				player.pos = i;
+				break;
+			}
+		}
+		player.num_walls = num_walls;
+	}
 }
 
 struct move_t play(struct move_t previous_move) {
-    struct move_t move;
-    // Initial move
-    if (first_move) {
-        move.c = player.id;
-        move.t = MOVE;
-        move.m = player.pos;
-        first_move = false;
-    }
-    else {
-        move = strat(player.graph, player.pos, previous_move);
-        // Decrease the wall counter if the player move is to put one
-        player.num_walls -= (move.t == WALL);
-    }
-    printf("%s move to %zu\n", get_player_name(), move.m);
-    return move;
+	struct move_t move;
+	// Initial move
+	if (first_move) {
+		move.c = player.id;
+		move.t = MOVE;
+		move.m = player.pos;
+		first_move = false;
+	}
+	else {
+		move = strat(player.graph, player.pos, previous_move);
+		if (move.t == MOVE)
+			player.pos = move.m;
+		else
+			player.num_walls--;
+	}
+	printf("%s move to %zu\n", get_player_name(), move.m);
+	return move;
 }
 
 void finalize(void) {
-    graph_free(player.graph);
+	graph_free(player.graph);
 }
