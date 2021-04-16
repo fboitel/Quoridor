@@ -1,11 +1,10 @@
-/.idea/
-
 /build/*
 !/build/.keep
 
 /install/*
 !/install/.keep
 
-/gsl
-
-/.vscode
+/.idea/
+/.vscode/
+/gsl/
+/vgcore.*
