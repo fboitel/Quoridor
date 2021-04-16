@@ -1,6 +1,6 @@
 GSL_PATH ?= gsl
-CFLAGS = --std=c99 -Wall -Wextra -Iheaders -I$(GSL_PATH)/include
-GSLFLAGS = -L$(GSL_PATH)/lib -g -lgsl -lgslcblas
+CFLAGS = --std=c99 -Wall -Wextra -g -Iheaders -I$(GSL_PATH)/include
+LFLAGS = -L$(GSL_PATH)/lib -lgsl -lgslcblas -ldl -lm
 CC = gcc
 
 .PHONY: build test run_server run_tests install clean
@@ -30,10 +30,10 @@ build: build/server build/tom.so build/jerry.so build/pablo.so
 test: build/alltests
 
 build/server: build/server.o build/opt.o build/board.o
-	$(CC) $^ -o $@ $(GSLFLAGS) -ldl
+	$(CC) $^ -o $@ $(LFLAGS)
 
 build/alltests: build/tests.o build/player_test.o build/dummy.o build/player.o build/board.o build/opt.o
-	$(CC) $^ -o $@  --coverage $(GSLFLAGS) -ldl
+	$(CC) $^ -o $@ --coverage $(LFLAGS)
 
 # TSTOBJ
 
@@ -73,10 +73,10 @@ build/pablo.o: src/pablo.c
 # DYNAMIC LIBS
 
 build/tom.so: build/tom.o build/player.o build/board.o
-	$(CC) -shared $^ -o $@ $(CFLAGS) $(GSLFLAGS)
+	$(CC) -shared $^ -o $@ $(LFLAGS)
 
 build/jerry.so: build/jerry.o build/player.o build/board.o
-	$(CC) -shared $^ -o $@ $(CFLAGS) $(GSLFLAGS)
+	$(CC) -shared $^ -o $@ $(LFLAGS)
 
 build/pablo.so: build/pablo.o build/player.o build/board.o
-	$(CC) -shared $^ -o $@ $(CFLAGS) $(GSLFLAGS)
+	$(CC) -shared $^ -o $@ $(LFLAGS)

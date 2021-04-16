@@ -7,7 +7,6 @@
 #include "math.h"
 #include <stdio.h>
 #include <string.h>
-#include <assert.h>
 
 extern struct player_t player;
 extern char *name;
@@ -20,7 +19,7 @@ static void setup(void) {
     n = 3;
     board = graph_init(n, SQUARE);
     edges = n * n * (n - 1) * (n - 1) * 2;
-    initialize(BLACK, board, ceil(edges / 15));
+    initialize(BLACK, board, ceil(edges / 15.0));
 }
 
 static void teardown(void) {
@@ -33,7 +32,7 @@ void test_initialization(void) {
     if (player.id != BLACK)
         FAIL("Id initialization failed");
 
-    if (player.num_walls != ceil(edges / 15))
+    if (player.num_walls != ceil(edges / 15.0))
         FAIL("Wrong number of walls initialized");
 
     // TODO Check player.graph
