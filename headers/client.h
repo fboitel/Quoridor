@@ -5,7 +5,6 @@
 #include "move.h"
 
 struct player_t {
-    char* name;
     enum color_t id;
     struct graph_t* graph;
     size_t pos;          // Position

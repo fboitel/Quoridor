@@ -2,6 +2,7 @@
 #include "graph.h"
 #include "move.h"
 #include "opt.h"
+<<<<<<< HEAD
 #include <dlfcn.h>          // to use dynamic libs
 #include <gsl/gsl_matrix.h> // for matrix
 #include <gsl/gsl_matrix_double.h>
@@ -10,6 +11,13 @@
 #include <string.h>
 #include <time.h>   // for random
 #include <unistd.h> // to check file existence
+=======
+#include <string.h>
+#include <dlfcn.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+>>>>>>> 08d4c80d9b00b0f8501e14dfe88c4453213e5c01
 
 extern char* player_1_path;
 extern char* player_2_path;
@@ -287,16 +295,17 @@ int main(int argc, char* argv[]) {
 			game_over = true;
 		}
 		else {
-			printf("Not win\n");
 			active_player = get_next_player(active_player);
 		}
 	}
 	printf("GAME OVER\n");
 	printf("%s won\n", winner == BLACK ? P1_name() : P2_name());
 
-	P1_finalize();
-	// P2_finalize();
-	graph_free(board);
+    P1_finalize();
+    P2_finalize();
+    graph_free(board);
+	dlclose(P1_lib);
+	dlclose(P2_lib);
 
 	return EXIT_SUCCESS;
 }
