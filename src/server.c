@@ -96,9 +96,9 @@ bool check(struct move_t mv, struct graph_t* board, enum color_t player) {
     if (mv.t == WALL) {
         // Check if edges are inside the board
         for (size_t i = 0; i < 2; i++) {
-            if (mv.e[i].fr < 0 || mv.e[i].fr >= board->t->size1)
+            if (mv.e[i].fr >= board->t->size1)
                 return false;
-            if (mv.e[i].to < 0 || mv.e[i].to >= board->t->size1)
+            if (mv.e[i].to >= board->t->size1)
                 return false;
         }
         // Check if edges are aligned
@@ -113,7 +113,7 @@ bool check(struct move_t mv, struct graph_t* board, enum color_t player) {
     return true;
 }
 
-void display_board(struct graph_t* board, int board_size) {
+void display_board(struct graph_t* board, size_t board_size) {
     // display board
 
     // care about out of tab
@@ -286,7 +286,7 @@ int main(int argc, char* argv[]) {
         }
     }
     printf("GAME OVER\n");
-    printf("%s won\n", active_player == BLACK ? P1_name() : P2_name());
+    printf("%s won\n", winner == BLACK ? P1_name() : P2_name());
 
     P1_finalize();
     P2_finalize();
