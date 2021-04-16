@@ -39,7 +39,31 @@ struct move_t make_first_move() {
 	return move;
 }
 
+void update_graph(struct move_t move, bool own_turn) {
+	switch (move.t) {
+		case MOVE:
+			if (own_turn) {
+				player.pos = move.m;
+			} else {
+				player.opponent_pos = move.m;
+			}
+			break;
+
+		case WALL:
+			add_edges(player.graph, move.e);
+			if (own_turn) {
+				--player.num_walls;
+			}
+			break;
+
+		case NO_TYPE:
+			break;
+	}
+}
+
 struct move_t play(struct move_t previous_move) {
+	update_graph(previous_move, false);
+
 	static bool first_move = true;
 	struct move_t move;
 	if (first_move) {
@@ -49,11 +73,7 @@ struct move_t play(struct move_t previous_move) {
 		move = strat(player.graph, player.pos, previous_move);
 	}
 
-	if (move.t == MOVE) {
-		player.pos = move.m;
-	} else {
-		--player.num_walls;
-	}
+	update_graph(previous_move, true);
 
 	printf("%s move to %zu\n", name, move.m);
 	return move;
