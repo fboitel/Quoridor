@@ -76,15 +76,15 @@ void update(struct graph_t *graph, struct move_t move) {
 // Compute the next player
 enum color_t get_next_player(enum color_t player) { return 1 - player; }
 
-void display_board(struct graph_t *board) {
+void display_board(struct graph_t *board, int board_size) {
   // display board
 
   // care about out of tab
   char next_line[100] = "";
 
-  for (size_t i = 0; i < m * m; ++i) {
+  for (size_t i = 0; i < board_size * board_size; ++i) {
 
-    if (i % m == 0) {
+    if (i % board_size == 0) {
       printf("\n");
       printf("%s", next_line);
       printf("\n");
@@ -93,7 +93,7 @@ void display_board(struct graph_t *board) {
 
     printf("0");
 
-    if (i + 1 < m * m) {
+    if (i + 1 < board_size * board_size) {
       int matrix_state_1 = gsl_spmatrix_uint_get(board->t, i, i + 1);
       if (matrix_state_1 == 4) {
         printf(" - ");
@@ -102,8 +102,8 @@ void display_board(struct graph_t *board) {
       }
     }
 
-    if (i + m < m * m) {
-      int matrix_state_2 = gsl_spmatrix_uint_get(board->t, i, i + m);
+    if (i + board_size < board_size * board_size) {
+      int matrix_state_2 = gsl_spmatrix_uint_get(board->t, i, i + board_size);
       if (matrix_state_2 == 2) {
         strcat(next_line, "|   ");
       } else {
@@ -125,9 +125,12 @@ void display_board(struct graph_t *board) {
 }
 
 int main(int argc, char *argv[]) {
+
+  // Parse arguments
   parse_args(argc, argv);
   printf("Args parsed\n");
 
+  // Init random generator
   srand(time(NULL));
 
   // Load players
@@ -166,6 +169,8 @@ int main(int argc, char *argv[]) {
     }
     printf("\n");
   }
+
+  display_board(board, m);  
 
   // Game loop
   bool game_over = false;
