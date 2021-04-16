@@ -2,12 +2,12 @@
 #include "graph.h"
 #include "move.h"
 #include "opt.h"
-#include "string.h"
 #include <dlfcn.h>          // to use dynamic libs
 #include <gsl/gsl_matrix.h> // for matrix
 #include <gsl/gsl_matrix_double.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>   // for random
 #include <unistd.h> // to check file existence
 
@@ -49,6 +49,7 @@ int load_libs(void) {
     fprintf(stderr, "%s\n", error);
     exit(EXIT_FAILURE);
   }
+
   if (P1_lib == NULL) {
     printf("Path to player's 2 library is unreachable.\n");
     exit(EXIT_FAILURE);
@@ -92,22 +93,46 @@ void display_board(struct graph_t *board, int board_size) {
     }
 
     printf("0");
-
+    int matrix_state_1 = 0;
+    int matrix_state_2 = 0;
     if (i + 1 < board_size * board_size) {
-      int matrix_state_1 = gsl_spmatrix_uint_get(board->t, i, i + 1);
-      if (matrix_state_1 == 4) {
-        printf(" - ");
-      } else {
-        printf("   ");
-      }
+      matrix_state_1 = gsl_spmatrix_uint_get(board->t, i, i + board_size);
+    }
+
+    if (i + board_size < board_size * board_size) {
+      matrix_state_2 = gsl_spmatrix_uint_get(board->t, i, i + board_size);
     }
 
     if (i + board_size < board_size * board_size) {
       int matrix_state_2 = gsl_spmatrix_uint_get(board->t, i, i + board_size);
       if (matrix_state_2 == 2) {
-        strcat(next_line, "|   ");
+        strcat(next_line, "| ");
+      } else if (matrix_state_2 == 7) {
+        strcat(next_line, "---");
+      } else if (matrix_state_2 == 8) {
+        strcat(next_line, "-");
       } else {
-        printf("    ");
+        strcat(next_line, "  ");
+      }
+    }
+
+    if (i + 1 < board_size * board_size) {
+      // get data from matrix
+      int matrix_state_1 = gsl_spmatrix_uint_get(board->t, i, i + 1);
+
+      // if connected to east node
+      if (matrix_state_1 == 4) {
+        printf(" - ");
+        strcat(next_line, "  ");
+      } else if (matrix_state_1 == 5) { // if there is a wall with east node
+        printf(" | ");
+        strcat(next_line, "| ");
+      } else if (matrix_state_1 == 6) { // if there is a wall with east node
+        printf(" | ");
+        strcat(next_line, "  ");
+      } else { // if there are no connection with east node
+        printf("   ");
+        strcat(next_line, "  ");
       }
     }
   }
@@ -139,7 +164,7 @@ int main(int argc, char *argv[]) {
 
   // Initialize a new board of size m and shape t
   // TODO : init a new board depending on parameters
-  size_t m = 4;
+  size_t m = 2;
   struct graph_t *board = graph_init(m, SQUARE);
   printf("Board created\n");
 
@@ -162,6 +187,11 @@ int main(int argc, char *argv[]) {
                              .e = {no_edge(), no_edge()},
                              .t = NO_TYPE};
 
+  // 5 = blocked east + down, 6 = blocked est, 7 = blocked down + right, 8 =
+  // blocked down
+  gsl_spmatrix_uint_set(board->t, 0, 2, 7);
+  gsl_spmatrix_uint_set(board->t, 1, 3, 8);
+
   // display adj matrix
   for (size_t i = 0; i < m * m; ++i) {
     for (size_t j = 0; j < m * m; ++j) {
@@ -170,7 +200,7 @@ int main(int argc, char *argv[]) {
     printf("\n");
   }
 
-  display_board(board, m);  
+  display_board(board, m);
 
   // Game loop
   bool game_over = false;
