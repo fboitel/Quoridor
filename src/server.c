@@ -140,7 +140,9 @@ int main(int argc, char *argv[]) {
   // Initialize a new board of size m and shape t
   // TODO : init a new board depending on parameters
   size_t m = 4;
-  struct graph_t *board = graph_init(m, SQUARE);
+  struct graph_t *board      = graph_init(m, SQUARE);
+  struct graph_t *boardCopy1 = graph_init(m, SQUARE);
+  struct graph_t *boardCopy2 = graph_init(m, SQUARE);
   printf("Board created\n");
 
   // TODO : compute num_walls depending on size and board shape
@@ -150,8 +152,8 @@ int main(int argc, char *argv[]) {
   enum color_t active_player = rand() % 2;
 
   // init players
-  P1_initialize(BLACK, board, num_walls);
-  P2_initialize(WHITE, board, num_walls);
+  P1_initialize(BLACK, boardCopy1, num_walls);
+  P2_initialize(WHITE, boardCopy2, num_walls);
   printf("Players initialized\n");
   printf("\n");
   printf("%s vs %s\n", P1_name(), P2_name());
@@ -189,8 +191,8 @@ int main(int argc, char *argv[]) {
   printf("GAME OVER\n");
   printf("%s won\n", active_player == BLACK ? P1_name() : P2_name());
 
-  // P1_finalize();
-  // P2_finalize();
+  P1_finalize();
+  P2_finalize();
   graph_free(board);
 
   return EXIT_SUCCESS;
