@@ -26,7 +26,7 @@ void initialize(enum color_t id, struct graph_t* graph, size_t num_walls) {
 		}
 	}
 	else {
-		for (size_t i = graph->o->size2 - 1; i >= 0; i--) {
+		for (size_t i = graph->o->size2 - 1; i + 1 > 0; i--) {
 			if (gsl_spmatrix_uint_get(graph->o, id, i) == 1) {
 				player.pos = i;
 				break;
