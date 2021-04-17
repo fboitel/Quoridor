@@ -3,7 +3,7 @@
 #include "move.h"
 
 #define MAX_POSSIBLE_WALLS 500
-#define MAX_DISTANCE 500000
+//#define MAX_DISTANCE 500000
 #define IMPOSSIBLE_ID 1234500
 char *name = "Pablo";
 
@@ -13,7 +13,7 @@ char *name = "Pablo";
 //Initialise the parents and weights arrays
 void init_w_arrays(size_t weight[], size_t pos, size_t length){
     for (size_t i = 0; i < length; i++){
-        weight[i] = MAX_DISTANCE;
+        weight[i] = 2*length;
     }
     weight[pos] = 0;
 }
@@ -102,12 +102,13 @@ size_t get_the_better_wall_id(struct graph_t *graph, struct edge_t posswall[MAX_
         enum direction_t dir = gsl_spmatrix_uint_get(graph->t, posswall[i][0].fr, posswall[i][0].to);
         put_wall(graph, posswall[i]);
         size_t new_dist = get_distance(graph, pos, color);
-        if (new_dist > dist && new_dist < MAX_DISTANCE){
+        if (new_dist > dist && new_dist < 2*(graph->num_vertices)){
             dist = new_dist;
             wall_id = i;
         }
         remove_wall(graph, posswall[i], dir);
         }
+    printf("(%zu %zu)", 2*(graph->num_vertices) + 5, dist + 5);
     return wall_id;
 }
 
@@ -118,7 +119,7 @@ size_t move_forward(struct graph_t* graph, size_t v, struct move_t last_move) {
     int dir = NO_DIRECTION;
     if(num == 0)
         fprintf(stderr, "ERROR: Player is blocked\n");
-    size_t shortest = MAX_DISTANCE;
+    size_t shortest = 2*(graph->num_vertices);
     for (int i = 1; i < MAX_DIRECTION; i++){
         if (!is_no_vertex(linked[i])){
             size_t dist_tmp = get_distance(graph, linked[i], 1 - last_move.c);

@@ -209,7 +209,7 @@ int main(int argc, char* argv[]) {
 
 	// Initialize a new board of size m and shape t
 	// TODO : init a new board depending on parameters
-	size_t m = 10;
+	size_t m = 5;
 	struct graph_t* board = graph_init(m, SQUARE);
 	struct graph_t* boardCopy1 = graph_init(m, SQUARE);
 	struct graph_t* boardCopy2 = graph_init(m, SQUARE);
