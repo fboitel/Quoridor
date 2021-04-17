@@ -3,7 +3,7 @@
 #include "move.h"
 
 #define MAX_POSSIBLE_WALLS 50
-#define IMPOSSIBLE_ID 10000
+#define IMPOSSIBLE_ID 12345
 char *name = "Pablo";
 
 //Pablo always does everithing possible to lengthen the path of his oponents 
@@ -30,21 +30,32 @@ void release(struct graph_t *graph, size_t weight[], size_t pos){
 
 //Returns the smallest value of the tab if it respects some conditions 
 size_t shorter(struct graph_t *graph, size_t weight[], enum color_t color, size_t n){
+    //printf("########### debut short ##########\n");
     size_t min = n*n*n;
+    //printf("%zu\n", min);
     for (size_t i = 0; i < n; i++)
         if (gsl_spmatrix_uint_get(graph->o, color, i) == 1 && weight[i] < min)
             min = weight[i];
+    //printf("########### fin shorter ##########\n");
     return min;
 }
 
 //Returns the shortest distance between a position on the graph and the target zone using Bellman-Ford algorithm
 size_t get_distance(struct graph_t *graph, size_t pos, enum color_t color){
+    //printf("########### debut get_distance ##########\n");
     size_t weight[graph->num_vertices];
     init_w_arrays(weight, pos, graph->num_vertices);
     for (size_t i = 0; i < graph->num_vertices; i++)
-        for (size_t j = 0; j < graph->num_vertices; j++)
+        for (size_t j = 0; j < graph->num_vertices; j++){
             release(graph, weight, j);
-    return shorter(graph, weight, color, graph->num_vertices);
+            //for (size_t k = 0; k < graph->num_vertices; k++)
+            //    printf("(%zu, %zu) ", k, weight[k]);
+            //printf("\n");
+        }
+    size_t sh = shorter(graph, weight, color, graph->num_vertices);
+    //printf(" plus courte distance : %zu\n", sh);
+    //printf("########### fin get_distance ##########\n");
+    return sh;
 }
 
 //Gather all the place where a wall can be set and returns its number
@@ -87,18 +98,21 @@ void remove_wall(struct graph_t *graph, struct edge_t wall[2], enum direction_t 
 
 //Returns the best place to put a wall in order to rretarder the oponent
 size_t get_the_better_wall_id(struct graph_t *graph, struct edge_t posswall[MAX_POSSIBLE_WALLS][2], size_t nb_wall, size_t pos, enum color_t color){
-    size_t dist = get_distance(graph, pos, color);
+    //printf("########## debut get_the_better_wall #########\n");
+    size_t dist = get_distance(graph, pos, 1 - color);
+    //printf("distance entre le joueur adverse %zu\n", dist);
     size_t wall_id = IMPOSSIBLE_ID;
     for (size_t i = 0; i < nb_wall; i++){
         enum direction_t dir = gsl_spmatrix_uint_get(graph->t, posswall[i][0].fr, posswall[i][0].to);
         put_wall(graph, posswall[i]);
-        size_t new_dist = get_distance(graph, pos, color);
+        size_t new_dist = get_distance(graph, pos, 1 - color);
         if (new_dist < dist){
             dist = new_dist;
             wall_id = i;
         }
         remove_wall(graph, posswall[i], dir);
         }
+    //printf("####### fin de get_the_better_wall ######\n");
     return wall_id;
 }
 
@@ -121,8 +135,11 @@ struct move_t strat(struct graph_t* graph, size_t v, struct move_t last_move){
     struct move_t move;
     struct edge_t posswall[MAX_POSSIBLE_WALLS][2];
     size_t pos = last_move.m;
+    printf("\n\n\nPose de Jerry : %zu\n", pos);
     size_t nb_of_walls = get_possible_walls(graph, posswall);
+    printf("nombre de places possibles pour poser un lur : %zu\n", nb_of_walls);
     size_t id_wall = get_the_better_wall_id(graph , posswall, nb_of_walls, pos, last_move.c);
+    printf("id du lur retenu : %zu\n", id_wall);
     if (id_wall != IMPOSSIBLE_ID){//Put a wall if it's possible
         put_wall(graph, posswall[id_wall]);
         move.m = v;
@@ -130,13 +147,11 @@ struct move_t strat(struct graph_t* graph, size_t v, struct move_t last_move){
         move.e[0].to = posswall[id_wall][0].to;
         move.e[1].fr = posswall[id_wall][1].fr;
         move.e[1].to = posswall[id_wall][1].to;
-        move.t = 14;
+        move.t = WALL;
     }
     else {//Move forward
         move.m = move_forward(graph, v, last_move);
-        move.e[0] = no_edge();
-        move.e[1] = no_edge();
-        move.t = 55;       
+        move.t = MOVE;       
     }
     move.c = 1 - last_move.c;
     return move;
