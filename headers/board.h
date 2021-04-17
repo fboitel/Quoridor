@@ -44,4 +44,7 @@ void graph_free(struct graph_t* graph);
 // Add edges in the graph
 void add_edges(struct graph_t* graph, struct edge_t e[]);
 
+
+int opposite(int d);
+
 #endif // _QUOR_BOARD_H_
