@@ -5,25 +5,16 @@
 #include "graph.h"
 #include <stdbool.h>
 
-enum direction_t { NO_DIRECTION, NORTH, SOUTH, WEST, EAST, MAX_DIRECTION};
+enum direction_t { NO_DIRECTION, NORTH, SOUTH, WEST, EAST, MAX_DIRECTION };
+
+enum orientation_t { HORIZONTAL, VERTICAL, ERROR_ORIENTATION = -1 };
 
 static inline size_t no_vertex(void) {
-    return SIZE_MAX;
+	return SIZE_MAX;
 }
 
 static inline bool is_no_vertex(const size_t v) {
-    return v == no_vertex();
-}
-
-struct wall_t { struct edge_t e1, e2; };
-
-// A special wall to tell that we put no wall
-static inline struct wall_t no_wall(void) {
-    return (struct wall_t) { no_edge(), no_edge() };
-}
-
-static inline bool is_no_wall(const struct edge_t wall[]) {
-    return is_no_edge(wall[0]) && is_no_edge(wall[1]);
+	return v == no_vertex();
 }
 
 // Check if there is an adjacent vertex of v (i.e a vertex linked by an edge) in the direction d
@@ -44,7 +35,9 @@ void graph_free(struct graph_t* graph);
 // Add edges in the graph
 void add_edges(struct graph_t* graph, struct edge_t e[]);
 
-
 int opposite(int d);
+
+void display_board(struct graph_t* board, size_t board_size, size_t position_player_1, size_t position_player_2);
+
 
 #endif // _QUOR_BOARD_H_
