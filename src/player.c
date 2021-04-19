@@ -21,6 +21,8 @@ struct move_t make_first_move() {
 	struct move_t move;
 	move.c = player.id;
 	move.t = MOVE;
+	move.e[0] = no_edge();
+	move.e[1] = no_edge();
 
 	int matches = 0;
 	for (size_t i = 0; i < player.graph->o->size2; i++) {
@@ -41,24 +43,39 @@ struct move_t make_first_move() {
 
 void update_graph(struct move_t move, bool own_turn) {
 	switch (move.t) {
-		case MOVE:
-			if (own_turn) {
-				player.pos = move.m;
-			} else {
-				player.opponent_pos = move.m;
-			}
-			break;
+	case MOVE:
+		if (own_turn)
+			player.pos = move.m;
+		else
+			player.opponent_pos = move.m;
+		break;
 
-		case WALL:
-			add_edges(player.graph, move.e);
-			if (own_turn) {
-				--player.num_walls;
-			}
-			break;
+	case WALL:
+		add_edges(player.graph, move.e);
+		if (own_turn)
+			player.num_walls--;
+		break;
 
-		case NO_TYPE:
-			break;
+	case NO_TYPE:
+		break;
 	}
+}
+
+void print_move(struct move_t move) {
+	printf("\n\nMove from %u (%s):\n", move.c, get_player_name());
+	printf("sommet : %zu\n", move.m);
+	printf("walls: ");
+	if (is_no_edge(move.e[0]))
+		printf("(no edge)");
+	else
+		printf("(%zu, %zu)", move.e[0].fr, move.e[0].to);
+	printf(" ");
+	if (is_no_edge(move.e[1]))
+		printf("(no edge)");
+	else
+		printf("(%zu, %zu)", move.e[1].fr, move.e[1].to);
+	printf("\n");
+	printf("move type : %s\n\n\n", move.t == 0 ? "WALL" : "MOVE");
 }
 
 struct move_t play(struct move_t previous_move) {
@@ -69,14 +86,15 @@ struct move_t play(struct move_t previous_move) {
 	if (first_move) {
 		move = make_first_move();
 		first_move = false;
-	} else {
+	}
+	else {
 		move = strat(player.graph, player.pos, previous_move);
 	}
+	// print_move(move);
 
 	update_graph(move, true);
-    printf("\n\nmove de %u (%s)  : \nsommet : %zu\nwalls : (%zu, %zu) (%zu, %zu)\nmove type : %d\n\n\n", move.c, get_player_name(), move.m, 
-            move.e[0].fr, move.e[0].to, move.e[1].fr, move.e[1].to, move.t);
-   	return move;
+
+	return move;
 }
 
 void finalize(void) {

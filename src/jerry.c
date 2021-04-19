@@ -9,15 +9,17 @@ size_t move_forward(struct graph_t* graph, size_t v, struct move_t last_move) {
     size_t linked[MAX_DIRECTION];
     size_t num = get_linked(graph, v, linked);
 
-    if(num == 0)
+    if (num == 0)
         fprintf(stderr, "ERROR: Player is blocked\n");
 
     // TODO get the closest to the finish
+    enum direction_t GOAL = 1 - last_move.c == BLACK ? SOUTH : NORTH;
+
     return
-        !is_no_vertex(linked[NORTH]) && linked[NORTH] != last_move.m ? linked[NORTH] :
+        !is_no_vertex(linked[GOAL]) && linked[GOAL] != last_move.m ? linked[GOAL] :
         !is_no_vertex(linked[WEST]) && linked[WEST] != last_move.m ? linked[WEST] :
         !is_no_vertex(linked[EAST]) && linked[EAST] != last_move.m ? linked[EAST] :
-        !is_no_vertex(linked[SOUTH]) && linked[SOUTH] != last_move.m ? linked[SOUTH] :
+        !is_no_vertex(linked[opposite(GOAL)]) && linked[opposite(GOAL)] != last_move.m ? linked[opposite(GOAL)] :
         no_vertex();
 }
 
@@ -27,6 +29,8 @@ struct move_t strat(struct graph_t* graph, size_t v, struct move_t last_move) {
     move.c = 1 - last_move.c;
     move.t = MOVE;
     move.m = move_forward(graph, v, last_move);
+    move.e[0] = no_edge();
+    move.e[1] = no_edge();
 
     return move;
 }
