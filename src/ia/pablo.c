@@ -57,7 +57,7 @@ size_t get_distance(struct graph_t *graph, size_t pos, enum color_t color) {
 }
 
 //Gather all the place where a wall can be set and returns its number
-int get_possible_walls(struct graph_t *graph, struct edge_t posswall[MAX_POSSIBLE_WALLS][2]) {
+size_t get_possible_walls(struct graph_t *graph, struct edge_t walls[MAX_POSSIBLE_WALLS][2]) {
 	size_t nb_wall = 0;
 	for (size_t i = 0; i < graph->num_vertices; i++) {
 		// To verify if a wall can be put on the south of the vertex i and the vertex on right of it
@@ -65,10 +65,10 @@ int get_possible_walls(struct graph_t *graph, struct edge_t posswall[MAX_POSSIBL
 			if (vertex_from_direction(graph, i, SOUTH) != no_vertex() &&
 			    vertex_from_direction(graph, vertex_from_direction(graph, i, EAST), SOUTH) !=
 			    no_vertex()) {//Add a wall to the list uf the place is free
-				posswall[nb_wall][0].fr = i;
-				posswall[nb_wall][0].to = vertex_from_direction(graph, i, SOUTH);
-				posswall[nb_wall][1].fr = vertex_from_direction(graph, i, EAST);
-				posswall[nb_wall][1].to = vertex_from_direction(graph, vertex_from_direction(graph, i, EAST), SOUTH);
+				walls[nb_wall][0].fr = i;
+				walls[nb_wall][0].to = vertex_from_direction(graph, i, SOUTH);
+				walls[nb_wall][1].fr = vertex_from_direction(graph, i, EAST);
+				walls[nb_wall][1].to = vertex_from_direction(graph, vertex_from_direction(graph, i, EAST), SOUTH);
 				nb_wall++;
 			}
 		}
@@ -77,10 +77,10 @@ int get_possible_walls(struct graph_t *graph, struct edge_t posswall[MAX_POSSIBL
 			if (vertex_from_direction(graph, i, EAST) != no_vertex() &&
 			    vertex_from_direction(graph, vertex_from_direction(graph, i, SOUTH), EAST) !=
 			    no_vertex()) {//Add a wall to the list uf the place is free
-				posswall[nb_wall][0].fr = i;
-				posswall[nb_wall][0].to = vertex_from_direction(graph, i, EAST);
-				posswall[nb_wall][1].fr = vertex_from_direction(graph, i, SOUTH);
-				posswall[nb_wall][1].to = vertex_from_direction(graph, vertex_from_direction(graph, i, SOUTH), EAST);
+				walls[nb_wall][0].fr = i;
+				walls[nb_wall][0].to = vertex_from_direction(graph, i, EAST);
+				walls[nb_wall][1].fr = vertex_from_direction(graph, i, SOUTH);
+				walls[nb_wall][1].to = vertex_from_direction(graph, vertex_from_direction(graph, i, SOUTH), EAST);
 				nb_wall++;
 			}
 		}
@@ -103,7 +103,7 @@ void remove_wall(struct graph_t *graph, struct edge_t wall[2], enum direction_t 
 	gsl_spmatrix_uint_set(graph->t, wall[1].to, wall[1].fr, opposite(dir));
 }
 
-//Returns the best place to put a wall in order to rretarder the oponent
+//Returns the best place to put a wall in order to delay the opponent
 size_t get_the_better_wall_id(struct graph_t *graph, struct edge_t posswall[MAX_POSSIBLE_WALLS][2], size_t nb_wall, size_t pos, enum color_t color) {
 	size_t dist = get_distance(graph, pos, color);
 	size_t wall_id = IMPOSSIBLE_ID;
@@ -122,17 +122,17 @@ size_t get_the_better_wall_id(struct graph_t *graph, struct edge_t posswall[MAX_
 }
 
 //Moves forward
-size_t move_forward(struct graph_t *graph, size_t v, struct move_t last_move) {
+size_t move_forward(struct player_t player) {
 	size_t linked[MAX_DIRECTION];
-	size_t num = get_linked(graph, v, linked);
+	size_t num = get_linked(player.graph, player.pos, linked);
 	int dir = NO_DIRECTION;
 	if (num == 0) {
 		fprintf(stderr, "ERROR: Player is blocked\n");
 	}
-	size_t shortest = 2 * (graph->num_vertices);
+	size_t shortest = 2 * (player.graph->num_vertices);
 	for (int i = 1; i < MAX_DIRECTION; i++) {
 		if (!is_no_vertex(linked[i])) {
-			size_t dist_tmp = get_distance(graph, linked[i], 1 - last_move.c);
+			size_t dist_tmp = get_distance(player.graph, linked[i], player.id);
 			if (dist_tmp < shortest) {
 				shortest = dist_tmp;
 				dir = i;
@@ -143,27 +143,26 @@ size_t move_forward(struct graph_t *graph, size_t v, struct move_t last_move) {
 }
 
 //Compute the move
-struct move_t strat(struct graph_t *graph, size_t v, struct move_t last_move) {
+struct move_t strat(struct player_t player) {
 	struct move_t move;
-	struct edge_t posswall[MAX_POSSIBLE_WALLS][2];
-	size_t pos = last_move.m;
-	size_t nb_of_walls = get_possible_walls(graph, posswall);
-	size_t id_wall = get_the_better_wall_id(graph, posswall, nb_of_walls, pos, last_move.c);
+	struct edge_t poss_walls[MAX_POSSIBLE_WALLS][2];
+	size_t nb_of_walls = get_possible_walls(player.graph, poss_walls);
+	size_t id_wall = get_the_better_wall_id(player.graph, poss_walls, nb_of_walls, player.opponent_pos, player.opponent_id);
 
 	if (id_wall != IMPOSSIBLE_ID) {
 		// Put a wall if it's possible
-		move.m = v;
-		move.e[0].fr = posswall[id_wall][0].fr;
-		move.e[0].to = posswall[id_wall][0].to;
-		move.e[1].fr = posswall[id_wall][1].fr;
-		move.e[1].to = posswall[id_wall][1].to;
+		move.m = player.pos;
+		move.e[0].fr = poss_walls[id_wall][0].fr;
+		move.e[0].to = poss_walls[id_wall][0].to;
+		move.e[1].fr = poss_walls[id_wall][1].fr;
+		move.e[1].to = poss_walls[id_wall][1].to;
 		move.t = WALL;
 	} else {
 		// Move forward
-		move.m = move_forward(graph, v, last_move);
+		move.m = move_forward(player);
 		move.t = MOVE;
 	}
 
-	move.c = 1 - last_move.c;
+	move.c = player.id;
 	return move;
 }

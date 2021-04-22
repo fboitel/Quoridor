@@ -6,6 +6,7 @@
 
 struct player_t {
 	enum color_t id;
+	enum color_t opponent_id;
 	struct graph_t *graph;
 	size_t pos;          // Position
 	size_t opponent_pos;
@@ -13,6 +14,6 @@ struct player_t {
 };
 
 // Return a move based on the client strategy
-struct move_t strat(struct graph_t *graph, size_t v, struct move_t last_move);
+struct move_t strat(struct player_t player);
 
 #endif // _QUOR_CLIENT_H_

@@ -60,13 +60,13 @@ build/player.o: src/player.c headers/player.h
 build/dummy.o: tests/dummy.c
 	$(CC) -c -fPIC $< -o $@ $(CFLAGS)
 
-build/tom.o: src/tom.c
+build/tom.o: src/ia/tom.c
 	$(CC) -c -fPIC $< -o $@ $(CFLAGS)
 
-build/jerry.o: src/jerry.c
+build/jerry.o: src/ia/jerry.c
 	$(CC) -c -fPIC $< -o $@ $(CFLAGS)
 
-build/pablo.o: src/pablo.c
+build/pablo.o: src/ia/pablo.c
 	$(CC) -c -fPIC $< -o $@ $(CFLAGS)
 
 

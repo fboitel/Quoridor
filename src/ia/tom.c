@@ -5,15 +5,16 @@
 char *name = "Tom";
 
 // Do a move in random direction
-size_t random_move(struct graph_t *graph, size_t v, struct move_t last_move) {
+size_t random_move(struct player_t player) {
 	size_t linked[MAX_DIRECTION];
-	get_linked(graph, v, linked);
+	get_linked(player.graph, player.pos, linked);
 
 	enum direction_t d;
 	do {
 		// Exclude NO_DIRECTION
 		d = (rand() % MAX_DIRECTION - 1) + 1;
-	} while (is_no_vertex(linked[d]) && linked[d] != last_move.m);
+	} while (is_no_vertex(linked[d]) && linked[d] != player.opponent_pos);
+
 	return linked[d];
 }
 
@@ -49,18 +50,19 @@ void random_wall(struct graph_t *graph, struct edge_t wall[]) {
 }
 
 // Tom's strategy is to do a random move
-struct move_t strat(struct graph_t *graph, size_t v, struct move_t last_move) {
+struct move_t strat(struct player_t player) {
 	struct move_t move;
-	move.c = 1 - last_move.c;
+	move.c = player.id;
 
 	if (rand() % 2) {
 		move.t = WALL;
-		random_wall(graph, move.e);
+		random_wall(player.graph, move.e);
 	} else {
 		move.t = MOVE;
-		move.m = random_move(graph, v, last_move);
+		move.m = random_move(player);
 		move.e[0] = no_edge();
 		move.e[1] = no_edge();
 	}
+
 	return move;
 }

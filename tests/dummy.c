@@ -6,8 +6,11 @@
 
 char* name = "Dummy";
 
-struct move_t strat(struct graph_t* graph, size_t v, struct move_t last_move) {
-    (void) graph;
-    (void) v;
-    return last_move;
+struct move_t strat(struct player_t player) {
+    return (struct move_t) {
+    	.m = no_vertex(),
+    	.e = {no_edge(), no_edge()},
+    	.t = NO_TYPE,
+    	.c = player.id
+    };
 }

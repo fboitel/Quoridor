@@ -21,6 +21,10 @@ static inline bool is_no_vertex(const size_t v) {
 	return v == no_vertex();
 }
 
+static inline bool is_vertex(const size_t v) {
+	return v != no_vertex();
+}
+
 // Check if there is an adjacent vertex of v (i.e a vertex linked by an edge) in the direction d
 // Return it if so, else return no_vertex()
 size_t vertex_from_direction(const struct graph_t *graph, size_t v, enum direction_t d);

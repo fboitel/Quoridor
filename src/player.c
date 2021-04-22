@@ -11,6 +11,7 @@ char const *get_player_name(void) {
 
 void initialize(enum color_t id, struct graph_t *graph, size_t num_walls) {
 	player.id = id;
+	player.opponent_id = id == BLACK ? WHITE : BLACK;
 	player.graph = graph;
 	player.pos = SIZE_MAX; // default value for position
 	player.num_walls = num_walls;
@@ -95,7 +96,7 @@ struct move_t play(struct move_t previous_move) {
 		move = make_first_move();
 		first_move = false;
 	} else {
-		move = strat(player.graph, player.pos, previous_move);
+		move = strat(player);
 	}
 	// print_move(move);
 
