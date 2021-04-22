@@ -5,14 +5,14 @@
 #include "move.h"
 
 struct player_t {
-    enum color_t id;
-    struct graph_t* graph;
-    size_t pos;          // Position
-    size_t opponent_pos;
-    size_t num_walls;    // Numbers of wall available to place
+	enum color_t id;
+	struct graph_t *graph;
+	size_t pos;          // Position
+	size_t opponent_pos;
+	size_t num_walls;    // Numbers of wall available to place
 };
 
 // Return a move based on the client strategy
-struct move_t strat(struct graph_t* graph, size_t v, struct move_t last_move);
+struct move_t strat(struct graph_t *graph, size_t v, struct move_t last_move);
 
 #endif // _QUOR_CLIENT_H_

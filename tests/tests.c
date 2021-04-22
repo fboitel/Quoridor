@@ -2,9 +2,9 @@
 #include <stdlib.h>
 
 int main() {
-    (void) pass;
-    (void) passed;
-    (void) total;
+	(void) pass;
+	(void) passed;
+	(void) total;
 
 	test_player_main();
 

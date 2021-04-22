@@ -3,13 +3,13 @@
 #include "board.h"
 
 struct player_t player;
-extern char* name;
+extern char *name;
 
-char const* get_player_name(void) {
+char const *get_player_name(void) {
 	return name;
 }
 
-void initialize(enum color_t id, struct graph_t* graph, size_t num_walls) {
+void initialize(enum color_t id, struct graph_t *graph, size_t num_walls) {
 	player.id = id;
 	player.graph = graph;
 	player.pos = SIZE_MAX; // default value for position
@@ -43,39 +43,47 @@ struct move_t make_first_move() {
 
 void update_graph(struct move_t move, bool own_turn) {
 	switch (move.t) {
-	case MOVE:
-		if (own_turn)
-			player.pos = move.m;
-		else
-			player.opponent_pos = move.m;
-		break;
+		case MOVE:
+			if (own_turn) {
+				player.pos = move.m;
+			} else {
+				player.opponent_pos = move.m;
+			}
+			break;
 
-	case WALL:
-		add_edges(player.graph, move.e);
-		if (own_turn)
-			player.num_walls--;
-		break;
+		case WALL:
+			add_edges(player.graph, move.e);
+			if (own_turn) {
+				player.num_walls--;
+			}
+			break;
 
-	case NO_TYPE:
-		break;
+		case NO_TYPE:
+			break;
 	}
 }
 
 void print_move(struct move_t move) {
 	printf("\n\nMove from %u (%s):\n", move.c, get_player_name());
-	printf("sommet : %zu\n", move.m);
+	printf("vertex: %zu\n", move.m);
 	printf("walls: ");
-	if (is_no_edge(move.e[0]))
+
+	if (is_no_edge(move.e[0])) {
 		printf("(no edge)");
-	else
+	} else {
 		printf("(%zu, %zu)", move.e[0].fr, move.e[0].to);
+	}
+
 	printf(" ");
-	if (is_no_edge(move.e[1]))
+
+	if (is_no_edge(move.e[1])) {
 		printf("(no edge)");
-	else
+	} else {
 		printf("(%zu, %zu)", move.e[1].fr, move.e[1].to);
+	}
+
 	printf("\n");
-	printf("move type : %s\n\n\n", move.t == 0 ? "WALL" : "MOVE");
+	printf("move type: %s\n\n\n", move.t == 0 ? "WALL" : "MOVE");
 }
 
 struct move_t play(struct move_t previous_move) {
@@ -86,8 +94,7 @@ struct move_t play(struct move_t previous_move) {
 	if (first_move) {
 		move = make_first_move();
 		first_move = false;
-	}
-	else {
+	} else {
 		move = strat(player.graph, player.pos, previous_move);
 	}
 	// print_move(move);

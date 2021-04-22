@@ -7,20 +7,20 @@
 #include <stdlib.h>
 #include <time.h>
 
-extern char* player_1_path;
-extern char* player_2_path;
+extern char *player_1_path;
+extern char *player_2_path;
 extern int board_size;
 
-void* P1_lib;
-void (*P1_initialize)(enum color_t id, struct graph_t* graph, size_t num_walls);
-char* (*P1_name)(void);
-struct move_t(*P1_play)(struct move_t previous_move);
+void *P1_lib;
+void (*P1_initialize)(enum color_t id, struct graph_t *graph, size_t num_walls);
+char *(*P1_name)(void);
+struct move_t (*P1_play)(struct move_t previous_move);
 void (*P1_finalize)();
 
-void* P2_lib;
-void (*P2_initialize)(enum color_t id, struct graph_t* graph, size_t num_walls);
-char* (*P2_name)(void);
-struct move_t(*P2_play)(struct move_t previous_move);
+void *P2_lib;
+void (*P2_initialize)(enum color_t id, struct graph_t *graph, size_t num_walls);
+char *(*P2_name)(void);
+struct move_t (*P2_play)(struct move_t previous_move);
 
 void (*P2_finalize)();
 
@@ -28,7 +28,7 @@ void (*P2_finalize)();
 int load_libs(void) {
 	// TODO : check fails
 	P1_lib = dlopen(player_1_path, RTLD_NOW);
-	char* error = dlerror();
+	char *error = dlerror();
 
 	if (error != NULL) {
 		fprintf(stderr, "%s\n", error);
@@ -62,11 +62,11 @@ int load_libs(void) {
 
 // Check if the player is winning
 // by checking if he is on a vertex owned by the other player
-bool is_winning(struct graph_t* board, enum color_t active_player, size_t position) {
+bool is_winning(struct graph_t *board, enum color_t active_player, size_t position) {
 	return gsl_spmatrix_uint_get(board->o, 1 - active_player, position);
 }
 
-void update(struct graph_t* graph, struct move_t move) {
+void update(struct graph_t *graph, struct move_t move) {
 	if (move.t == WALL)
 		add_edges(graph, move.e);
 }
@@ -74,49 +74,46 @@ void update(struct graph_t* graph, struct move_t move) {
 // Compute the next player
 enum color_t get_next_player(enum color_t player) { return 1 - player; }
 
-bool is_valid_wall(struct graph_t* board, struct edge_t e[]) {
+bool is_valid_wall(struct graph_t *board, struct edge_t e[]) {
 	return
-		(
-			vertex_from_direction(board, e[0].fr, EAST) == e[0].to &&
-			vertex_from_direction(board, e[1].fr, EAST) == e[1].to &&
-			vertex_from_direction(board, e[0].fr, SOUTH) == e[1].fr &&
-			vertex_from_direction(board, e[0].to, SOUTH) == e[1].to) ? true :
-		(
-			vertex_from_direction(board, e[0].fr, SOUTH) == e[0].to &&
-			vertex_from_direction(board, e[1].fr, SOUTH) == e[1].to &&
-			vertex_from_direction(board, e[0].fr, EAST) == e[1].fr &&
-			vertex_from_direction(board, e[0].to, EAST) == e[1].to) ? true :
-		false;
+			(
+					vertex_from_direction(board, e[0].fr, EAST) == e[0].to &&
+					vertex_from_direction(board, e[1].fr, EAST) == e[1].to &&
+					vertex_from_direction(board, e[0].fr, SOUTH) == e[1].fr &&
+					vertex_from_direction(board, e[0].to, SOUTH) == e[1].to
+			) || (
+					vertex_from_direction(board, e[0].fr, SOUTH) == e[0].to &&
+					vertex_from_direction(board, e[1].fr, SOUTH) == e[1].to &&
+					vertex_from_direction(board, e[0].fr, EAST) == e[1].fr &&
+					vertex_from_direction(board, e[0].to, EAST) == e[1].to
+			);
 }
 
 // Check move validity
-bool check(struct move_t mv, struct graph_t* board, enum color_t player) {
+bool check(struct move_t mv, struct graph_t *board, enum color_t player) {
 	// Check type
 	if (mv.t < 0 || mv.t >= NO_TYPE) {
-		fprintf(stderr, "Error from %s: incorrect move type (%u)\n",
-			player == BLACK ? P1_name() : P2_name(), mv.t);
+		fprintf(stderr, "Error from %s: incorrect move type (%u)\n", player == BLACK ? P1_name() : P2_name(), mv.t);
 		return false;
 	}
 
 	// Check color
 	if (mv.c != player) {
-		fprintf(stderr, "Error from %s: incorrect color (%u)\n",
-			player == BLACK ? P1_name() : P2_name(), mv.c);
+		fprintf(stderr, "Error from %s: incorrect color (%u)\n",  player == BLACK ? P1_name() : P2_name(), mv.c);
 		return false;
 	}
 
 	// Check if edges create a wall
 	if (mv.t == WALL) {
 		if (!is_valid_wall(board, mv.e)) {
-			fprintf(stderr, "Error from %s: bad wall (%zu, %zu), (%zu, %zu)\n",
-				player == BLACK ? P1_name() : P2_name(), mv.e[0].fr, mv.e[0].to, mv.e[1].fr, mv.e[1].to);
+			fprintf(stderr, "Error from %s: bad wall (%zu, %zu), (%zu, %zu)\n", player == BLACK ? P1_name() : P2_name(), mv.e[0].fr, mv.e[0].to, mv.e[1].fr, mv.e[1].to);
 			return false;
 		}
 	}
 	return true;
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
 	// Parse arguments
 	parse_args(argc, argv);
 	printf("Args parsed\n");
@@ -131,9 +128,9 @@ int main(int argc, char* argv[]) {
 	// Initialize a new board of size m and shape t
 	// TODO : init a new board depending on parameters
 	size_t m = board_size;
-	struct graph_t* board = graph_init(m, SQUARE);
-	struct graph_t* boardCopy1 = graph_init(m, SQUARE);
-	struct graph_t* boardCopy2 = graph_init(m, SQUARE);
+	struct graph_t *board = graph_init(m, SQUARE);
+	struct graph_t *boardCopy1 = graph_init(m, SQUARE);
+	struct graph_t *boardCopy2 = graph_init(m, SQUARE);
 	printf("Board created\n");
 
 	// TODO : compute num_walls depending on size and board shape
@@ -152,10 +149,12 @@ int main(int argc, char* argv[]) {
 	printf("%s vs %s\n", P1_name(), P2_name());
 	printf("%s begins\n", active_player == BLACK ? P1_name() : P2_name());
 	// Initialize the first move as a move to the intial place
-	struct move_t last_move = { .m = SIZE_MAX,
-							   .c = active_player,
-							   .e = {no_edge(), no_edge()},
-							   .t = NO_TYPE };
+	struct move_t last_move = {
+			.m = SIZE_MAX,
+			.c = active_player,
+			.e = {no_edge(), no_edge()},
+			.t = NO_TYPE
+	};
 
 	/*
 	// display adj matrix
@@ -176,13 +175,11 @@ int main(int argc, char* argv[]) {
 	while (!game_over) {
 		turn++;
 		// Play
-		last_move =
-			active_player == BLACK ? P1_play(last_move) : P2_play(last_move);
+		last_move = active_player == BLACK ? P1_play(last_move) : P2_play(last_move);
 
 		// Check move validity
 		if (!check(last_move, board, active_player)) {
-			printf("Invalid move from %s\n",
-				active_player == BLACK ? P1_name() : P2_name());
+			printf("Invalid move from %s\n", active_player == BLACK ? P1_name() : P2_name());
 			winner = get_next_player(active_player);
 			break;
 		}
@@ -194,8 +191,7 @@ int main(int argc, char* argv[]) {
 		if (last_move.t == MOVE) {
 			if (active_player == BLACK) {
 				position_player_1 = last_move.m;
-			}
-			else {
+			} else {
 				position_player_2 = last_move.m;
 			}
 		}
@@ -212,12 +208,10 @@ int main(int argc, char* argv[]) {
 		display_board(board, m, position_player_1, position_player_2);
 
 		// Check if a player has won
-		if (is_winning(board, active_player, 
-		active_player == BLACK ? position_player_1 : position_player_2)) {
+		if (is_winning(board, active_player, active_player == BLACK ? position_player_1 : position_player_2)) {
 			winner = active_player;
 			game_over = true;
-		}
-		else {
+		} else {
 			active_player = get_next_player(active_player);
 		}
 	}

@@ -7,45 +7,45 @@
 
 int board_size = -1;
 enum shape_t board_shape = INVALID_SHAPE;
-char* player_1_path = NULL;
-char* player_2_path = NULL;
+char *player_1_path = NULL;
+char *player_2_path = NULL;
 
 
-enum shape_t parse_board_shape(char* t) {
+enum shape_t parse_board_shape(char *t) {
 	if (strlen(t) != 1) {
 		return INVALID_SHAPE;
 	}
 
 	switch (*t) {
-	case 'c':
-		return SQUARE;
+		case 'c':
+			return SQUARE;
 
-	case 't':
-		return TORIC;
+		case 't':
+			return TORIC;
 
-	case 'h':
-		return H;
+		case 'h':
+			return H;
 
-	case 's':
-		return SNAKE;
+		case 's':
+			return SNAKE;
 
-	default:
-		return INVALID_SHAPE;
+		default:
+			return INVALID_SHAPE;
 	}
 }
 
-void usage(char* exec_path, char* message) {
+void usage(char *exec_path, char *message) {
 	if (message != NULL) {
 		fprintf(stderr, "%s\n\n", message);
 	}
 	fprintf(stderr,
-		"Usage: %s [-m SIZE] [-t SHAPE] <PLAYER_1_PATH> <PLAYER_2_PATH>\n",
-		exec_path);
+	        "Usage: %s [-m SIZE] [-t SHAPE] <PLAYER_1_PATH> <PLAYER_2_PATH>\n",
+	        exec_path);
 }
 
-void parse_args(int argc, char** argv) {
+void parse_args(int argc, char **argv) {
 	for (int i = 1; i < argc; ++i) {
-		char* arg = argv[i];
+		char *arg = argv[i];
 
 		if (!strcmp(arg, "-m")) {
 			if (board_size != -1) {
@@ -65,8 +65,7 @@ void parse_args(int argc, char** argv) {
 				exit(EXIT_FAILURE);
 			}
 
-		}
-		else if (!strcmp(arg, "-t")) {
+		} else if (!strcmp(arg, "-t")) {
 			if (board_shape != INVALID_SHAPE) {
 				usage(argv[0], "\"-t\" option can't be used multiple times.");
 				exit(EXIT_FAILURE);
@@ -84,18 +83,17 @@ void parse_args(int argc, char** argv) {
 				exit(EXIT_FAILURE);
 			}
 
-		}
-		else {
+		} else {
 			if (player_2_path != NULL) {
 				printf(argv[0], "There is too much players.");
 				exit(EXIT_FAILURE);
 			}
 
 			if (access(argv[i], F_OK)) {
-				char* message_start = "File \"";
-				char* message_end = "\" doesn't exists.";
+				char *message_start = "File \"";
+				char *message_end = "\" doesn't exists.";
 				char message[strlen(message_start) + strlen(argv[i]) +
-					strlen(message_end) + 1];
+				             strlen(message_end) + 1];
 				sprintf(message, "%s%s%s", message_start, argv[i], message_end);
 				usage(argv[0], message);
 				exit(EXIT_FAILURE);
@@ -103,8 +101,7 @@ void parse_args(int argc, char** argv) {
 
 			if (player_1_path == NULL) {
 				player_1_path = argv[i];
-			}
-			else {
+			} else {
 				player_2_path = argv[i];
 			}
 		}
@@ -121,24 +118,23 @@ void parse_args(int argc, char** argv) {
 
 	if (board_size == -1) {
 		board_size = 15;
-	}
-	else {
+	} else {
 		switch (board_shape) {
-		case TORIC:
-		case H:
-			if (board_shape % 3 != 0) {
-				usage(argv[0], "Using this shape, board size must be a multiple of 3.");
-				exit(EXIT_FAILURE);
-			}
-			break;
-		case SNAKE:
-			if (board_shape % 5 != 0) {
-				usage(argv[0], "Using this shape, board size must be a multiple of 5.");
-				exit(EXIT_FAILURE);
-			}
-			break;
-		default:
-			break;
+			case TORIC:
+			case H:
+				if (board_shape % 3 != 0) {
+					usage(argv[0], "Using this shape, board size must be a multiple of 3.");
+					exit(EXIT_FAILURE);
+				}
+				break;
+			case SNAKE:
+				if (board_shape % 5 != 0) {
+					usage(argv[0], "Using this shape, board size must be a multiple of 5.");
+					exit(EXIT_FAILURE);
+				}
+				break;
+			default:
+				break;
 		}
 	}
 }

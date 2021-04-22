@@ -5,8 +5,10 @@
 #include "graph.h"
 #include "client.h"
 
-void print_edge(struct edge_t* e);
-void print_move(struct move_t* m);
-void print_player(struct player_t* p);
+void print_edge(struct edge_t *e);
+
+void print_move(struct move_t *m);
+
+void print_player(struct player_t *p);
 
 #endif // _QUOR_DEBUG_H_
