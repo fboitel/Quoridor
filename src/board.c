@@ -149,17 +149,17 @@ void display_board(struct graph_t *board, size_t board_size, size_t position_pla
 		}
 		int end_pattern = 0;
 
-		int matrix_state_1 = 0;
+		unsigned int matrix_state_1 = 0;
 		if (i + 1 < board_size * board_size) {
 			matrix_state_1 = gsl_spmatrix_uint_get(board->t, i, i + 1);
 		}
 
-		int matrix_state_2 = 0;
+		unsigned int matrix_state_2 = 0;
 		if (i + board_size < board_size * board_size) {
 			matrix_state_2 = gsl_spmatrix_uint_get(board->t, i, i + board_size);
 		}
 
-		// sounth connection
+		// south connection
 		if (matrix_state_2 == 2) {
 			strcat(next_line, "| ");
 		} else if (matrix_state_2 == 7) {
