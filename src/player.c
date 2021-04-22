@@ -1,8 +1,8 @@
 #include "player.h"
-#include "client.h"
+#include "ia.h"
 #include "board.h"
 
-struct player_t player;
+struct game_state_t game;
 extern char *name;
 
 char const *get_player_name(void) {
@@ -10,28 +10,36 @@ char const *get_player_name(void) {
 }
 
 void initialize(enum color_t id, struct graph_t *graph, size_t num_walls) {
-	player.id = id;
-	player.opponent_id = id == BLACK ? WHITE : BLACK;
-	player.graph = graph;
-	player.pos = SIZE_MAX; // default value for position
-	player.num_walls = num_walls;
+	game.graph = graph;
+
+	game.self = (struct player_state_t) {
+			.color = id,
+			.pos = SIZE_MAX, // default value (no position for now)
+			.num_walls = num_walls
+	};
+
+	game.opponent = (struct player_state_t) {
+			.color = id == BLACK ? WHITE : BLACK,
+			.pos = SIZE_MAX, // default value (no position for now)
+			.num_walls = num_walls
+	};
 }
 
 // TODO should be implemented by client
 struct move_t make_first_move() {
 	struct move_t move;
-	move.c = player.id;
+	move.c = game.self.color;
 	move.t = MOVE;
 	move.e[0] = no_edge();
 	move.e[1] = no_edge();
 
 	int matches = 0;
-	for (size_t i = 0; i < player.graph->o->size2; i++) {
-		if (!gsl_spmatrix_uint_get(player.graph->o, player.id, i)) {
+	for (size_t i = 0; i < game.graph->o->size2; i++) {
+		if (!gsl_spmatrix_uint_get(game.graph->o, game.self.color, i)) {
 			continue;
 		}
-		// FIXME: hack so white player doesn't start on the same column as black player
-		if (player.id == WHITE && matches < 2) {
+		// FIXME: hack so white game doesn't start on the same column as black game
+		if (game.self.color == WHITE && matches < 2) {
 			++matches;
 			continue;
 		}
@@ -42,21 +50,17 @@ struct move_t make_first_move() {
 	return move;
 }
 
-void update_graph(struct move_t move, bool own_turn) {
+void update_graph(struct move_t move) {
+	struct player_state_t player = move.c == game.self.color ? game.self : game.opponent;
+
 	switch (move.t) {
 		case MOVE:
-			if (own_turn) {
-				player.pos = move.m;
-			} else {
-				player.opponent_pos = move.m;
-			}
+			player.pos = move.m;
 			break;
 
 		case WALL:
-			add_edges(player.graph, move.e);
-			if (own_turn) {
-				player.num_walls--;
-			}
+			add_edges(game.graph, move.e);
+			--player.num_walls;
 			break;
 
 		case NO_TYPE:
@@ -88,7 +92,7 @@ void print_move(struct move_t move) {
 }
 
 struct move_t play(struct move_t previous_move) {
-	update_graph(previous_move, false);
+	update_graph(previous_move);
 
 	static bool first_move = true;
 	struct move_t move;
@@ -96,15 +100,15 @@ struct move_t play(struct move_t previous_move) {
 		move = make_first_move();
 		first_move = false;
 	} else {
-		move = strat(player);
+		move = strat(game);
 	}
 	// print_move(move);
 
-	update_graph(move, true);
+	update_graph(move);
 
 	return move;
 }
 
 void finalize(void) {
-	graph_free(player.graph);
+	graph_free(game.graph);
 }

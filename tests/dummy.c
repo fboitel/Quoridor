@@ -1,16 +1,16 @@
-// A crash test player for tests
+// A crash test game for tests
 
-#include "client.h"
+#include "ia.h"
 #include "board.h"
 #include "move.h"
 
 char* name = "Dummy";
 
-struct move_t strat(struct player_t player) {
+struct move_t strat(struct game_state_t game) {
     return (struct move_t) {
     	.m = no_vertex(),
     	.e = {no_edge(), no_edge()},
     	.t = NO_TYPE,
-    	.c = player.id
+    	.c = game.self.color
     };
 }

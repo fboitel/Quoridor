@@ -1,19 +1,19 @@
-#include "client.h"
+#include "ia.h"
 #include "board.h"
 #include "move.h"
 
 char *name = "Tom";
 
 // Do a move in random direction
-size_t random_move(struct player_t player) {
+size_t random_move(struct game_state_t game) {
 	size_t linked[MAX_DIRECTION];
-	get_linked(player.graph, player.pos, linked);
+	get_linked(game.graph, game.self.pos, linked);
 
 	enum direction_t d;
 	do {
 		// Exclude NO_DIRECTION
 		d = (rand() % MAX_DIRECTION - 1) + 1;
-	} while (is_no_vertex(linked[d]) && linked[d] != player.opponent_pos);
+	} while (is_no_vertex(linked[d]) && linked[d] != game.opponent.pos);
 
 	return linked[d];
 }
@@ -50,16 +50,16 @@ void random_wall(struct graph_t *graph, struct edge_t wall[]) {
 }
 
 // Tom's strategy is to do a random move
-struct move_t strat(struct player_t player) {
+struct move_t strat(struct game_state_t game) {
 	struct move_t move;
-	move.c = player.id;
+	move.c = game.self.color;
 
 	if (rand() % 2) {
 		move.t = WALL;
-		random_wall(player.graph, move.e);
+		random_wall(game.graph, move.e);
 	} else {
 		move.t = MOVE;
-		move.m = random_move(player);
+		move.m = random_move(game);
 		move.e[0] = no_edge();
 		move.e[1] = no_edge();
 	}

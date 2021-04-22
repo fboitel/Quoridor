@@ -1,6 +1,6 @@
 #include "tests.h"
 #include "player.h"
-#include "client.h"
+#include "ia.h"
 #include "move.h"
 #include "board.h"
 #include "opt.h"
@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 
-extern struct player_t player;
+extern struct game_state_t game;
 extern char *name;
 
 size_t n = 3;
@@ -29,22 +29,22 @@ static void teardown(void) {
 void test_initialization(void) {
 	printf("%s", __func__);
 
-	if (player.id != BLACK) {
+	if (game.self.color != BLACK) {
 		FAIL("Id initialization failed");
 	}
 
-	if (player.num_walls != ceil(edges / 15.0)) {
+	if (game.self.num_walls != ceil(edges / 15.0)) {
 		FAIL("Wrong number of walls initialized");
 	}
 
-	// TODO Check player.graph
+	// TODO Check game.graph
 }
 
 void test_get_player_name(void) {
 	printf("%s", __func__);
 
 	if (strcmp(get_player_name(), name) != 0) {
-		FAIL("Can not get player name");
+		FAIL("Can not get game name");
 	}
 }
 

@@ -1,4 +1,4 @@
-#include "client.h"
+#include "ia.h"
 #include "board.h"
 #include "move.h"
 
@@ -122,17 +122,17 @@ size_t get_the_better_wall_id(struct graph_t *graph, struct edge_t posswall[MAX_
 }
 
 //Moves forward
-size_t move_forward(struct player_t player) {
+size_t move_forward(struct game_state_t game) {
 	size_t linked[MAX_DIRECTION];
-	size_t num = get_linked(player.graph, player.pos, linked);
+	size_t num = get_linked(game.graph, game.self.pos, linked);
 	int dir = NO_DIRECTION;
 	if (num == 0) {
 		fprintf(stderr, "ERROR: Player is blocked\n");
 	}
-	size_t shortest = 2 * (player.graph->num_vertices);
+	size_t shortest = 2 * (game.graph->num_vertices);
 	for (int i = 1; i < MAX_DIRECTION; i++) {
 		if (!is_no_vertex(linked[i])) {
-			size_t dist_tmp = get_distance(player.graph, linked[i], player.id);
+			size_t dist_tmp = get_distance(game.graph, linked[i], game.self.color);
 			if (dist_tmp < shortest) {
 				shortest = dist_tmp;
 				dir = i;
@@ -143,15 +143,15 @@ size_t move_forward(struct player_t player) {
 }
 
 //Compute the move
-struct move_t strat(struct player_t player) {
+struct move_t strat(struct game_state_t game) {
 	struct move_t move;
 	struct edge_t poss_walls[MAX_POSSIBLE_WALLS][2];
-	size_t nb_of_walls = get_possible_walls(player.graph, poss_walls);
-	size_t id_wall = get_the_better_wall_id(player.graph, poss_walls, nb_of_walls, player.opponent_pos, player.opponent_id);
+	size_t nb_of_walls = get_possible_walls(game.graph, poss_walls);
+	size_t id_wall = get_the_better_wall_id(game.graph, poss_walls, nb_of_walls, game.opponent.pos, game.opponent.color);
 
 	if (id_wall != IMPOSSIBLE_ID) {
 		// Put a wall if it's possible
-		move.m = player.pos;
+		move.m = game.self.pos;
 		move.e[0].fr = poss_walls[id_wall][0].fr;
 		move.e[0].to = poss_walls[id_wall][0].to;
 		move.e[1].fr = poss_walls[id_wall][1].fr;
@@ -159,10 +159,10 @@ struct move_t strat(struct player_t player) {
 		move.t = WALL;
 	} else {
 		// Move forward
-		move.m = move_forward(player);
+		move.m = move_forward(game);
 		move.t = MOVE;
 	}
 
-	move.c = player.id;
+	move.c = game.self.color;
 	return move;
 }

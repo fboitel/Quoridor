@@ -3,7 +3,7 @@
 
 #include "move.h"
 #include "graph.h"
-#include "client.h"
+#include "ia.h"
 
 void print_edge(struct edge_t *e);
 
