@@ -25,31 +25,6 @@ void initialize(enum color_t id, struct graph_t *graph, size_t num_walls) {
 	};
 }
 
-// TODO should be implemented by client
-struct move_t make_first_move() {
-	struct move_t move;
-	move.c = game.self.color;
-	move.t = MOVE;
-	move.e[0] = no_edge();
-	move.e[1] = no_edge();
-
-	int matches = 0;
-	for (size_t i = 0; i < game.graph->o->size2; i++) {
-		if (!gsl_spmatrix_uint_get(game.graph->o, game.self.color, i)) {
-			continue;
-		}
-		// FIXME: hack so white game doesn't start on the same column as black game
-		if (game.self.color == WHITE && matches < 2) {
-			++matches;
-			continue;
-		}
-		move.m = i;
-		break;
-	}
-
-	return move;
-}
-
 void update_graph(struct move_t move) {
 	struct player_state_t *player = move.c == game.self.color ? &game.self : &game.opponent;
 
@@ -97,10 +72,10 @@ struct move_t play(struct move_t previous_move) {
 	static bool first_move = true;
 	struct move_t move;
 	if (first_move) {
-		move = make_first_move();
+		move = make_first_move(game);
 		first_move = false;
 	} else {
-		move = strat(game);
+		move = make_move(game);
 	}
 	// print_move(move);
 

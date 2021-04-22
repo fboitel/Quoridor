@@ -1,4 +1,5 @@
 #include "ia.h"
+#include "ia_utils.h"
 #include "board.h"
 #include "move.h"
 
@@ -49,8 +50,12 @@ void random_wall(struct graph_t *graph, struct edge_t wall[]) {
 	} while (is_no_edge(wall[0]) || is_no_edge(wall[1]));
 }
 
+struct move_t make_first_move(struct game_state_t game) {
+	return make_default_first_move(game);
+}
+
 // Tom's strategy is to do a random move
-struct move_t strat(struct game_state_t game) {
+struct move_t make_move(struct game_state_t game) {
 	struct move_t move;
 	move.c = game.self.color;
 

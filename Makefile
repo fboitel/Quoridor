@@ -32,7 +32,7 @@ test: build/alltests
 build/server: build/server.o build/opt.o build/board.o
 	$(CC) $^ -o $@ $(LFLAGS)
 
-build/alltests: build/tests.o build/player_test.o build/dummy.o build/player.o build/board.o build/opt.o
+build/alltests: build/tests.o build/player_test.o build/dummy.o build/ia_utils.o build/player.o build/board.o build/opt.o
 	$(CC) $^ -o $@ --coverage $(LFLAGS)
 
 # TSTOBJ
@@ -54,6 +54,9 @@ build/opt.o: src/opt.c headers/opt.h
 build/board.o: src/board.c headers/board.h
 	$(CC) -c $< -o $@ $(CFLAGS)
 
+build/ia_utils.o: src/ia_utils.c headers/ia_utils.h
+	$(CC) -c $< -o $@ $(CFLAGS)
+
 build/player.o: src/player.c headers/player.h
 	$(CC) -c -fPIC $< -o $@ $(CFLAGS)
 
@@ -72,11 +75,11 @@ build/pablo.o: src/ia/pablo.c
 
 # DYNAMIC LIBS
 
-build/tom.so: build/tom.o build/player.o build/board.o
+build/tom.so: build/tom.o build/player.o build/board.o build/ia_utils.o
 	$(CC) -shared $^ -o $@ $(LFLAGS)
 
-build/jerry.so: build/jerry.o build/player.o build/board.o
+build/jerry.so: build/jerry.o build/player.o build/board.o build/ia_utils.o
 	$(CC) -shared $^ -o $@ $(LFLAGS)
 
-build/pablo.so: build/pablo.o build/player.o build/board.o
+build/pablo.so: build/pablo.o build/player.o build/board.o build/ia_utils.o
 	$(CC) -shared $^ -o $@ $(LFLAGS)

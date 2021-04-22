@@ -1,5 +1,5 @@
-#ifndef _QUOR_CLIENT_H_
-#define _QUOR_CLIENT_H_
+#ifndef _QUOR_IA_H_
+#define _QUOR_IA_H_
 
 #include "graph.h"
 #include "move.h"
@@ -16,7 +16,10 @@ struct game_state_t {
 	struct player_state_t opponent;
 };
 
-// Return a move based on the client strategy
-struct move_t strat(struct game_state_t game);
+// Return a first move based on the IA strategy
+struct move_t make_first_move(struct game_state_t game);
 
-#endif // _QUOR_CLIENT_H_
+// Return a move based on the IA strategy
+struct move_t make_move(struct game_state_t game);
+
+#endif // _QUOR_IA_H_

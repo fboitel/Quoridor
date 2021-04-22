@@ -1,4 +1,5 @@
 #include "ia.h"
+#include "ia_utils.h"
 #include "board.h"
 #include "move.h"
 
@@ -142,8 +143,12 @@ size_t move_forward(struct game_state_t game) {
 	return linked[dir];
 }
 
-//Compute the move
-struct move_t strat(struct game_state_t game) {
+struct move_t make_first_move(struct game_state_t game) {
+	return make_default_first_move(game);
+}
+
+// Compute the move
+struct move_t make_move(struct game_state_t game) {
 	struct move_t move;
 	struct edge_t poss_walls[MAX_POSSIBLE_WALLS][2];
 	size_t nb_of_walls = get_possible_walls(game.graph, poss_walls);
