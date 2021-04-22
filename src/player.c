@@ -51,16 +51,16 @@ struct move_t make_first_move() {
 }
 
 void update_graph(struct move_t move) {
-	struct player_state_t player = move.c == game.self.color ? game.self : game.opponent;
+	struct player_state_t *player = move.c == game.self.color ? &game.self : &game.opponent;
 
 	switch (move.t) {
 		case MOVE:
-			player.pos = move.m;
+			player->pos = move.m;
 			break;
 
 		case WALL:
 			add_edges(game.graph, move.e);
-			--player.num_walls;
+			--player->num_walls;
 			break;
 
 		case NO_TYPE:
