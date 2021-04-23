@@ -34,7 +34,7 @@ void update_graph(struct move_t move) {
 			break;
 
 		case WALL:
-			add_edges(game.graph, move.e);
+			placeWall(game.graph, move.e);
 			--player->num_walls;
 			break;
 
