@@ -200,7 +200,7 @@ int main(int argc, char* argv[]) {
 		}
 
 		display_board(board, m, position_player_1, position_player_2);
-		printf("wall : %ld:%ld - %ld:%ld \n", last_move.e[0].fr,  last_move.e[0].to,  last_move.e[1].fr,  last_move.e[1].to);
+	//	printf("wall : %ld:%ld - %ld:%ld \n", last_move.e[0].fr,  last_move.e[0].to,  last_move.e[1].fr,  last_move.e[1].to);
 
 		// Check if a player has won
 		if (is_winning(board, active_player, active_player == BLACK ? position_player_1 : position_player_2)) {
