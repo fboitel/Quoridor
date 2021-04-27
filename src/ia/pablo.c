@@ -67,10 +67,17 @@ size_t get_distance(struct graph_t *graph, size_t pos, enum color_t color) {
 }
 
 //Gather all the place where a wall can be set and returns its number
-size_t get_possible_walls(struct graph_t *graph, struct edge_t walls[MAX_POSSIBLE_WALLS][2]) {
+size_t get_possible_walls(struct graph_t *graph, struct edge_t walls[MAX_POSSIBLE_WALLS][2], enum color_t color) {
 	size_t nb_wall = 0;
-	//int nb_v = vertices_owned(graph);
-	for (size_t i = 0; i < graph->num_vertices; i++) {
+	size_t side1 = 0;
+	size_t side2 = 0;
+	size_t board_size = vertices_owned(graph);
+	if (gsl_spmatrix_uint_get(graph->o, color, 0) == 1)
+		side1 = board_size*5;
+	else 
+		side2 = board_size*5;
+	printf("(((((%zu, %zu)))))", side1, side2);
+	for (size_t i = 0 + side1; i < graph->num_vertices-side2; i++) {
 		// To verify if a wall can be put on the south of the vertex i and the vertex on right of it
 			if (vertex_from_direction(graph, i, EAST) != no_vertex()) {
 				if (vertex_from_direction(graph, i, SOUTH) != no_vertex() &&
@@ -135,8 +142,8 @@ size_t get_the_better_wall_id(struct graph_t *graph, struct edge_t posswall[MAX_
 //Returns the best place to put a wall in order to delay the opponent
 size_t get_a_good_wall_id(struct graph_t *graph, struct edge_t posswall[MAX_POSSIBLE_WALLS][2], size_t nb_wall, size_t pos, enum color_t color){
 	size_t dist = get_distance(graph, pos, color);
-	int nb_v = vertices_owned(graph);
-	for (size_t i = 5*nb_v; i < nb_wall; i+=2) {
+
+	for (size_t i = 0; i < nb_wall; i++) {
 		enum direction_t dir = gsl_spmatrix_uint_get(graph->t, posswall[i][0].fr, posswall[i][0].to);
 		put_wall(graph, posswall[i]);
 		size_t new_dist = get_distance(graph, pos, color);
@@ -178,23 +185,29 @@ struct move_t make_first_move(struct game_state_t game) {
 struct move_t make_move(struct game_state_t game) {
 	struct move_t move;
 	struct edge_t poss_walls[MAX_POSSIBLE_WALLS][2];
-	size_t nb_of_walls = get_possible_walls(game.graph, poss_walls);
-	size_t id_wall = get_a_good_wall_id(game.graph, poss_walls, nb_of_walls, game.opponent.pos, game.opponent.color);
-
-	if (id_wall != IMPOSSIBLE_ID) {
-		// Put a wall if it's possible
-		move.m = game.self.pos;
-		move.e[0].fr = poss_walls[id_wall][0].fr;
-		move.e[0].to = poss_walls[id_wall][0].to;
-		move.e[1].fr = poss_walls[id_wall][1].fr;
-		move.e[1].to = poss_walls[id_wall][1].to;
-		move.t = WALL;
-	} else {
-		// Move forward
+	size_t size_board = sqrt(game.graph->num_vertices);
+	if (get_distance(game.graph, game.opponent.pos, game.opponent.color) > size_board/3){
 		move.m = move_forward(game);
 		move.t = MOVE;
-	}
+		}
+	else {
+		size_t nb_of_walls = get_possible_walls(game.graph, poss_walls, game.opponent.color);
+		size_t id_wall = get_a_good_wall_id(game.graph, poss_walls, nb_of_walls, game.opponent.pos, game.opponent.color);
 
+		if (id_wall != IMPOSSIBLE_ID) {
+			// Put a wall if it's possible
+			move.m = game.self.pos;
+			move.e[0].fr = poss_walls[id_wall][0].fr;
+			move.e[0].to = poss_walls[id_wall][0].to;
+			move.e[1].fr = poss_walls[id_wall][1].fr;
+			move.e[1].to = poss_walls[id_wall][1].to;
+			move.t = WALL;
+		} else {
+			// Move forward
+			move.m = move_forward(game);
+			move.t = MOVE;
+		}
+		}
 	move.c = game.self.color;
 	return move;
 }
