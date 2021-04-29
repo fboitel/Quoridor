@@ -71,18 +71,18 @@ enum color_t get_next_player(enum color_t player) { return 1 - player; }
 
 bool is_valid_wall(struct graph_t* board, struct edge_t e[]) {
 	return
-		(
+		(//FIXME : some wall will be refused unfairly
 			// vertical wall
 			vertex_from_direction(board, e[0].fr, EAST) == e[0].to &&
 			vertex_from_direction(board, e[1].fr, EAST) == e[1].to &&
-			vertex_from_direction(board, e[0].fr, SOUTH) == e[1].fr &&
-			vertex_from_direction(board, e[0].to, SOUTH) == e[1].to
+			(vertex_from_direction(board, e[0].fr, SOUTH) == e[1].fr ||
+			vertex_from_direction(board, e[0].to, SOUTH) == e[1].to)
 			) || (
 				// horizontal wall
 				vertex_from_direction(board, e[0].fr, SOUTH) == e[0].to &&
 				vertex_from_direction(board, e[1].fr, SOUTH) == e[1].to &&
-				vertex_from_direction(board, e[0].fr, EAST) == e[1].fr &&
-				vertex_from_direction(board, e[0].to, EAST) == e[1].to
+				(vertex_from_direction(board, e[0].fr, EAST) == e[1].fr ||
+				vertex_from_direction(board, e[0].to, EAST) == e[1].to)
 				);
 }
 
@@ -210,6 +210,13 @@ int main(int argc, char* argv[]) {
 		else {
 			active_player = get_next_player(active_player);
 		}
+		// display adj matrix
+	/*	for (size_t i = 0; i < m * m; ++i) {
+			for (size_t j = 0; j < m * m; ++j) {
+				printf("% d ", gsl_spmatrix_uint_get(board->t, i, j));
+			}
+			printf("\n");
+		}*/
 	}
 	printf("GAME OVER\n");
 	printf("%s won\n", winner == BLACK ? P1_name() : P2_name());
