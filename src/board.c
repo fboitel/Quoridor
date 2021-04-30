@@ -61,7 +61,7 @@ void graph_free(struct graph_t* graph) {
 
 // Graph operations
 void placeWall(struct graph_t* graph, struct edge_t e[]) {
-	int board_size = sqrt(graph->num_vertices);
+	size_t board_size = (size_t) sqrtl(graph->num_vertices);
 
 	// get nodes
 	size_t first_node = e[0].fr;
@@ -75,21 +75,19 @@ void placeWall(struct graph_t* graph, struct edge_t e[]) {
 	}
 
 	if (first_node + 1 == second_node) { // vertical wall
+		gsl_spmatrix_uint_set(graph->t, first_node, second_node, 5);
+		gsl_spmatrix_uint_set(graph->t, second_node, first_node, 5);
+
 		gsl_spmatrix_uint_set(graph->t, first_node + board_size, second_node + board_size, 6);
 		gsl_spmatrix_uint_set(graph->t, second_node + board_size, first_node + board_size, 6);
 
-		gsl_spmatrix_uint_set(graph->t, first_node, second_node, 5);
-		gsl_spmatrix_uint_set(graph->t, second_node, first_node, 5);
-	}
-
-	else { // horizontal wall
+	} else { // horizontal wall
 		gsl_spmatrix_uint_set(graph->t, first_node, second_node, 7);
 		gsl_spmatrix_uint_set(graph->t, second_node, first_node, 7);
 
 		gsl_spmatrix_uint_set(graph->t, first_node + 1, second_node + 1, 8);
 		gsl_spmatrix_uint_set(graph->t, second_node + 1, first_node + 1, 8);
 	}
-
 }
 
 int opposite(int d) {
