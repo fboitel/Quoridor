@@ -20,7 +20,7 @@ size_t vertices_owned(struct graph_t *graph){
 	return i;
 }
 
-
+//init the array d of the distance and v of the vertices
 void release_init(size_t d[], size_t v[], size_t pos, size_t length){
 		for (size_t i = 0; i < length; i++) {
 		d[i] = IMPOSSIBLE_DISTANCE;
@@ -29,6 +29,7 @@ void release_init(size_t d[], size_t v[], size_t pos, size_t length){
 	d[pos] = 0;
 }
 
+//Returns the vertex that have the smallest distance, and make it desapear of the array v.
 size_t extract_min(size_t d[], size_t v[],size_t length){
 	size_t ind = length+1;
 	size_t min = length*4;
@@ -42,6 +43,7 @@ size_t extract_min(size_t d[], size_t v[],size_t length){
 	return vertex;
 }
 
+//Returns true if elem belong to arr
 bool belong(size_t elem, size_t arr[], size_t length){
 	for (size_t i = 0; i < length; i++)
 		if (elem == arr[i])
@@ -49,11 +51,13 @@ bool belong(size_t elem, size_t arr[], size_t length){
 	return false;
 }
 
+//Releases the edge between vertex u and vertex v
 void release_dijk(size_t u, size_t v, size_t d[]){
 	if (d[v] > d[u] + 1)
 		d[v] = d[u] + 1;
 }
 
+//Returns the shortest distance in array d under condition that the vertes is a target vertex.
 size_t get_shortest(size_t d[], struct graph_t *graph, enum color_t color){
 	size_t min = IMPOSSIBLE_DISTANCE;
 	for (size_t i = 0; i < graph->num_vertices; i++)
