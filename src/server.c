@@ -81,24 +81,137 @@ enum color_t get_next_player(enum color_t player) { return 1 - player; }
 // Return if the displacement of the player is valid
 bool is_valid_displacement(struct graph_t* board, size_t destination, enum color_t player) {
 
-	// destination is in the board :
-	if (destination < 0 || board->num_vertices <= destination ) {
+	size_t position_player = player == BLACK ? position_player_1 : position_player_2;
+
+	size_t position_opposent = player == BLACK ? position_player_2 : position_player_1;
+
+	// destination is in the board and destination is not on a player cell
+	if (board->num_vertices <= destination || position_player == destination || position_opposent == destination) {
 		return false;
 	}
-
-	int position_player = player == BLACK ? position_player_1 : position_player_2;
 
 	// check first move
 	if (position_player == -1) {
 		if (player == BLACK) {
 			return destination < board_size;
 		}
-		return board->num_vertices - board_size < destination && destination < board->num_vertices;
+		return board->num_vertices - board_size < destination&& destination < board->num_vertices;
 	}
 
 	// check destination is in the 4 near cells :
-	if ( abs(position_player - destination) == 1 || abs(position_player - destination) == board_size) {
-		return is_linked(position_player, destination);
+	if (is_linked(board, position_player, destination)) {
+		return true;
+	}
+
+	// check others destination manually
+	// TODO : try to find something more clean, but it's hard
+
+	// move 2 on the left
+	if (position_player % board_size > 1 &&
+		position_player - destination == 2 &&
+		is_linked(board, position_player, position_player - 1) &&
+		is_linked(board, position_player - 1, destination) &&
+		position_opposent == position_player - 1) {
+		return true;
+	}
+
+	// move 2 on the right
+	if (position_player % board_size < board_size - 2 &&
+		destination - position_player == 2 &&
+		is_linked(board, position_player, position_player + 1) &&
+		is_linked(board, position_player + 1, destination) &&
+		position_opposent == position_player + 1) {
+		return true;
+	}
+
+	// move 2 on the top
+	if (position_player / board_size > 1 &&
+		destination + 2 * board_size == position_player &&
+		is_linked(board, position_player, position_player - board_size) &&
+		is_linked(board, position_player - board_size, destination) &&
+		position_opposent == position_player - board_size) {
+		return true;
+	}
+
+	// move 2 on the bottom
+	if (position_player / board_size < board_size - 2 &&
+		position_player + 2 * board_size == destination &&
+		is_linked(board, position_player, position_player + board_size) &&
+		is_linked(board, position_player + board_size, destination) &&
+		position_opposent == position_player + board_size) {
+		return true;
+	}
+
+	// move top + left
+	if (position_player / board_size > 0 &&
+		position_player % board_size > 0 &&
+		position_player - board_size == destination + 1 &&
+		(
+			(is_linked(board, position_player, position_player - board_size) &&
+				is_linked(board, position_player - board_size, destination) &&
+				position_opposent == position_player - board_size
+				)
+			||
+			(is_linked(board, position_player, position_player - 1) &&
+				is_linked(board, position_player - 1, destination) &&
+				position_opposent == position_player -1)
+			)
+		) {
+		return true;
+	}
+
+	// move top + right
+	if (position_player / board_size > 0 &&
+		position_player % board_size < board_size - 1 &&
+		position_player - board_size == destination - 1 &&
+		(
+			(is_linked(board, position_player, position_player - board_size) &&
+				is_linked(board, position_player - board_size, destination) &&
+				position_opposent == position_player - board_size
+				)
+			||
+			(is_linked(board, position_player, position_player + 1) &&
+				is_linked(board, position_player + 1, destination) &&
+				position_opposent == position_player + 1)
+			)
+		) {
+		return true;
+	}
+
+	// move bot + right
+	if (position_player / board_size < board_size -1 &&
+		position_player % board_size < board_size -1 &&
+		position_player + board_size == destination - 1 &&
+		(
+			(is_linked(board, position_player, position_player + board_size) &&
+				is_linked(board, position_player + board_size, destination) &&
+				position_opposent == position_player + board_size
+				)
+			||
+			(is_linked(board, position_player, position_player + 1) &&
+				is_linked(board, position_player + 1, destination) &&
+				position_opposent == position_player + 1)
+			)
+		) {
+		return true;
+	}
+
+	// move bot + left
+	if (position_player / board_size < board_size -1 &&
+		position_player % board_size > 0 &&
+		position_player + board_size == destination + 1 &&
+		(
+			(is_linked(board, position_player, position_player + board_size) &&
+				is_linked(board, position_player + board_size, destination) &&
+				position_opposent == position_player + board_size
+				)
+			||
+			(is_linked(board, position_player, position_player - 1) &&
+				is_linked(board, position_player - 1, destination) &&
+				position_opposent == position_player - 1)
+			)
+		) {
+		return true;
 	}
 
 	//gsl_spmatrix_uint_set(board->t, position_player, destination, 5);
