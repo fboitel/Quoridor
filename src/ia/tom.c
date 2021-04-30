@@ -13,7 +13,7 @@ size_t random_move(struct game_state_t game) {
 	enum direction_t d;
 	do {
 		// Exclude NO_DIRECTION
-		d = (rand() % MAX_DIRECTION - 1) + 1;
+		d = (rand() % (MAX_DIRECTION - 1)) + 1;
 	} while (is_no_vertex(linked[d]) && linked[d] != game.opponent.pos);
 
 	return linked[d];
