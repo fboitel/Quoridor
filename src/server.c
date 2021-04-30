@@ -16,6 +16,10 @@ size_t position_player_1 = -1;
 size_t position_player_2 = -1;
 enum color_t active_player = -1;
 enum color_t winner = -1;
+size_t turn = 0;
+
+
+enum reasons_t { WIN = 0, INVALID_MOVE = 1 };
 
 void* P1_lib;
 void (*P1_initialize)(enum color_t id, struct graph_t* graph, size_t num_walls);
@@ -74,6 +78,34 @@ bool is_winning(struct graph_t* board, enum color_t active_player, size_t positi
 // Compute the next player
 enum color_t get_next_player(enum color_t player) { return 1 - player; }
 
+// Return if the displacement of the player is valid
+bool is_valid_displacement(struct graph_t* board, size_t destination, enum color_t player) {
+
+	// destination is in the board :
+	if (destination < 0 || board->num_vertices <= destination ) {
+		return false;
+	}
+
+	int position_player = player == BLACK ? position_player_1 : position_player_2;
+
+	// check first move
+	if (position_player == -1) {
+		if (player == BLACK) {
+			return destination < board_size;
+		}
+		return board->num_vertices - board_size < destination && destination < board->num_vertices;
+	}
+
+	// check destination is in the 4 near cells :
+	if ( abs(position_player - destination) == 1 || abs(position_player - destination) == board_size) {
+		return is_linked(position_player, destination);
+	}
+
+	//gsl_spmatrix_uint_set(board->t, position_player, destination, 5);
+
+	return true;
+}
+
 bool is_valid_wall(struct graph_t* board, struct edge_t e[]) {
 	return
 		(//FIXME : some wall will be refused unfairly
@@ -91,30 +123,44 @@ bool is_valid_wall(struct graph_t* board, struct edge_t e[]) {
 				);
 }
 
+
+void end_game(enum reasons_t reason) {
+	winner = reason == WIN ? active_player : get_next_player(active_player);
+	game_over = true;
+}
+
 // Check move validity
 bool move_is_valid(struct move_t* mv, struct graph_t* board, enum color_t player) {
+
 	// Check type
-	if (mv->t < 0 || mv->t >= NO_TYPE) {
+	if (!(mv->t == WALL || mv->t == MOVE)) {
 		fprintf(stderr, "Error from %s: incorrect move type (%u)\n", player == BLACK ? P1_name() : P2_name(), mv->t);
-		winner = get_next_player(active_player);
-		game_over = true;
+		end_game(INVALID_MOVE);
 		return false;
 	}
 
 	// Check color
 	if (mv->c != player) {
 		fprintf(stderr, "Error from %s: incorrect color (%u)\n", player == BLACK ? P1_name() : P2_name(), mv->c);
-		winner = get_next_player(active_player);
-		game_over = true;
+		end_game(INVALID_MOVE);
 		return false;
 	}
+
+	// Check if move respect rules
+	if (mv->t == MOVE) {
+		if (!is_valid_displacement(board, mv->m, player)) {
+			fprintf(stderr, "Error from %s: bad displacement %zu --> %zu\n", player == BLACK ? P1_name() : P2_name(), player == BLACK ? position_player_1 : position_player_2, mv->m);
+			end_game(INVALID_MOVE);
+			return false;
+		}
+	}
+
 
 	// Check if edges create a wall
 	if (mv->t == WALL) {
 		if (!is_valid_wall(board, mv->e)) {
 			fprintf(stderr, "Error from %s: bad wall (%zu, %zu), (%zu, %zu)\n", player == BLACK ? P1_name() : P2_name(), mv->e[0].fr, mv->e[0].to, mv->e[1].fr, mv->e[1].to);
-			winner = get_next_player(active_player);
-			game_over = true;
+			end_game(INVALID_MOVE);
 			return false;
 		}
 	}
@@ -138,11 +184,6 @@ void update_board(struct graph_t* board, struct move_t* last_move) {
 		// Update the board if a player has put a wall
 		placeWall(board, last_move->e);
 	}
-}
-
-void end_game() {
-	winner = active_player;
-	game_over = true;
 }
 
 void close_server(struct graph_t* board) {
@@ -196,8 +237,6 @@ int main(int argc, char* argv[]) {
 	};
 
 	// Game loop
-	size_t turn = 0;
-
 	while (!game_over) {
 		turn++;
 
@@ -216,10 +255,10 @@ int main(int argc, char* argv[]) {
 
 		// Check if a player has won
 		if (is_winning(board, active_player, active_player == BLACK ? position_player_1 : position_player_2)) {
-			end_game();
+			end_game(WIN);
 			break;
 		}
-		
+
 		active_player = get_next_player(active_player);
 	}
 

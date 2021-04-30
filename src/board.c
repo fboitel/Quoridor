@@ -144,7 +144,7 @@ int opposite(int d) {
 // Check if vertex dest is linked to vertex src (i.e there is an edge between
 // them)
 bool is_linked(const struct graph_t* graph, size_t src, size_t dest) {
-	return gsl_spmatrix_uint_get(graph->t, src, dest) > 0;
+	return 0 < gsl_spmatrix_uint_get(graph->t, src, dest) && gsl_spmatrix_uint_get(graph->t, src, dest) < 5;
 }
 
 // Check if there is an adjacent vertex of v (i.e a vertex linked by an edge) in
