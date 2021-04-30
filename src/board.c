@@ -1,12 +1,13 @@
 #include "board.h"
 #include <gsl/gsl_spmatrix.h>
 #include <string.h>
+#include <math.h>
 
 //// Graph structure manipulation functions
 
 // Initialize a square graph of size m
-struct graph_t *square_init(size_t m) {
-	struct graph_t *graph = malloc(sizeof(*graph));
+struct graph_t* square_init(size_t m) {
+	struct graph_t* graph = malloc(sizeof(*graph));
 
 	size_t n = m * m;
 	graph->num_vertices = n;
@@ -43,57 +44,115 @@ struct graph_t *square_init(size_t m) {
 	return graph;
 }
 
-struct graph_t *graph_init(size_t m, enum shape_t shape) {
+struct graph_t* graph_init(size_t m, enum shape_t shape) {
 	switch (shape) {
-		case SQUARE:
-			return square_init(m);
-		default:
-			return square_init(m);
+	case SQUARE:
+		return square_init(m);
+	default:
+		return square_init(m);
 	}
 }
 
-void graph_free(struct graph_t *graph) {
+void graph_free(struct graph_t* graph) {
 	gsl_spmatrix_uint_free(graph->t);
 	gsl_spmatrix_uint_free(graph->o);
 	free(graph);
 }
 
 // Graph operations
-void add_edges(struct graph_t *graph, struct edge_t e[]) {
-	for (int i = 0; i < 2; i++) {
-		if (!is_no_edge(e[i])) {
-			gsl_spmatrix_uint_set(graph->t, e[i].fr, e[i].to, -1);
-			gsl_spmatrix_uint_set(graph->t, e[i].to, e[i].fr, -1);
+void placeWall(struct graph_t* graph, struct edge_t e[]) {
+
+	/*	for (int i = 0; i < 2; i++) {
+			if (!is_no_edge(e[i])) {
+
+				gsl_spmatrix_uint_set(graph->t, e[i].fr, e[i].to, -1);
+				gsl_spmatrix_uint_set(graph->t, e[i].to, e[i].fr, -1);
+
+			}
+		}
+		*/
+
+
+	int board_size = sqrt(graph->num_vertices);
+
+	// get nodes
+	size_t first_node = e[0].fr;
+	size_t second_node = e[0].to;
+
+	// sort nodes
+	if (first_node > second_node) {
+		size_t tmp = first_node;
+		first_node = second_node;
+		second_node = tmp;
+	}
+
+	if (first_node + 1 == second_node) { // vertical wall
+		if (first_node + board_size == e[1].fr || first_node + board_size == e[1].to) {
+			gsl_spmatrix_uint_set(graph->t, first_node, second_node, 5);
+			gsl_spmatrix_uint_set(graph->t, second_node, first_node, 5);
+
+			gsl_spmatrix_uint_set(graph->t, first_node + board_size, second_node + board_size, 6);
+			gsl_spmatrix_uint_set(graph->t, second_node + board_size, first_node + board_size, 6);
+
+		}
+		else {
+			gsl_spmatrix_uint_set(graph->t, first_node + board_size, second_node + board_size, 6);
+			gsl_spmatrix_uint_set(graph->t, second_node + board_size, first_node + board_size, 6);
+
+			gsl_spmatrix_uint_set(graph->t, first_node, second_node, 5);
+			gsl_spmatrix_uint_set(graph->t, second_node, first_node, 5);
+
 		}
 	}
+
+	else { // horizontal wall
+		if (first_node + 1 == e[1].fr || first_node + 1 == e[1].to) {
+			gsl_spmatrix_uint_set(graph->t, first_node, second_node, 7);
+			gsl_spmatrix_uint_set(graph->t, second_node, first_node, 7);
+
+			gsl_spmatrix_uint_set(graph->t, first_node + 1, second_node + 1, 8);
+			gsl_spmatrix_uint_set(graph->t, second_node + 1, first_node + 1, 8);
+
+		}
+		else {
+			gsl_spmatrix_uint_set(graph->t, first_node, second_node, 8);
+			gsl_spmatrix_uint_set(graph->t, second_node, first_node, 8);
+
+			gsl_spmatrix_uint_set(graph->t, first_node + 1, second_node + 1, 7);
+			gsl_spmatrix_uint_set(graph->t, second_node + 1, first_node + 1, 7);
+
+		}
+	}
+
 }
 
 int opposite(int d) {
 	switch (d) {
-		case NORTH:
-			return SOUTH;
-		case SOUTH:
-			return NORTH;
-		case WEST:
-			return EAST;
-		case EAST:
-			return WEST;
-		default:
-			return NO_DIRECTION;
+	case NORTH:
+		return SOUTH;
+	case SOUTH:
+		return NORTH;
+	case WEST:
+		return EAST;
+	case EAST:
+		return WEST;
+	default:
+		return NO_DIRECTION;
 	}
 }
 
 // Check if vertex dest is linked to vertex src (i.e there is an edge between
 // them)
-bool is_linked(const struct graph_t *graph, size_t src, size_t dest) {
+bool is_linked(const struct graph_t* graph, size_t src, size_t dest) {
 	return gsl_spmatrix_uint_get(graph->t, src, dest) > 0;
 }
 
 // Check if there is an adjacent vertex of v (i.e a vertex linked by an edge) in
 // the direction d
 // Return it if so, else return no_vertex()
-size_t vertex_from_direction(const struct graph_t *graph, size_t v,
-                             enum direction_t d) {
+size_t vertex_from_direction(const struct graph_t* graph, size_t v, enum direction_t d) {
+	// TODO : this function can be optimised
+
 	if (v >= graph->num_vertices)
 		return no_vertex();
 
@@ -108,7 +167,7 @@ size_t vertex_from_direction(const struct graph_t *graph, size_t v,
 // Get all the linked vertices from the vertex v
 // Fill an array with the linked vertices (no_vertex() if there is no vertex in
 // the direction)
-size_t get_linked(const struct graph_t *graph, size_t v, size_t vertices[]) {
+size_t get_linked(const struct graph_t* graph, size_t v, size_t vertices[]) {
 	size_t linked = 0;
 	vertices[NO_DIRECTION] = v; // First one is himself
 
@@ -119,7 +178,7 @@ size_t get_linked(const struct graph_t *graph, size_t v, size_t vertices[]) {
 	return linked;
 }
 
-void display_board(struct graph_t *board, size_t board_size, size_t position_player_1, size_t position_player_2) {
+void display_board(struct graph_t* board, size_t board_size, size_t position_player_1, size_t position_player_2) {
 	/*
 	 5 = wall on east + next line
 	 6 = wall on east
@@ -142,9 +201,11 @@ void display_board(struct graph_t *board, size_t board_size, size_t position_pla
 
 		if (i == position_player_1) {
 			printf("\033[31m1\033[m");
-		} else if (i == position_player_2) {
+		}
+		else if (i == position_player_2) {
 			printf("\033[34m1\033[m");
-		} else {
+		}
+		else {
 			printf("0");
 		}
 		int end_pattern = 0;
@@ -162,31 +223,38 @@ void display_board(struct graph_t *board, size_t board_size, size_t position_pla
 		// south connection
 		if (matrix_state_2 == 2) {
 			strcat(next_line, "| ");
-		} else if (matrix_state_2 == 7) {
+		}
+		else if (matrix_state_2 == 7) {
 			strcat(next_line, "\033[33m──\033[m");
 			end_pattern = 1;
-		} else if (matrix_state_2 == 8) {
+		}
+		else if (matrix_state_2 == 8) {
 			strcat(next_line, "\033[33m─\033[m ");
-		} else {
+		}
+		else {
 			strcat(next_line, "  ");
 		}
 
 		// east connection
 		if (matrix_state_1 == 4) {
 			printf(" - ");
-		} else if (matrix_state_1 == 5) {
+		}
+		else if (matrix_state_1 == 5) {
 			printf(" \033[33m│\033[m ");
 			strcat(next_line, "\033[33m│\033[m ");
 			end_pattern = 2;
-		} else if (matrix_state_1 == 6) {
+		}
+		else if (matrix_state_1 == 6) {
 			printf(" \033[33m│\033[m ");
-		} else {
+		}
+		else {
 			printf("   ");
 		}
 
 		if (end_pattern == 0) {
 			strcat(next_line, "  ");
-		} else if (end_pattern == 1) {
+		}
+		else if (end_pattern == 1) {
 			strcat(next_line, "\033[33m──\033[m");
 		}
 	}

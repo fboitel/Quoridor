@@ -41,7 +41,7 @@ struct graph_t *graph_init(size_t n, enum shape_t shape);
 void graph_free(struct graph_t *graph);
 
 // Add edges in the graph
-void add_edges(struct graph_t *graph, struct edge_t e[]);
+void placeWall(struct graph_t *graph, struct edge_t e[]);
 
 int opposite(int d);
 
