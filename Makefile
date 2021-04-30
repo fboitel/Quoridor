@@ -75,6 +75,9 @@ build/pablo.o: src/ia/pablo.c
 build/pablo_supersaiyan.o: src/ia/pablo_supersaiyan.c
 	$(CC) -c -fPIC $< -o $@ $(CFLAGS)
 
+build/goodboy.o: src/ia/goodboy.c
+	$(CC) -c -fPIC $< -o $@ $(CFLAGS)
+
 # DYNAMIC LIBS
 
 build/tom.so: build/tom.o build/player.o build/board.o build/ia_utils.o
@@ -87,4 +90,7 @@ build/pablo.so: build/pablo.o build/player.o build/board.o build/ia_utils.o
 	$(CC) -shared $^ -o $@ $(LFLAGS)
 
 build/pablo_supersaiyan.so: build/pablo_supersaiyan.o build/player.o build/board.o build/ia_utils.o
+	$(CC) -shared $^ -o $@ $(LFLAGS)
+
+build/goodboy.so: build/goodboy.o build/player.o build/board.o build/ia_utils.o
 	$(CC) -shared $^ -o $@ $(LFLAGS)

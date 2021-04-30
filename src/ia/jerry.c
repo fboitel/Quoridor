@@ -3,21 +3,20 @@
 #include "board.h"
 #include "move.h"
 
-char *name = "Jerry";
+char* name = "Jerry";
 
 // Move to the closest vertex to the finish
 size_t move_forward(struct game_state_t game) {
 	size_t linked[MAX_DIRECTION];
 	size_t num = get_linked(game.graph, game.self.pos, linked);
 
-	if (num == 0) {
+	if (num == 0)
 		fprintf(stderr, "ERROR: Player is blocked\n");
-	}
 
 	// TODO get the closest to the finish
 	enum direction_t GOAL = game.self.color == BLACK ? SOUTH : NORTH;
 
-	enum direction_t directions[] = {GOAL, WEST, EAST, linked[opposite(GOAL)]};
+	enum direction_t directions[] = { GOAL, WEST, EAST, linked[opposite(GOAL)] };
 
 	for (int i = 0; i < 4; ++i) {
 		if (is_vertex(linked[directions[i]]) && linked[directions[i]] != game.opponent.pos) {
