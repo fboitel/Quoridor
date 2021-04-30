@@ -62,15 +62,15 @@ void graph_free(struct graph_t* graph) {
 // Graph operations
 void placeWall(struct graph_t* graph, struct edge_t e[]) {
 
-	/*	for (int i = 0; i < 2; i++) {
+		for (int i = 0; i < 2; i++) {
 			if (!is_no_edge(e[i])) {
 
-				gsl_spmatrix_uint_set(graph->t, e[i].fr, e[i].to, -1);
-				gsl_spmatrix_uint_set(graph->t, e[i].to, e[i].fr, -1);
+				gsl_spmatrix_uint_set(graph->t, e[i].fr, e[i].to, 0);
+				gsl_spmatrix_uint_set(graph->t, e[i].to, e[i].fr, 0);
 
 			}
 		}
-		*/
+		/*
 
 
 	int board_size = sqrt(graph->num_vertices);
@@ -123,7 +123,7 @@ void placeWall(struct graph_t* graph, struct edge_t e[]) {
 
 		}
 	}
-
+*/
 }
 
 int opposite(int d) {
