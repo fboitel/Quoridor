@@ -61,19 +61,7 @@ void graph_free(struct graph_t* graph) {
 
 // Graph operations
 void placeWall(struct graph_t* graph, struct edge_t e[]) {
-
-		for (int i = 0; i < 2; i++) {
-			if (!is_no_edge(e[i])) {
-
-				gsl_spmatrix_uint_set(graph->t, e[i].fr, e[i].to, 0);
-				gsl_spmatrix_uint_set(graph->t, e[i].to, e[i].fr, 0);
-
-			}
-		}
-		/*
-
-
-	int board_size = sqrt(graph->num_vertices);
+	size_t board_size = (size_t) sqrtl(graph->num_vertices);
 
 	// get nodes
 	size_t first_node = e[0].fr;
@@ -87,43 +75,19 @@ void placeWall(struct graph_t* graph, struct edge_t e[]) {
 	}
 
 	if (first_node + 1 == second_node) { // vertical wall
-		if (first_node + board_size == e[1].fr || first_node + board_size == e[1].to) {
-			gsl_spmatrix_uint_set(graph->t, first_node, second_node, 5);
-			gsl_spmatrix_uint_set(graph->t, second_node, first_node, 5);
+		gsl_spmatrix_uint_set(graph->t, first_node, second_node, 5);
+		gsl_spmatrix_uint_set(graph->t, second_node, first_node, 5);
 
-			gsl_spmatrix_uint_set(graph->t, first_node + board_size, second_node + board_size, 6);
-			gsl_spmatrix_uint_set(graph->t, second_node + board_size, first_node + board_size, 6);
+		gsl_spmatrix_uint_set(graph->t, first_node + board_size, second_node + board_size, 6);
+		gsl_spmatrix_uint_set(graph->t, second_node + board_size, first_node + board_size, 6);
 
-		}
-		else {
-			gsl_spmatrix_uint_set(graph->t, first_node + board_size, second_node + board_size, 6);
-			gsl_spmatrix_uint_set(graph->t, second_node + board_size, first_node + board_size, 6);
+	} else { // horizontal wall
+		gsl_spmatrix_uint_set(graph->t, first_node, second_node, 7);
+		gsl_spmatrix_uint_set(graph->t, second_node, first_node, 7);
 
-			gsl_spmatrix_uint_set(graph->t, first_node, second_node, 5);
-			gsl_spmatrix_uint_set(graph->t, second_node, first_node, 5);
-
-		}
+		gsl_spmatrix_uint_set(graph->t, first_node + 1, second_node + 1, 8);
+		gsl_spmatrix_uint_set(graph->t, second_node + 1, first_node + 1, 8);
 	}
-
-	else { // horizontal wall
-		if (first_node + 1 == e[1].fr || first_node + 1 == e[1].to) {
-			gsl_spmatrix_uint_set(graph->t, first_node, second_node, 7);
-			gsl_spmatrix_uint_set(graph->t, second_node, first_node, 7);
-
-			gsl_spmatrix_uint_set(graph->t, first_node + 1, second_node + 1, 8);
-			gsl_spmatrix_uint_set(graph->t, second_node + 1, first_node + 1, 8);
-
-		}
-		else {
-			gsl_spmatrix_uint_set(graph->t, first_node, second_node, 8);
-			gsl_spmatrix_uint_set(graph->t, second_node, first_node, 8);
-
-			gsl_spmatrix_uint_set(graph->t, first_node + 1, second_node + 1, 7);
-			gsl_spmatrix_uint_set(graph->t, second_node + 1, first_node + 1, 7);
-
-		}
-	}
-*/
 }
 
 int opposite(int d) {
@@ -144,7 +108,7 @@ int opposite(int d) {
 // Check if vertex dest is linked to vertex src (i.e there is an edge between
 // them)
 bool is_linked(const struct graph_t* graph, size_t src, size_t dest) {
-	return gsl_spmatrix_uint_get(graph->t, src, dest) > 0;
+	return 0 < gsl_spmatrix_uint_get(graph->t, src, dest) && gsl_spmatrix_uint_get(graph->t, src, dest) < 5;
 }
 
 // Check if there is an adjacent vertex of v (i.e a vertex linked by an edge) in
@@ -176,6 +140,16 @@ size_t get_linked(const struct graph_t* graph, size_t v, size_t vertices[]) {
 		linked += !is_no_vertex(vertices[i]);
 	}
 	return linked;
+}
+
+void display_adj_matrix(struct graph_t* board, size_t board_size) {
+	size_t nbCells = board_size * board_size;
+	for (size_t i = 0; i < nbCells; ++i) {
+		for (size_t j = 0; j < nbCells; ++j) {
+			printf("% d ", gsl_spmatrix_uint_get(board->t, i, j));
+		}
+		printf("\n");
+	}
 }
 
 void display_board(struct graph_t* board, size_t board_size, size_t position_player_1, size_t position_player_2) {
