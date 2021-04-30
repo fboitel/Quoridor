@@ -61,18 +61,6 @@ void graph_free(struct graph_t* graph) {
 
 // Graph operations
 void placeWall(struct graph_t* graph, struct edge_t e[]) {
-
-	/*	for (int i = 0; i < 2; i++) {
-			if (!is_no_edge(e[i])) {
-
-				gsl_spmatrix_uint_set(graph->t, e[i].fr, e[i].to, -1);
-				gsl_spmatrix_uint_set(graph->t, e[i].to, e[i].fr, -1);
-
-			}
-		}
-		*/
-
-
 	int board_size = sqrt(graph->num_vertices);
 
 	// get nodes
@@ -87,41 +75,19 @@ void placeWall(struct graph_t* graph, struct edge_t e[]) {
 	}
 
 	if (first_node + 1 == second_node) { // vertical wall
-		if (first_node + board_size == e[1].fr || first_node + board_size == e[1].to) {
-			gsl_spmatrix_uint_set(graph->t, first_node, second_node, 5);
-			gsl_spmatrix_uint_set(graph->t, second_node, first_node, 5);
+		gsl_spmatrix_uint_set(graph->t, first_node + board_size, second_node + board_size, 6);
+		gsl_spmatrix_uint_set(graph->t, second_node + board_size, first_node + board_size, 6);
 
-			gsl_spmatrix_uint_set(graph->t, first_node + board_size, second_node + board_size, 6);
-			gsl_spmatrix_uint_set(graph->t, second_node + board_size, first_node + board_size, 6);
-
-		}
-		else {
-			gsl_spmatrix_uint_set(graph->t, first_node + board_size, second_node + board_size, 6);
-			gsl_spmatrix_uint_set(graph->t, second_node + board_size, first_node + board_size, 6);
-
-			gsl_spmatrix_uint_set(graph->t, first_node, second_node, 5);
-			gsl_spmatrix_uint_set(graph->t, second_node, first_node, 5);
-
-		}
+		gsl_spmatrix_uint_set(graph->t, first_node, second_node, 5);
+		gsl_spmatrix_uint_set(graph->t, second_node, first_node, 5);
 	}
 
 	else { // horizontal wall
-		if (first_node + 1 == e[1].fr || first_node + 1 == e[1].to) {
-			gsl_spmatrix_uint_set(graph->t, first_node, second_node, 7);
-			gsl_spmatrix_uint_set(graph->t, second_node, first_node, 7);
+		gsl_spmatrix_uint_set(graph->t, first_node, second_node, 7);
+		gsl_spmatrix_uint_set(graph->t, second_node, first_node, 7);
 
-			gsl_spmatrix_uint_set(graph->t, first_node + 1, second_node + 1, 8);
-			gsl_spmatrix_uint_set(graph->t, second_node + 1, first_node + 1, 8);
-
-		}
-		else {
-			gsl_spmatrix_uint_set(graph->t, first_node, second_node, 8);
-			gsl_spmatrix_uint_set(graph->t, second_node, first_node, 8);
-
-			gsl_spmatrix_uint_set(graph->t, first_node + 1, second_node + 1, 7);
-			gsl_spmatrix_uint_set(graph->t, second_node + 1, first_node + 1, 7);
-
-		}
+		gsl_spmatrix_uint_set(graph->t, first_node + 1, second_node + 1, 8);
+		gsl_spmatrix_uint_set(graph->t, second_node + 1, first_node + 1, 8);
 	}
 
 }
