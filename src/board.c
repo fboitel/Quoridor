@@ -144,6 +144,16 @@ size_t get_linked(const struct graph_t* graph, size_t v, size_t vertices[]) {
 	return linked;
 }
 
+void display_adj_matrix(struct graph_t* board, size_t board_size) {
+	size_t nbCells = board_size * board_size;
+	for (size_t i = 0; i < nbCells; ++i) {
+		for (size_t j = 0; j < nbCells; ++j) {
+			printf("% d ", gsl_spmatrix_uint_get(board->t, i, j));
+		}
+		printf("\n");
+	}
+}
+
 void display_board(struct graph_t* board, size_t board_size, size_t position_player_1, size_t position_player_2) {
 	/*
 	 5 = wall on east + next line
