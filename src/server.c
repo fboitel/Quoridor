@@ -78,6 +78,12 @@ bool is_winning(struct graph_t* board, enum color_t active_player, size_t positi
 // Compute the next player
 enum color_t get_next_player(enum color_t player) { return 1 - player; }
 
+
+void end_game(enum reasons_t reason) {
+	winner = reason == WIN ? active_player : get_next_player(active_player);
+	game_over = true;
+}
+
 // Return if the displacement of the player is valid
 bool is_valid_displacement(struct graph_t* board, size_t destination, enum color_t player) {
 
@@ -91,9 +97,9 @@ bool is_valid_displacement(struct graph_t* board, size_t destination, enum color
 	}
 
 	// check first move
-	if (position_player == -1) {
+	if (position_player == (long unsigned int) -1) {
 		if (player == BLACK) {
-			return destination < board_size;
+			return destination < (long unsigned int) board_size;
 		}
 		return board->num_vertices - board_size < destination&& destination < board->num_vertices;
 	}
@@ -116,7 +122,7 @@ bool is_valid_displacement(struct graph_t* board, size_t destination, enum color
 	}
 
 	// move 2 on the right
-	if (position_player % board_size < board_size - 2 &&
+	if (position_player % board_size < (long unsigned int) board_size - 2 &&
 		destination - position_player == 2 &&
 		is_linked(board, position_player, position_player + 1) &&
 		is_linked(board, position_player + 1, destination) &&
@@ -134,7 +140,7 @@ bool is_valid_displacement(struct graph_t* board, size_t destination, enum color
 	}
 
 	// move 2 on the bottom
-	if (position_player / board_size < board_size - 2 &&
+	if (position_player / board_size < (long unsigned int) board_size - 2 &&
 		position_player + 2 * board_size == destination &&
 		is_linked(board, position_player, position_player + board_size) &&
 		is_linked(board, position_player + board_size, destination) &&
@@ -154,7 +160,7 @@ bool is_valid_displacement(struct graph_t* board, size_t destination, enum color
 			||
 			(is_linked(board, position_player, position_player - 1) &&
 				is_linked(board, position_player - 1, destination) &&
-				position_opposent == position_player -1)
+				position_opposent == position_player - 1)
 			)
 		) {
 		return true;
@@ -162,7 +168,7 @@ bool is_valid_displacement(struct graph_t* board, size_t destination, enum color
 
 	// move top + right
 	if (position_player / board_size > 0 &&
-		position_player % board_size < board_size - 1 &&
+		position_player % board_size < (long unsigned int) board_size - 1 &&
 		position_player - board_size == destination - 1 &&
 		(
 			(is_linked(board, position_player, position_player - board_size) &&
@@ -179,8 +185,8 @@ bool is_valid_displacement(struct graph_t* board, size_t destination, enum color
 	}
 
 	// move bot + right
-	if (position_player / board_size < board_size -1 &&
-		position_player % board_size < board_size -1 &&
+	if (position_player / board_size < (long unsigned int) board_size - 1 &&
+		position_player % board_size <  (long unsigned int) board_size - 1 &&
 		position_player + board_size == destination - 1 &&
 		(
 			(is_linked(board, position_player, position_player + board_size) &&
@@ -197,7 +203,7 @@ bool is_valid_displacement(struct graph_t* board, size_t destination, enum color
 	}
 
 	// move bot + left
-	if (position_player / board_size < board_size -1 &&
+	if (position_player / board_size < (long unsigned int) board_size - 1 &&
 		position_player % board_size > 0 &&
 		position_player + board_size == destination + 1 &&
 		(
@@ -220,26 +226,41 @@ bool is_valid_displacement(struct graph_t* board, size_t destination, enum color
 }
 
 bool is_valid_wall(struct graph_t* board, struct edge_t e[]) {
-	return
-		(//FIXME : some wall will be refused unfairly
-			// vertical wall
-			vertex_from_direction(board, e[0].fr, EAST) == e[0].to &&
-			vertex_from_direction(board, e[1].fr, EAST) == e[1].to &&
-			(vertex_from_direction(board, e[0].fr, SOUTH) == e[1].fr ||
-				vertex_from_direction(board, e[0].to, SOUTH) == e[1].to)
-			) || (
-				// horizontal wall
-				vertex_from_direction(board, e[0].fr, SOUTH) == e[0].to &&
-				vertex_from_direction(board, e[1].fr, SOUTH) == e[1].to &&
-				(vertex_from_direction(board, e[0].fr, EAST) == e[1].fr ||
-					vertex_from_direction(board, e[0].to, EAST) == e[1].to)
-				);
-}
 
+	// sort verticies
 
-void end_game(enum reasons_t reason) {
-	winner = reason == WIN ? active_player : get_next_player(active_player);
-	game_over = true;
+	size_t e0fr = e[0].fr < e[0].to ? e[0].fr : e[0].to;
+	size_t e0to = e[0].fr > e[0].to ? e[0].fr : e[0].to;
+	size_t e1fr = e[1].fr < e[1].to ? e[1].fr : e[1].to;
+	size_t e1to = e[1].fr > e[1].to ? e[1].fr : e[1].to;
+
+	// check if the wall cut valid edges
+	if (!(is_linked(board, e0fr, e0to) && is_linked(board, e1fr, e1to))) {
+		return false;
+	}
+
+	// check if verticies form a valid square
+	if ((e0fr % board_size) + 1 == e0to % board_size && (e1fr % board_size) + 1 == e1to % board_size && e0fr + board_size == e1fr) { // vertical wall
+		// check if the wall cut another wall
+		size_t e2 = gsl_spmatrix_uint_get(board->t, e0fr, e1fr);
+		if (e2 == 7) {
+			return false;
+		}
+	}
+	else if (e0fr + board_size == e0to && e1fr + board_size == e1to && (e0fr % board_size) + 1 == e1fr % board_size) { // horizontal wall
+		// check if the wall cut another wall
+		size_t e2 = gsl_spmatrix_uint_get(board->t, e0fr, e1fr);
+		if (e2 == 5) {
+			return false;
+		}
+	}
+	else {
+		return false;
+	}
+
+	// TODO : opposent or player can't win 
+
+	return true;
 }
 
 // Check move validity
@@ -266,8 +287,8 @@ bool move_is_valid(struct move_t* mv, struct graph_t* board, enum color_t player
 			end_game(INVALID_MOVE);
 			return false;
 		}
+		return true;
 	}
-
 
 	// Check if edges create a wall
 	if (mv->t == WALL) {
