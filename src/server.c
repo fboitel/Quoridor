@@ -352,26 +352,31 @@ int main(int argc, char* argv[]) {
 	// Game loop
 	while (!game_over) {
 		turn++;
-
+		printf("1)\n");
 		// Plays the active player
 		last_move = active_player == BLACK ? P1_play(last_move) : P2_play(last_move);
 
+		printf("11)\n");
 		// Check move validity
 		if (!move_is_valid(&last_move, board, active_player)) {
 			break;
 		}
 
+		printf("111)\n");
 		update_board(board, &last_move);
 
+		printf("1111)\n");
 		display_board(board, m, position_player_1, position_player_2);
 		//	printf("wall : %ld:%ld - %ld:%ld \n", last_move.e[0].fr,  last_move.e[0].to,  last_move.e[1].fr,  last_move.e[1].to);
 
 		// Check if a player has won
+		printf("11111)\n");
 		if (is_winning(board, active_player, active_player == BLACK ? position_player_1 : position_player_2)) {
 			end_game(WIN);
 			break;
 		}
 
+		printf("111111)\n");
 		active_player = get_next_player(active_player);
 	}
 
