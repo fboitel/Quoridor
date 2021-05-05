@@ -115,7 +115,7 @@ size_t get_possible_walls(struct graph_t *graph, struct edge_t walls[MAX_POSSIBL
 	}
 	return nb_wall;
 }
-
+/*
 //Put a wall on the graph
 void put_wall(struct graph_t *graph, struct edge_t wall[2]) {
 	gsl_spmatrix_uint_set(graph->t, wall[0].fr, wall[0].to, 0);
@@ -130,22 +130,31 @@ void remove_wall(struct graph_t *graph, struct edge_t wall[2], enum direction_t 
 	gsl_spmatrix_uint_set(graph->t, wall[1].fr, wall[1].to, dir);
 	gsl_spmatrix_uint_set(graph->t, wall[1].to, wall[1].fr, opposite(dir));
 }
-
+*/
 //Returns the best place to put a wall in order to delay the opponent
 size_t get_the_better_wall_id(struct graph_t *graph, struct edge_t posswall[MAX_POSSIBLE_WALLS][2], size_t nb_wall, size_t pos, enum color_t color) {
 	size_t dist = dijkstra(graph, pos, color);
 	size_t wall_id = IMPOSSIBLE_ID;
+	// size_t closest = dist;
 	for (size_t i = 0; i < nb_wall; i++) {
-		enum direction_t dir = gsl_spmatrix_uint_get(graph->t, posswall[i][0].fr, posswall[i][0].to);
-		put_wall(graph, posswall[i]);
+		place_wall(graph, posswall[i]);
 		size_t new_dist = dijkstra(graph, pos, color);
+		// size_t new_closest = dijkstra(graph, posswall[i][0].fr, color);
 		if (new_dist > dist && new_dist < IMPOSSIBLE_DISTANCE) {
 			dist = new_dist;
+			// closest = new_closest;
 			wall_id = i;
 		}
-		remove_wall(graph, posswall[i], dir);
+		// if (new_dist == dist && new_dist < IMPOSSIBLE_DISTANCE && new_closest > closest){
+		// 	dist = new_dist;
+		// 	closest = new_closest;
+		// 	wall_id = i;
+		// }
+		//display_board(graph, (size_t)sqrtl(graph->num_vertices), 0, graph->num_vertices - 1);
+		//printf("OK3OK");
+		remove_wall(graph, posswall[i]);
 	}
-	printf("(%zu %zu)", 2 * (graph->num_vertices) + 5, dist + 5);
+	// printf("(%zu %zu)", 2 * (graph->num_vertices) + 5, dist + 5);
 	return wall_id;
 }
 
@@ -161,13 +170,19 @@ size_t move_forward(struct game_state_t game) {
 	size_t shortest = 2 * (game.graph->num_vertices);
 	for (int i = 1; i < MAX_DIRECTION; i++) {
 		if (!is_no_vertex(linked[i])) {
+			if (linked[i] == game.opponent.pos)
+				linked[i] = vertex_from_direction(game.graph, linked[i], i);
 			size_t dist_tmp = dijkstra(game.graph, linked[i], game.self.color);
 			if (dist_tmp < shortest) {
 				shortest = dist_tmp;
 				dir = i;
+				
 			}
 		}
 	}
+	fprintf(stderr, "%ld\n", game.self.pos);
+	for (int i = 0; i < 4; i++)
+		fprintf(stderr, "(%zu, dist : %zu) ", linked[i], dijkstra(game.graph, linked[i], game.self.color));
 	return linked[dir];
 }
 
@@ -179,8 +194,9 @@ struct move_t make_first_move(struct game_state_t game) {
 struct move_t make_move(struct game_state_t game) {
 	struct move_t move;
 	struct edge_t poss_walls[MAX_POSSIBLE_WALLS][2];
-	size_t size_board = sqrt(game.graph->num_vertices);
-	if (dijkstra(game.graph, game.opponent.pos, game.opponent.color) > size_board/3 && dijkstra(game.graph, game.opponent.pos, game.opponent.color) > dijkstra(game.graph, game.self.pos, game.self.color)){
+	//size_t size_board = sqrt(game.graph->num_vertices);
+	if (dijkstra(game.graph, game.opponent.pos, game.opponent.color) > dijkstra(game.graph, game.self.pos, game.self.color) ||
+		dijkstra(game.graph, game.self.pos, game.self.color) == 1){
 		move.m = move_forward(game);
 		move.t = MOVE;
 		}

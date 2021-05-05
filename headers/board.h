@@ -41,10 +41,12 @@ struct graph_t *graph_init(size_t n, enum shape_t shape);
 void graph_free(struct graph_t *graph);
 
 // Add edges in the graph
-void placeWall(struct graph_t *graph, struct edge_t e[]);
+void place_wall(struct graph_t *graph, struct edge_t e[]);
+void remove_wall(struct graph_t *graph, struct edge_t e[]);
 
 int opposite(int d);
 
 void display_board(struct graph_t *board, size_t board_size, size_t position_player_1, size_t position_player_2);
 
+void display_adj_matrix(struct graph_t* board, size_t board_size);
 #endif // _QUOR_BOARD_H_
