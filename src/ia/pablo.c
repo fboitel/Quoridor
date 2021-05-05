@@ -165,10 +165,12 @@ size_t move_forward(struct game_state_t game) {
 	size_t shortest = 2 * (game.graph->num_vertices);
 	for (int i = 1; i < MAX_DIRECTION; i++) {
 		if (!is_no_vertex(linked[i])) {
-			size_t dist_tmp = get_distance(game.graph, linked[i], game.self.color);
-			if (dist_tmp < shortest) {
-				shortest = dist_tmp;
-				dir = i;
+			if (linked[i] != game.opponent.pos){
+				size_t dist_tmp = get_distance(game.graph, linked[i], game.self.color);
+				if (dist_tmp < shortest) {
+					shortest = dist_tmp;
+					dir = i;
+				}
 			}
 		}
 	}
