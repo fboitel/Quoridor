@@ -106,7 +106,7 @@ struct move_t expand_move(struct game_state_t game, SimpleMove move) {
 	struct move_t expanded = {
 			.c = game.self.color,
 			.t = move.type,
-			.m = move.type == MOVE ? move.action[0] : game.self.pos
+			.m = move.type == MOVE ? (size_t) move.action[0] : game.self.pos
 	};
 
 	switch (move.type) {
