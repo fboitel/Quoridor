@@ -334,7 +334,9 @@ int main(int argc, char* argv[]) {
 	printf("Args parsed\n");
 
 	// Init random generator
-	srand(time(NULL));
+	time_t seed = time(NULL);
+	srand(seed);
+	printf("Seed: %ld\n", seed);
 
 	// Load players
 	load_libs();
