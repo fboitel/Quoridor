@@ -177,7 +177,9 @@ void display_board(struct graph_t* board, size_t board_size, size_t position_pla
 	*/
 
 	// care about out of tab
-	char next_line[100] = "";
+	char next_line[24 * board_size + 1];
+	next_line[0] = '\0';
+
 	for (size_t i = 0; i < board_size * board_size; ++i) {
 
 		if (i % board_size == 0) {
@@ -212,13 +214,13 @@ void display_board(struct graph_t* board, size_t board_size, size_t position_pla
 		if (matrix_state_2 == 2) {
 			strcat(next_line, "| ");
 		}
-		 /*else if (matrix_state_2 == 7) {
+		else if (matrix_state_2 == 7) {
 		  	strcat(next_line, "\033[33m──\033[m");
 		  	end_pattern = 1;
 		}
 		else if (matrix_state_2 == 8) {
 		 	strcat(next_line, "\033[33m─\033[m ");
-		}*/
+		}
 		else {
 			strcat(next_line, "  ");
 		}
@@ -226,7 +228,7 @@ void display_board(struct graph_t* board, size_t board_size, size_t position_pla
 		// east connection
 		if (matrix_state_1 == 4) {
 			printf(" - ");
-		}/*
+		}
 		else if (matrix_state_1 == 5) {
 			printf(" \033[33m│\033[m ");
 		 	strcat(next_line, "\033[33m│\033[m ");
@@ -234,7 +236,7 @@ void display_board(struct graph_t* board, size_t board_size, size_t position_pla
 		}
 		else if (matrix_state_1 == 6) {
 		 	printf(" \033[33m│\033[m ");
-		}*/
+		}
 		else {
 			printf("   ");
 		}
