@@ -78,27 +78,146 @@ bool is_winning(struct graph_t* board, enum color_t active_player, size_t positi
 // Compute the next player
 enum color_t get_next_player(enum color_t player) { return 1 - player; }
 
+
+void end_game(enum reasons_t reason) {
+	winner = reason == WIN ? active_player : get_next_player(active_player);
+	game_over = true;
+}
+
 // Return if the displacement of the player is valid
 bool is_valid_displacement(struct graph_t* board, size_t destination, enum color_t player) {
 
-	// destination is in the board :
-	if (destination < 0 || board->num_vertices <= destination ) {
+	size_t position_player = player == BLACK ? position_player_1 : position_player_2;
+
+	size_t position_opposent = player == BLACK ? position_player_2 : position_player_1;
+
+	// destination is in the board and destination is not on a player cell
+	if (board->num_vertices <= destination || position_player == destination || position_opposent == destination) {
 		return false;
 	}
 
-	int position_player = player == BLACK ? position_player_1 : position_player_2;
-
 	// check first move
-	if (position_player == -1) {
+	if (position_player == (long unsigned int) -1) {
 		if (player == BLACK) {
-			return destination < board_size;
+			return destination < (long unsigned int) board_size;
 		}
-		return board->num_vertices - board_size < destination && destination < board->num_vertices;
+		return board->num_vertices - board_size < destination&& destination < board->num_vertices;
 	}
 
 	// check destination is in the 4 near cells :
-	if ( abs(position_player - destination) == 1 || abs(position_player - destination) == board_size) {
-		return is_linked(position_player, destination);
+	if (is_linked(board, position_player, destination)) {
+		return true;
+	}
+
+	// check others destination manually
+	// TODO : try to find something more clean, but it's hard
+
+	// move 2 on the left
+	if (position_player % board_size > 1 &&
+		position_player - destination == 2 &&
+		is_linked(board, position_player, position_player - 1) &&
+		is_linked(board, position_player - 1, destination) &&
+		position_opposent == position_player - 1) {
+		return true;
+	}
+
+	// move 2 on the right
+	if (position_player % board_size < (long unsigned int) board_size - 2 &&
+		destination - position_player == 2 &&
+		is_linked(board, position_player, position_player + 1) &&
+		is_linked(board, position_player + 1, destination) &&
+		position_opposent == position_player + 1) {
+		return true;
+	}
+
+	// move 2 on the top
+	if (position_player / board_size > 1 &&
+		destination + 2 * board_size == position_player &&
+		is_linked(board, position_player, position_player - board_size) &&
+		is_linked(board, position_player - board_size, destination) &&
+		position_opposent == position_player - board_size) {
+		return true;
+	}
+
+	// move 2 on the bottom
+	if (position_player / board_size < (long unsigned int) board_size - 2 &&
+		position_player + 2 * board_size == destination &&
+		is_linked(board, position_player, position_player + board_size) &&
+		is_linked(board, position_player + board_size, destination) &&
+		position_opposent == position_player + board_size) {
+		return true;
+	}
+
+	// move top + left
+	if (position_player / board_size > 0 &&
+		position_player % board_size > 0 &&
+		position_player - board_size == destination + 1 &&
+		(
+			(is_linked(board, position_player, position_player - board_size) &&
+				is_linked(board, position_player - board_size, destination) &&
+				position_opposent == position_player - board_size
+				)
+			||
+			(is_linked(board, position_player, position_player - 1) &&
+				is_linked(board, position_player - 1, destination) &&
+				position_opposent == position_player - 1)
+			)
+		) {
+		return true;
+	}
+
+	// move top + right
+	if (position_player / board_size > 0 &&
+		position_player % board_size < (long unsigned int) board_size - 1 &&
+		position_player - board_size == destination - 1 &&
+		(
+			(is_linked(board, position_player, position_player - board_size) &&
+				is_linked(board, position_player - board_size, destination) &&
+				position_opposent == position_player - board_size
+				)
+			||
+			(is_linked(board, position_player, position_player + 1) &&
+				is_linked(board, position_player + 1, destination) &&
+				position_opposent == position_player + 1)
+			)
+		) {
+		return true;
+	}
+
+	// move bot + right
+	if (position_player / board_size < (long unsigned int) board_size - 1 &&
+		position_player % board_size <  (long unsigned int) board_size - 1 &&
+		position_player + board_size == destination - 1 &&
+		(
+			(is_linked(board, position_player, position_player + board_size) &&
+				is_linked(board, position_player + board_size, destination) &&
+				position_opposent == position_player + board_size
+				)
+			||
+			(is_linked(board, position_player, position_player + 1) &&
+				is_linked(board, position_player + 1, destination) &&
+				position_opposent == position_player + 1)
+			)
+		) {
+		return true;
+	}
+
+	// move bot + left
+	if (position_player / board_size < (long unsigned int) board_size - 1 &&
+		position_player % board_size > 0 &&
+		position_player + board_size == destination + 1 &&
+		(
+			(is_linked(board, position_player, position_player + board_size) &&
+				is_linked(board, position_player + board_size, destination) &&
+				position_opposent == position_player + board_size
+				)
+			||
+			(is_linked(board, position_player, position_player - 1) &&
+				is_linked(board, position_player - 1, destination) &&
+				position_opposent == position_player - 1)
+			)
+		) {
+		return true;
 	}
 
 	//gsl_spmatrix_uint_set(board->t, position_player, destination, 5);
@@ -107,26 +226,41 @@ bool is_valid_displacement(struct graph_t* board, size_t destination, enum color
 }
 
 bool is_valid_wall(struct graph_t* board, struct edge_t e[]) {
-	return
-		(//FIXME : some wall will be refused unfairly
-			// vertical wall
-			vertex_from_direction(board, e[0].fr, EAST) == e[0].to &&
-			vertex_from_direction(board, e[1].fr, EAST) == e[1].to &&
-			(vertex_from_direction(board, e[0].fr, SOUTH) == e[1].fr ||
-				vertex_from_direction(board, e[0].to, SOUTH) == e[1].to)
-			) || (
-				// horizontal wall
-				vertex_from_direction(board, e[0].fr, SOUTH) == e[0].to &&
-				vertex_from_direction(board, e[1].fr, SOUTH) == e[1].to &&
-				(vertex_from_direction(board, e[0].fr, EAST) == e[1].fr ||
-					vertex_from_direction(board, e[0].to, EAST) == e[1].to)
-				);
-}
 
+	// sort verticies
 
-void end_game(enum reasons_t reason) {
-	winner = reason == WIN ? active_player : get_next_player(active_player);
-	game_over = true;
+	size_t e0fr = e[0].fr < e[0].to ? e[0].fr : e[0].to;
+	size_t e0to = e[0].fr > e[0].to ? e[0].fr : e[0].to;
+	size_t e1fr = e[1].fr < e[1].to ? e[1].fr : e[1].to;
+	size_t e1to = e[1].fr > e[1].to ? e[1].fr : e[1].to;
+
+	// check if the wall cut valid edges
+	if (!(is_linked(board, e0fr, e0to) && is_linked(board, e1fr, e1to))) {
+		return false;
+	}
+
+	// check if verticies form a valid square
+	if ((e0fr % board_size) + 1 == e0to % board_size && (e1fr % board_size) + 1 == e1to % board_size && e0fr + board_size == e1fr) { // vertical wall
+		// check if the wall cut another wall
+		size_t e2 = gsl_spmatrix_uint_get(board->t, e0fr, e1fr);
+		if (e2 == 7) {
+			return false;
+		}
+	}
+	else if (e0fr + board_size == e0to && e1fr + board_size == e1to && (e0fr % board_size) + 1 == e1fr % board_size) { // horizontal wall
+		// check if the wall cut another wall
+		size_t e2 = gsl_spmatrix_uint_get(board->t, e0fr, e1fr);
+		if (e2 == 5) {
+			return false;
+		}
+	}
+	else {
+		return false;
+	}
+
+	// TODO : opposent or player can't win 
+
+	return true;
 }
 
 // Check move validity
@@ -153,8 +287,8 @@ bool move_is_valid(struct move_t* mv, struct graph_t* board, enum color_t player
 			end_game(INVALID_MOVE);
 			return false;
 		}
+		return true;
 	}
-
 
 	// Check if edges create a wall
 	if (mv->t == WALL) {
@@ -182,7 +316,7 @@ void update_board(struct graph_t* board, struct move_t* last_move) {
 	}
 	else {
 		// Update the board if a player has put a wall
-		placeWall(board, last_move->e);
+		place_wall(board, last_move->e);
 	}
 }
 
@@ -239,7 +373,6 @@ int main(int argc, char* argv[]) {
 	// Game loop
 	while (!game_over) {
 		turn++;
-
 		// Plays the active player
 		last_move = active_player == BLACK ? P1_play(last_move) : P2_play(last_move);
 
@@ -250,8 +383,10 @@ int main(int argc, char* argv[]) {
 
 		update_board(board, &last_move);
 
+
 		display_board(board, m, position_player_1, position_player_2);
-		//	printf("wall : %ld:%ld - %ld:%ld \n", last_move.e[0].fr,  last_move.e[0].to,  last_move.e[1].fr,  last_move.e[1].to);
+
+		//printf("wall : %ld:%ld - %ld:%ld \n", last_move.e[0].fr,  last_move.e[0].to,  last_move.e[1].fr,  last_move.e[1].to);
 
 		// Check if a player has won
 		if (is_winning(board, active_player, active_player == BLACK ? position_player_1 : position_player_2)) {

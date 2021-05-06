@@ -19,13 +19,13 @@ run-game: build/server build/pablo.so build/jerry.so
 	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/server ./build/pablo.so ./build/jerry.so -m 8
 
 
-install: build/server build/alltests build/tom.so build/jerry.so build/pablo.so
+install: build/server build/alltests build/tom.so build/jerry.so build/pablo.so build/pablo_supersaiyan.so
 	cp $^ install
 
 clean:
 	find build install -type f -not -name .keep | xargs rm -rf
 
-build: build/server build/tom.so build/jerry.so build/pablo.so build/geralt.so
+build: build/server build/tom.so build/jerry.so build/pablo.so build/pablo_supersaiyan.so build/geralt.so
 
 test: build/alltests
 
@@ -75,6 +75,11 @@ build/pablo.o: src/ia/pablo.c
 build/geralt.o: src/ia/geralt.c
 	$(CC) -c -fPIC $< -o $@ $(CFLAGS)
 
+build/pablo_supersaiyan.o: src/ia/pablo_supersaiyan.c
+	$(CC) -c -fPIC $< -o $@ $(CFLAGS)
+
+build/goodboy.o: src/ia/goodboy.c
+	$(CC) -c -fPIC $< -o $@ $(CFLAGS)
 
 # DYNAMIC LIBS
 
@@ -88,4 +93,10 @@ build/pablo.so: build/pablo.o build/player.o build/board.o build/ia_utils.o
 	$(CC) -shared $^ -o $@ $(LFLAGS)
 
 build/geralt.so: build/geralt.o build/player.o build/board.o build/ia_utils.o
+	$(CC) -shared $^ -o $@ $(LFLAGS)
+
+build/pablo_supersaiyan.so: build/pablo_supersaiyan.o build/player.o build/board.o build/ia_utils.o
+	$(CC) -shared $^ -o $@ $(LFLAGS)
+
+build/goodboy.so: build/goodboy.o build/player.o build/board.o build/ia_utils.o
 	$(CC) -shared $^ -o $@ $(LFLAGS)
