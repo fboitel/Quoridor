@@ -57,6 +57,39 @@ void add_displacement_moves(const char *graph, int n, SimpleMove *moves, int *nb
 }
 
 
+void add_wall_moves(const char *graph, int n, SimpleMove *moves, int *nb_of_moves) {
+	int n2 = n * n;
+
+	for (int i = 0; i < n - 1; ++i) {
+		for (int j = 0; j < n - 1; ++j) {
+			/*
+			 * a -e- b
+			 * |     |
+			 * g     h
+			 * |     |
+			 * c -f- d
+			 */
+			int a = i * n + j;
+			int b = a + 1;
+			int c = a + n;
+			int d = b + n;
+			char e = EDGE(graph, n2, a, b);
+			char f = EDGE(graph, n2, c, d);
+			char g = EDGE(graph, n2, a, c);
+			char h = EDGE(graph, n2, b, d);
+
+			if (e >= 1 && e <= 4 && f >= 1 && f <= 4 && g != 7) {
+				moves[(*nb_of_moves)++] = (SimpleMove) {WALL, {a, b, c, d}};
+			}
+
+			if (g >= 1 && g <= 4 && h >= 1 && h <= 4 && e != 5) {
+				moves[(*nb_of_moves)++] = (SimpleMove) {WALL, {a, c, b, d}};
+			}
+		}
+	}
+}
+
+
 SimpleMove *get_possible_moves(SimpleGameState *game, int n, int *nb_of_moves) {
 	SimpleMove *moves = malloc((2 * (n - 1) * (n - 1) + 5) * sizeof(SimpleMove));
 	*nb_of_moves = 0;
@@ -65,6 +98,10 @@ SimpleMove *get_possible_moves(SimpleGameState *game, int n, int *nb_of_moves) {
 	add_displacement_moves(game->graph, n, moves, nb_of_moves, game->pos, game->opponent_pos, -1, (char) n);
 	add_displacement_moves(game->graph, n, moves, nb_of_moves, game->pos, game->opponent_pos, (char) n, 1);
 	add_displacement_moves(game->graph, n, moves, nb_of_moves, game->pos, game->opponent_pos, (char) -n, 1);
+
+	if (game->num_walls > 0) {
+		add_wall_moves(game->graph, n, moves, nb_of_moves);
+	}
 
 	moves = realloc(moves, *nb_of_moves * sizeof(SimpleMove));
 	return moves;
