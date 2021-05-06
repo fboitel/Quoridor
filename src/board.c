@@ -105,6 +105,53 @@ void place_wall(struct graph_t* graph, struct edge_t e[]) {
 	}
 }
 
+void remove_wall(struct graph_t* graph, struct edge_t e[]){
+	/*
+	// get nodes
+	size_t first_node = e[0].fr;
+	size_t second_node = e[0].to;
+
+	// sort nodes
+	if (first_node > second_node) {
+		size_t tmp = first_node;
+		first_node = second_node;
+		second_node = tmp;
+	}
+	*/
+	if (gsl_spmatrix_uint_get(graph->t, e[0].fr, e[0].to) == 5 || gsl_spmatrix_uint_get(graph->t, e[0].fr, e[0].to) == 6){
+		gsl_spmatrix_uint_set(graph->t, e[0].fr, e[0].to, 4);
+		gsl_spmatrix_uint_set(graph->t, e[0].to, e[0].fr, 3);
+
+		gsl_spmatrix_uint_set(graph->t, e[1].fr, e[1].to, 4);
+		gsl_spmatrix_uint_set(graph->t, e[1].to, e[1].fr, 3);
+	}
+
+	else if (gsl_spmatrix_uint_get(graph->t, e[0].fr, e[0].to) == 7 || gsl_spmatrix_uint_get(graph->t, e[0].fr, e[0].to) == 8){
+		gsl_spmatrix_uint_set(graph->t, e[0].fr, e[0].to, 2);
+		gsl_spmatrix_uint_set(graph->t, e[0].to, e[0].fr, 1);
+
+		gsl_spmatrix_uint_set(graph->t, e[1].fr, e[1].to, 2);
+		gsl_spmatrix_uint_set(graph->t, e[1].to, e[1].fr, 1);
+	}
+
+	else if (gsl_spmatrix_uint_get(graph->t, e[0].to, e[0].fr) == 5 || gsl_spmatrix_uint_get(graph->t, e[0].to, e[0].fr) == 6){
+		gsl_spmatrix_uint_set(graph->t, e[0].fr, e[0].to, 3);
+		gsl_spmatrix_uint_set(graph->t, e[0].to, e[0].fr, 4);
+
+		gsl_spmatrix_uint_set(graph->t, e[1].fr, e[1].to, 3);
+		gsl_spmatrix_uint_set(graph->t, e[1].to, e[1].fr, 4);
+	}
+
+	else if (gsl_spmatrix_uint_get(graph->t, e[0].to, e[0].fr) == 7 || gsl_spmatrix_uint_get(graph->t, e[0].to, e[0].fr) == 8){
+		gsl_spmatrix_uint_set(graph->t, e[0].fr, e[0].to, 1);
+		gsl_spmatrix_uint_set(graph->t, e[0].to, e[0].fr, 2);
+
+		gsl_spmatrix_uint_set(graph->t, e[1].fr, e[1].to, 1);
+		gsl_spmatrix_uint_set(graph->t, e[1].to, e[1].fr, 2);
+	}
+	else printf("ERRRRROR (%u) (%u)\n", gsl_spmatrix_uint_get(graph->t, e[0].fr, e[0].to), gsl_spmatrix_uint_get(graph->t, e[0].to, e[0].fr));
+}
+
 int opposite(int d) {
 	switch (d) {
 	case NORTH:
