@@ -117,14 +117,14 @@ size_t get_possible_walls(struct graph_t *graph, struct edge_t walls[MAX_POSSIBL
 }
 
 //Put a wall on the graph
-void put_wall(struct graph_t *graph, struct edge_t wall[2]) {
+void put_wall_opti(struct graph_t *graph, struct edge_t wall[2]) {
 	gsl_spmatrix_uint_set(graph->t, wall[0].fr, wall[0].to, 0);
 	gsl_spmatrix_uint_set(graph->t, wall[0].to, wall[0].fr, 0);
 	gsl_spmatrix_uint_set(graph->t, wall[1].fr, wall[1].to, 0);
 	gsl_spmatrix_uint_set(graph->t, wall[1].to, wall[1].fr, 0);
 }
 
-void remove_wall(struct graph_t *graph, struct edge_t wall[2], enum direction_t dir) {
+void remove_wall_opti(struct graph_t *graph, struct edge_t wall[2], enum direction_t dir) {
 	gsl_spmatrix_uint_set(graph->t, wall[0].fr, wall[0].to, dir);
 	gsl_spmatrix_uint_set(graph->t, wall[0].to, wall[0].fr, opposite(dir));
 	gsl_spmatrix_uint_set(graph->t, wall[1].fr, wall[1].to, dir);
@@ -138,7 +138,7 @@ size_t get_the_better_wall_id(struct graph_t *graph, struct edge_t posswall[MAX_
 	size_t closest = dist;
 	for (size_t i = 0; i < nb_wall; i++) {
 		size_t dir = gsl_spmatrix_uint_get(graph->t, posswall[i][0].fr, posswall[i][0].to);
-		put_wall(graph, posswall[i]);
+		put_wall_opti(graph, posswall[i]);
 		size_t new_dist = dijkstra(graph, pos, color);
 		size_t new_closest = dijkstra(graph, posswall[i][0].fr, color);
 		if (new_dist > dist && new_dist < IMPOSSIBLE_DISTANCE) {
@@ -153,7 +153,7 @@ size_t get_the_better_wall_id(struct graph_t *graph, struct edge_t posswall[MAX_
 		}
 		//display_board(graph, (size_t)sqrtl(graph->num_vertices), 0, graph->num_vertices - 1);
 		//printf("OK3OK");
-		remove_wall(graph, posswall[i], dir);
+		remove_wall_opti(graph, posswall[i], dir);
 	}
 	// printf("(%zu %zu)", 2 * (graph->num_vertices) + 5, dist + 5);
 	return wall_id;
