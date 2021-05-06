@@ -16,7 +16,7 @@ run-tests: build/alltests
 	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/alltests
 
 run-game: build/server build/pablo.so build/jerry.so
-	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/server ./build/pablo.so ./build/jerry.so -m 5
+	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/server ./build/pablo.so ./build/jerry.so -m 8
 
 
 install: build/server build/alltests build/tom.so build/jerry.so build/pablo.so
@@ -25,7 +25,7 @@ install: build/server build/alltests build/tom.so build/jerry.so build/pablo.so
 clean:
 	find build install -type f -not -name .keep | xargs rm -rf
 
-build: build/server build/tom.so build/jerry.so build/pablo.so
+build: build/server build/tom.so build/jerry.so build/pablo.so build/geralt.so
 
 test: build/alltests
 
@@ -72,6 +72,9 @@ build/jerry.o: src/ia/jerry.c
 build/pablo.o: src/ia/pablo.c
 	$(CC) -c -fPIC $< -o $@ $(CFLAGS)
 
+build/geralt.o: src/ia/geralt.c
+	$(CC) -c -fPIC $< -o $@ $(CFLAGS)
+
 
 # DYNAMIC LIBS
 
@@ -82,4 +85,7 @@ build/jerry.so: build/jerry.o build/player.o build/board.o build/ia_utils.o
 	$(CC) -shared $^ -o $@ $(LFLAGS)
 
 build/pablo.so: build/pablo.o build/player.o build/board.o build/ia_utils.o
+	$(CC) -shared $^ -o $@ $(LFLAGS)
+
+build/geralt.so: build/geralt.o build/player.o build/board.o build/ia_utils.o
 	$(CC) -shared $^ -o $@ $(LFLAGS)
