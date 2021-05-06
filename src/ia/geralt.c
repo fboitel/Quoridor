@@ -3,7 +3,7 @@
 #include "move.h"
 
 
-#define EDGE(graph, n, i, j) ((graph)[(i) * (n) + (j)])
+#define EDGE(graph, n2, i, j) ((graph)[(i) * (n2) + (j)])
 #define DISPLACEMENT_MOVE(dest) ((SimpleMove) {MOVE, {(dest), 0, 0, 0}})
 
 
@@ -27,33 +27,31 @@ char *name = "Geralt";
 
 
 void add_displacement_moves(const char *graph, int n, SimpleMove *moves, int *nb_of_moves, int player_pos, int opponent_pos, char main_direction, char secondary_direction) {
+	int n2 = n * n;
+
 	int step_1 = player_pos + main_direction;
-	if (step_1 < 0 || step_1 >= n || !EDGE(graph, n, player_pos, step_1)) {
+	if (step_1 < 0 || step_1 >= n2 || !EDGE(graph, n2, player_pos, step_1)) {
 		return;
 	}
 
 	if (step_1 != opponent_pos) {
-		moves[*nb_of_moves] = DISPLACEMENT_MOVE(step_1);
-		*nb_of_moves = *nb_of_moves + 1;
+		moves[(*nb_of_moves)++] = DISPLACEMENT_MOVE(step_1);
 		return;
 	}
 
 	int step_2 = step_1 + main_direction;
-	if (step_2 >= 0 && step_2 < n && EDGE(graph, n, step_1, step_2)) {
-		moves[*nb_of_moves] = DISPLACEMENT_MOVE(step_2);
-		*nb_of_moves = *nb_of_moves + 1;
+	if (step_2 >= 0 && step_2 < n2 && EDGE(graph, n2, step_1, step_2)) {
+		moves[(*nb_of_moves)++] = DISPLACEMENT_MOVE(step_2);
 	}
 
 	step_2 = step_1 + secondary_direction;
-	if (step_2 >= 0 && step_2 < n && EDGE(graph, n, step_1, step_2)) {
-		moves[*nb_of_moves] = DISPLACEMENT_MOVE(step_2);
-		*nb_of_moves = *nb_of_moves + 1;
+	if (step_2 >= 0 && step_2 < n2 && EDGE(graph, n2, step_1, step_2)) {
+		moves[(*nb_of_moves)++] = DISPLACEMENT_MOVE(step_2);
 	}
 
 	step_2 = step_1 - secondary_direction;
-	if (step_2 >= 0 && step_2 < n && EDGE(graph, n, step_1, step_2)) {
-		moves[*nb_of_moves] = DISPLACEMENT_MOVE(step_2);
-		*nb_of_moves = *nb_of_moves + 1;
+	if (step_2 >= 0 && step_2 < n2 && EDGE(graph, n2, step_1, step_2)) {
+		moves[(*nb_of_moves)++] = DISPLACEMENT_MOVE(step_2);
 	}
 }
 
@@ -62,10 +60,10 @@ SimpleMove *get_possible_moves(SimpleGameState *game, int n, int *nb_of_moves) {
 	SimpleMove *moves = malloc((2 * (n - 1) * (n - 1) + 5) * sizeof(SimpleMove));
 	*nb_of_moves = 0;
 
-	add_displacement_moves(game->graph, n, moves, nb_of_moves, game->pos, game->opponent_pos, 1, 1);
-	add_displacement_moves(game->graph, n, moves, nb_of_moves, game->pos, game->opponent_pos, 1, -1);
-	add_displacement_moves(game->graph, n, moves, nb_of_moves, game->pos, game->opponent_pos, -1, 1);
-	add_displacement_moves(game->graph, n, moves, nb_of_moves, game->pos, game->opponent_pos, -1, -1);
+	add_displacement_moves(game->graph, n, moves, nb_of_moves, game->pos, game->opponent_pos, 1, (char) n);
+	add_displacement_moves(game->graph, n, moves, nb_of_moves, game->pos, game->opponent_pos, -1, (char) n);
+	add_displacement_moves(game->graph, n, moves, nb_of_moves, game->pos, game->opponent_pos, (char) n, 1);
+	add_displacement_moves(game->graph, n, moves, nb_of_moves, game->pos, game->opponent_pos, (char) -n, 1);
 
 	moves = realloc(moves, *nb_of_moves * sizeof(SimpleMove));
 	return moves;
@@ -89,12 +87,13 @@ SimpleGameState compress_game(struct game_state_t game, int *n) {
 		.opponent_num_walls = (int) game.opponent.num_walls
 	};
 
-	*n = (int) game.graph->t->size1;
-	compressed.graph = malloc(*n * *n);
+	int n2 = (int) game.graph->t->size1;
+	*n = (int) sqrt(n2);
+	compressed.graph = malloc(n2 * n2);
 
-	for (int i = 0; i < *n; ++i) {
-		for (int j = 0; j < *n; ++j) {
-			EDGE(compressed.graph, *n, i, j) = (char) gsl_spmatrix_uint_get(game.graph->t, i, j);
+	for (int i = 0; i < n2; ++i) {
+		for (int j = 0; j < n2; ++j) {
+			EDGE(compressed.graph, n2, i, j) = (char) gsl_spmatrix_uint_get(game.graph->t, i, j);
 		}
 	}
 
