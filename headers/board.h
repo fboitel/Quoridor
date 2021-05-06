@@ -42,7 +42,6 @@ void graph_free(struct graph_t *graph);
 
 // Add edges in the graph
 void place_wall(struct graph_t *graph, struct edge_t e[]);
-void remove_wall(struct graph_t *graph, struct edge_t e[]);
 
 int opposite(int d);
 
