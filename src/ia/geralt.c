@@ -28,9 +28,10 @@ char *name = "Geralt";
 
 void add_displacement_moves(const char *graph, int n, SimpleMove *moves, int *nb_of_moves, int player_pos, int opponent_pos, char main_direction, char secondary_direction) {
 	int n2 = n * n;
+	char edge;
 
 	int step_1 = player_pos + main_direction;
-	if (step_1 < 0 || step_1 >= n2 || !EDGE(graph, n2, player_pos, step_1)) {
+	if (step_1 < 0 || step_1 >= n2 || (edge = EDGE(graph, n2, player_pos, step_1)) == 0 || edge > 4) {
 		return;
 	}
 
@@ -40,17 +41,17 @@ void add_displacement_moves(const char *graph, int n, SimpleMove *moves, int *nb
 	}
 
 	int step_2 = step_1 + main_direction;
-	if (step_2 >= 0 && step_2 < n2 && EDGE(graph, n2, step_1, step_2)) {
+	if (step_2 >= 0 && step_2 < n2 && (edge = EDGE(graph, n2, step_1, step_2)) >= 1 && edge <= 4) {
 		moves[(*nb_of_moves)++] = DISPLACEMENT_MOVE(step_2);
 	}
 
 	step_2 = step_1 + secondary_direction;
-	if (step_2 >= 0 && step_2 < n2 && EDGE(graph, n2, step_1, step_2)) {
+	if (step_2 >= 0 && step_2 < n2 && (edge = EDGE(graph, n2, step_1, step_2)) >= 1 && edge <= 4) {
 		moves[(*nb_of_moves)++] = DISPLACEMENT_MOVE(step_2);
 	}
 
 	step_2 = step_1 - secondary_direction;
-	if (step_2 >= 0 && step_2 < n2 && EDGE(graph, n2, step_1, step_2)) {
+	if (step_2 >= 0 && step_2 < n2 && (edge = EDGE(graph, n2, step_1, step_2)) >= 1 && edge <= 4) {
 		moves[(*nb_of_moves)++] = DISPLACEMENT_MOVE(step_2);
 	}
 }
