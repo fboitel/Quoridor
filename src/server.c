@@ -362,7 +362,7 @@ int main(int argc, char* argv[]) {
 	printf("%s vs %s\n", P1_name(), P2_name());
 	printf("%s begins\n", active_player == BLACK ? P1_name() : P2_name());
 
-	// Initialize the first move as a move to the intial place
+	// Initialize the first move as a move to the initial place
 	struct move_t last_move = (struct move_t){
 			.m = SIZE_MAX,
 			.c = active_player,
@@ -383,7 +383,7 @@ int main(int argc, char* argv[]) {
 
 		update_board(board, &last_move);
 
-
+		printf("\n\n%s:\n", active_player == BLACK ? P1_name() : P2_name());
 		display_board(board, m, position_player_1, position_player_2);
 
 		//printf("wall : %ld:%ld - %ld:%ld \n", last_move.e[0].fr,  last_move.e[0].to,  last_move.e[1].fr,  last_move.e[1].to);
