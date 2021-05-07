@@ -170,9 +170,9 @@ size_t move_forward(struct game_state_t game) {
 	}
 	size_t shortest = 2 * (game.graph->num_vertices);
 	for (int i = 1; i < MAX_DIRECTION; i++) {
-		if (!is_no_vertex(linked[i])) {
-			if (linked[i] == game.opponent.pos)
+		if (linked[i] == game.opponent.pos)
 				linked[i] = vertex_from_direction(game.graph, linked[i], i);
+		if (!is_no_vertex(linked[i])) {
 			size_t dist_tmp = dijkstra(game.graph, linked[i], game.self.color);
 			if (dist_tmp < shortest) {
 				shortest = dist_tmp;
