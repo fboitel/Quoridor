@@ -15,8 +15,8 @@ run-server: build/server
 run-tests: build/alltests
 	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/alltests
 
-run-game: build/server build/pablo.so build/geralt.so
-	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/server ./build/pablo.so ./build/geralt.so -m 8
+run-game: build/server build/jerry.so build/geralt.so
+	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/server ./build/jerry.so ./build/geralt.so -m 8
 
 test: build/alltests
 	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/alltests

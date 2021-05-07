@@ -111,12 +111,15 @@ int distance(const char *graph, int n, int pos, bool target_is_up) {
 	int dist = 0;
 
 	bool flags[n2];
-	memset(flags, false, n2 * sizeof(bool));
-	flags[pos] = true;
+	memset(flags, true, n2 * sizeof(bool));
+	flags[pos] = false;
 
 	int queue[n2];
 	int queue_start = 0;
 	int queue_size = 0;
+
+	int iteration_length = 1;
+	int next_iteration_length = 0;
 
 	QUEUE_ADD(queue, n2, queue_start, queue_size, pos);
 
@@ -132,33 +135,43 @@ int distance(const char *graph, int n, int pos, bool target_is_up) {
 
 		// north
 		new_pos = current_pos - n;
-		if (new_pos >= 0 && flags[new_pos] && (edge = EDGE(graph, n2, pos, new_pos)) >= 1 && edge <= 4) {
-			flags[new_pos] = true;
+		if (new_pos >= 0 && flags[new_pos] && (edge = EDGE(graph, n2, current_pos, new_pos)) >= 1 && edge <= 4) {
+			flags[new_pos] = false;
 			QUEUE_ADD(queue, n2, queue_start, queue_size, new_pos);
+			++next_iteration_length;
 		}
 
 		// south
 		new_pos = current_pos + n;
-		if (new_pos < n2 && flags[new_pos] && (edge = EDGE(graph, n2, pos, new_pos)) >= 1 && edge <= 4) {
-			flags[new_pos] = true;
+		if (new_pos < n2 && flags[new_pos] && (edge = EDGE(graph, n2, current_pos, new_pos)) >= 1 && edge <= 4) {
+			flags[new_pos] = false;
 			QUEUE_ADD(queue, n2, queue_start, queue_size, new_pos);
+			++next_iteration_length;
 		}
 
 		// west
 		new_pos = current_pos - 1;
-		if (new_pos >= 0 && flags[new_pos] && (edge = EDGE(graph, n2, pos, new_pos)) >= 1 && edge <= 4) {
-			flags[new_pos] = true;
+		if (new_pos >= 0 && flags[new_pos] && (edge = EDGE(graph, n2, current_pos, new_pos)) >= 1 && edge <= 4) {
+			flags[new_pos] = false;
 			QUEUE_ADD(queue, n2, queue_start, queue_size, new_pos);
+			++next_iteration_length;
 		}
 
 		// east
 		new_pos = current_pos + 1;
-		if (new_pos < n2 && flags[new_pos] && (edge = EDGE(graph, n2, pos, new_pos)) >= 1 && edge <= 4) {
-			flags[new_pos] = true;
+		if (new_pos < n2 && flags[new_pos] && (edge = EDGE(graph, n2, current_pos, new_pos)) >= 1 && edge <= 4) {
+			flags[new_pos] = false;
 			QUEUE_ADD(queue, n2, queue_start, queue_size, new_pos);
+			++next_iteration_length;
 		}
 
-		++dist;
+		--iteration_length;
+
+		if (iteration_length == 0) {
+			iteration_length = next_iteration_length;
+			next_iteration_length = 0;
+			++dist;
+		}
 	}
 
 	return -1;
@@ -173,7 +186,7 @@ int evaluate(const char *graph, int n, int pos, int opponent_pos, bool target_is
 		return -INT_MAX; // we can't use INT_MIN because it must be invertible
 	}
 
-	return dist - opponent_dist;
+	return opponent_dist - dist;
 }
 
 void apply_move(SimpleGameState *dest, SimpleGameState *src, int n, SimpleMove move) {
@@ -295,7 +308,7 @@ struct move_t make_first_move(struct game_state_t game) {
 }
 
 struct move_t make_move(struct game_state_t game) {
-	bool target_is_up = gsl_spmatrix_uint_get(game.graph->o, game.self.color, 0);
+	bool target_is_up = !gsl_spmatrix_uint_get(game.graph->o, game.self.color, 0);
 	int n;
 	SimpleGameState compressed_game = compress_game(game, &n);
 	struct move_t move = expand_move(game, get_best_move(&compressed_game, n, target_is_up));
