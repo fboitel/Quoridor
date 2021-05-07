@@ -2,10 +2,8 @@
 #include "ia.h"
 #include "move.h"
 
-
 #define EDGE(graph, n2, i, j) ((graph)[(i) * (n2) + (j)])
 #define DISPLACEMENT_MOVE(dest) ((SimpleMove) {MOVE, {(dest), 0, 0, 0}})
-
 
 // define simplified structures to gain efficiency
 
@@ -22,9 +20,7 @@ typedef struct {
 	int opponent_num_walls;
 } SimpleGameState;
 
-
 char *name = "Geralt";
-
 
 void add_displacement_moves(const char *graph, int n, SimpleMove *moves, int *nb_of_moves, int player_pos, int opponent_pos, char main_direction, char secondary_direction) {
 	int n2 = n * n;
@@ -55,7 +51,6 @@ void add_displacement_moves(const char *graph, int n, SimpleMove *moves, int *nb
 		moves[(*nb_of_moves)++] = DISPLACEMENT_MOVE(step_2);
 	}
 }
-
 
 void add_wall_moves(const char *graph, int n, SimpleMove *moves, int *nb_of_moves) {
 	int n2 = n * n;
@@ -89,7 +84,6 @@ void add_wall_moves(const char *graph, int n, SimpleMove *moves, int *nb_of_move
 	}
 }
 
-
 SimpleMove *get_possible_moves(SimpleGameState *game, int n, int *nb_of_moves) {
 	SimpleMove *moves = malloc((2 * (n - 1) * (n - 1) + 5) * sizeof(SimpleMove));
 	*nb_of_moves = 0;
@@ -107,7 +101,6 @@ SimpleMove *get_possible_moves(SimpleGameState *game, int n, int *nb_of_moves) {
 	return moves;
 }
 
-
 SimpleMove get_rand_move(SimpleGameState *game, int n) {
 	int nb_of_moves;
 	SimpleMove *moves = get_possible_moves(game, n, &nb_of_moves);
@@ -115,7 +108,6 @@ SimpleMove get_rand_move(SimpleGameState *game, int n) {
 	free(moves);
 	return move;
 }
-
 
 SimpleGameState compress_game(struct game_state_t game, int *n) {
 	SimpleGameState compressed = {
@@ -137,7 +129,6 @@ SimpleGameState compress_game(struct game_state_t game, int *n) {
 
 	return compressed;
 }
-
 
 struct move_t expand_move(struct game_state_t game, SimpleMove move) {
 	struct move_t expanded = {
@@ -161,11 +152,9 @@ struct move_t expand_move(struct game_state_t game, SimpleMove move) {
 	return expanded;
 }
 
-
 struct move_t make_first_move(struct game_state_t game) {
 	return make_default_first_move(game);
 }
-
 
 struct move_t make_move(struct game_state_t game) {
 	int n;
