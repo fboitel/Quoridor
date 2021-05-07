@@ -43,6 +43,7 @@ void add_displacement_moves(const char *graph, int n, SimpleMove *moves, int *nb
 	int step_2 = step_1 + main_direction;
 	if (step_2 >= 0 && step_2 < n2 && (edge = EDGE(graph, n2, step_1, step_2)) >= 1 && edge <= 4) {
 		moves[(*nb_of_moves)++] = DISPLACEMENT_MOVE(step_2);
+		return;
 	}
 
 	step_2 = step_1 + secondary_direction;
