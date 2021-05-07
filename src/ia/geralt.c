@@ -187,7 +187,7 @@ int evaluate(const char *graph, int n, int pos, int opponent_pos, bool target_is
 		return -INT_MAX; // we can't use INT_MIN because it must be invertible
 	}
 
-	return 2 * opponent_dist - dist;
+	return (int) (1.5 * opponent_dist - dist);
 }
 
 void apply_move(SimpleGameState *dest, SimpleGameState *src, int n, SimpleMove move) {
