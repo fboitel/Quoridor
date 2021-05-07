@@ -168,6 +168,7 @@ int evaluate(const char *graph, int n, int pos, int opponent_pos, bool target_is
 	int dist = distance(graph, n, pos, target_is_up);
 	int opponent_dist = distance(graph, n, opponent_pos, !target_is_up);
 
+	// invalid move (no possible path)
 	if (dist == -1 || opponent_dist == -1) {
 		return -INT_MAX; // we can't use INT_MIN because it must be invertible
 	}
@@ -175,12 +176,75 @@ int evaluate(const char *graph, int n, int pos, int opponent_pos, bool target_is
 	return dist - opponent_dist;
 }
 
-SimpleMove get_rand_move(SimpleGameState *game, int n) {
+void apply_move(SimpleGameState *dest, SimpleGameState *src, int n, SimpleMove move) {
+	int n2 = n * n;
+
+	memcpy(dest->graph, src->graph, n2 * n2);
+	dest->opponent_pos = src->opponent_pos;
+	dest->opponent_num_walls = src->opponent_num_walls;
+
+	switch (move.type) {
+		case MOVE:
+			dest->pos = move.action[0];
+			dest->num_walls = src->num_walls;
+			break;
+
+		case WALL:
+			dest->pos = src->pos;
+			dest->num_walls = src->num_walls - 1;
+
+			// get nodes
+			int first_node = move.action[0];
+			int second_node = move.action[1];
+
+			if (first_node + 1 == second_node) {
+				// vertical wall
+				EDGE(dest->graph, n2, first_node, second_node) = 5;
+				EDGE(dest->graph, n2, second_node, first_node) = 5;
+
+				EDGE(dest->graph, n2, first_node + n, second_node + n) = 6;
+				EDGE(dest->graph, n2, second_node + n, first_node + n) = 6;
+			} else {
+				// horizontal wall
+				EDGE(dest->graph, n2, first_node, second_node) = 7;
+				EDGE(dest->graph, n2, second_node, first_node) = 7;
+
+				EDGE(dest->graph, n2, first_node + 1, second_node + 1) = 8;
+				EDGE(dest->graph, n2, second_node + 1, first_node + 1) = 8;
+			}
+
+			break;
+
+		default:
+			break;
+	}
+}
+
+SimpleMove get_best_move(SimpleGameState *game, int n, bool target_is_up) {
+	int n2 = n * n;
+
 	int nb_of_moves;
 	SimpleMove *moves = get_possible_moves(game, n, &nb_of_moves);
-	SimpleMove move = moves[rand() % nb_of_moves];
+
+	int best_score = INT_MIN;
+	SimpleMove best_move;
+
+	for (int i = 0; i < nb_of_moves; ++i) {
+		SimpleMove move = moves[i];
+
+		char new_graph[n2 * n2];
+		SimpleGameState new_state = { .graph = new_graph };
+		apply_move(&new_state, game, n, move);
+
+		int score = evaluate(new_state.graph, n, new_state.pos, new_state.opponent_pos, target_is_up);
+		if (score > best_score) {
+			best_score = score;
+			best_move = move;
+		}
+	}
+
 	free(moves);
-	return move;
+	return best_move;
 }
 
 SimpleGameState compress_game(struct game_state_t game, int *n) {
@@ -231,9 +295,10 @@ struct move_t make_first_move(struct game_state_t game) {
 }
 
 struct move_t make_move(struct game_state_t game) {
+	bool target_is_up = gsl_spmatrix_uint_get(game.graph->o, game.self.color, 0);
 	int n;
 	SimpleGameState compressed_game = compress_game(game, &n);
-	struct move_t move = expand_move(game, get_rand_move(&compressed_game, n));
+	struct move_t move = expand_move(game, get_best_move(&compressed_game, n, target_is_up));
 	free(compressed_game.graph);
 	return move;
 }
