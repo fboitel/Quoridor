@@ -27,12 +27,12 @@ install: build/server build/alltests build/tom.so build/jerry.so build/pablo.so 
 clean:
 	find build install -type f -not -name .keep | xargs rm -rf
 
-build: build/server build/tom.so build/jerry.so build/pablo.so build/pablo_supersaiyan.so build/geralt.so
+build: build/server build/tom.so build/jerry.so build/pablo.so build/pablo_supersaiyan.so build/geralt.so build/goodboy.so
 
 build/server: build/server.o build/opt.o build/board.o
 	$(CC) $^ -o $@ $(LFLAGS)
 
-build/alltests: build/tests.o build/player_test.o build/crashboy.o build/ia_utils.o build/player.o build/board.o build/opt.o
+build/alltests: build/tests.o build/player_test.o build/server_test.o build/crashboy.o build/ia_utils.o build/player.o build/board.o build/opt.o
 	$(CC) $^ -o $@ --coverage $(LFLAGS)
 
 # OBJ
