@@ -7,6 +7,6 @@ int main() {
 	(void) total;
 
 	test_player_main();
-
+	test_server_main();
 	return EXIT_SUCCESS;
 }
