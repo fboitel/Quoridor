@@ -164,6 +164,16 @@ int distance(const char *graph, int n, int pos, bool target_is_up) {
 	return -1;
 }
 
+int evaluate(const char *graph, int n, int pos, int opponent_pos, bool target_is_up) {
+	int dist = distance(graph, n, pos, target_is_up);
+	int opponent_dist = distance(graph, n, opponent_pos, !target_is_up);
+
+	if (dist == -1 || opponent_dist == -1) {
+		return -INT_MAX; // we can't use INT_MIN because it must be invertible
+	}
+
+	return dist - opponent_dist;
+}
 
 SimpleMove get_rand_move(SimpleGameState *game, int n) {
 	int nb_of_moves;
