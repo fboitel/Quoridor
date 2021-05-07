@@ -1,9 +1,13 @@
 #include <ia_utils.h>
+#include <stdbool.h>
+#include <string.h>
 #include "ia.h"
 #include "move.h"
 
 #define EDGE(graph, n2, i, j) ((graph)[(i) * (n2) + (j)])
 #define DISPLACEMENT_MOVE(dest) ((SimpleMove) {MOVE, {(dest), 0, 0, 0}})
+#define QUEUE_ADD(array, capacity, start, size, value) ((array)[((start) + (size)++) % (capacity)] = (value))
+#define QUEUE_REMOVE(array, capacity, start, size) ((array)[(start)++ % (capacity)]); --(size)
 
 // define simplified structures to gain efficiency
 
@@ -100,6 +104,66 @@ SimpleMove *get_possible_moves(SimpleGameState *game, int n, int *nb_of_moves) {
 	moves = realloc(moves, *nb_of_moves * sizeof(SimpleMove));
 	return moves;
 }
+
+int distance(const char *graph, int n, int pos, bool target_is_up) {
+	int n2 = n * n;
+
+	int dist = 0;
+
+	bool flags[n2];
+	memset(flags, false, n2 * sizeof(bool));
+	flags[pos] = true;
+
+	int queue[n2];
+	int queue_start = 0;
+	int queue_size = 0;
+
+	QUEUE_ADD(queue, n2, queue_start, queue_size, pos);
+
+	while (queue_size > 0) {
+		int current_pos = QUEUE_REMOVE(queue, n2, queue_start, queue_size);
+
+		if ((target_is_up && current_pos < n) || (!target_is_up && current_pos >= n2 - n)) {
+			return dist;
+		}
+
+		int new_pos;
+		char edge;
+
+		// north
+		new_pos = current_pos - n;
+		if (new_pos >= 0 && flags[new_pos] && (edge = EDGE(graph, n2, pos, new_pos)) >= 1 && edge <= 4) {
+			flags[new_pos] = true;
+			QUEUE_ADD(queue, n2, queue_start, queue_size, new_pos);
+		}
+
+		// south
+		new_pos = current_pos + n;
+		if (new_pos < n2 && flags[new_pos] && (edge = EDGE(graph, n2, pos, new_pos)) >= 1 && edge <= 4) {
+			flags[new_pos] = true;
+			QUEUE_ADD(queue, n2, queue_start, queue_size, new_pos);
+		}
+
+		// west
+		new_pos = current_pos - 1;
+		if (new_pos >= 0 && flags[new_pos] && (edge = EDGE(graph, n2, pos, new_pos)) >= 1 && edge <= 4) {
+			flags[new_pos] = true;
+			QUEUE_ADD(queue, n2, queue_start, queue_size, new_pos);
+		}
+
+		// east
+		new_pos = current_pos + 1;
+		if (new_pos < n2 && flags[new_pos] && (edge = EDGE(graph, n2, pos, new_pos)) >= 1 && edge <= 4) {
+			flags[new_pos] = true;
+			QUEUE_ADD(queue, n2, queue_start, queue_size, new_pos);
+		}
+
+		++dist;
+	}
+
+	return -1;
+}
+
 
 SimpleMove get_rand_move(SimpleGameState *game, int n) {
 	int nb_of_moves;
