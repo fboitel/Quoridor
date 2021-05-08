@@ -328,9 +328,9 @@ void close_server(struct graph_t* board) {
 	dlclose(P2_lib);
 }
 
-int main(int argc, char* argv[]) {
+int game(int a, char* b[]) {
 	// Parse arguments
-	parse_args(argc, argv);
+	parse_args(a, b);
 	printf("Args parsed\n");
 
 	// Init random generator
