@@ -21,7 +21,7 @@ run-game: build/server build/jerry.so build/geralt.so
 test: build/alltests
 	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/alltests
 
-install: build/server build/alltests build/tom.so build/jerry.so build/pablo.so build/pablo_supersaiyan.so build/geralt.so
+install: build/server build/alltests build/jerry.so build/pablo_supersaiyan.so build/geralt.so
 	cp $^ install
 
 clean:
