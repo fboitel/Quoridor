@@ -32,7 +32,7 @@ build: build/server build/tom.so build/jerry.so build/pablo.so build/pablo_super
 build/server: build/main.o build/server.o build/opt.o build/board.o
 	$(CC) $^ -o $@ $(LFLAGS)
 
-build/alltests: build/tests.o build/player_test.o build/server_test.o build/crashboy.o build/ia_utils.o build/player.o build/board.o build/opt.o 
+build/alltests: build/tests.o build/player_test.o build/server_test.o build/crashboy.o build/ia_utils.o build/player.o build/board.o build/opt.o  build/server.o
 	$(CC) $^ -o $@ --coverage $(LFLAGS)
 
 # OBJ

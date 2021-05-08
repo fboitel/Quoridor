@@ -90,7 +90,6 @@ bool is_valid_displacement(struct graph_t* board, size_t destination, enum color
 	size_t position_player = player == BLACK ? position_player_1 : position_player_2;
 
 	size_t position_opposent = player == BLACK ? position_player_2 : position_player_1;
-
 	// destination is in the board and destination is not on a player cell
 	if (board->num_vertices <= destination || position_player == destination || position_opposent == destination) {
 		return false;
@@ -222,7 +221,7 @@ bool is_valid_displacement(struct graph_t* board, size_t destination, enum color
 
 	//gsl_spmatrix_uint_set(board->t, position_player, destination, 5);
 
-	return true;
+	return false;
 }
 
 bool is_valid_wall(struct graph_t* board, struct edge_t e[]) {
@@ -328,7 +327,7 @@ void close_server(struct graph_t* board) {
 	dlclose(P2_lib);
 }
 
-int game(int a, char* b[]) {
+int play_game(int a, char* b[]) {
 	// Parse arguments
 	parse_args(a, b);
 	printf("Args parsed\n");
