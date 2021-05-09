@@ -9,7 +9,7 @@
 #include <string.h>
 
 bool is_valid_displacement(struct graph_t* board, size_t destination, enum color_t player);
-
+bool is_valid_wall(struct graph_t* board, struct edge_t e[]);
 
 struct game_state_t game_s;
 extern char *name;
@@ -33,6 +33,16 @@ static void teardown(void){
     finalize();
     }
 
+
+
+void fill_wall(size_t fr_1, size_t to_1, size_t fr_2, size_t to_2, struct edge_t e[]){
+    e[0].fr = fr_1;
+    e[0].to = to_1;
+    e[1].fr = fr_2;
+    e[1].to = to_2;
+}
+
+
 void test_is_valid_displacement(){
     printf("%s", __func__);
     
@@ -45,7 +55,7 @@ void test_is_valid_displacement(){
         }
     }  
 
-    for (int iter = 10; iter < 20; iter++){ 
+    for (int iter = 0; iter < 10; iter++){ 
         position_player_1 = (1 + rand()%7) + 10*(1 + rand()%7); 
         position_player_2 = 99;
         if (!is_valid_displacement(my_board, position_player_1 - 1, BLACK) || !is_valid_displacement(my_board, position_player_1 + 1, BLACK) || !is_valid_displacement(my_board, position_player_1 - 10, BLACK) || !is_valid_displacement(my_board, position_player_1 + 10, BLACK))
@@ -58,17 +68,18 @@ void test_is_valid_displacement(){
                 FAIL("A player can't teleport himself");
             }
         
+        position_player_1 = 10*(1 + rand()%7);
+        if (is_valid_displacement(my_board, position_player_1 - 1, BLACK))
+            FAIL("A player can't cross the board");
+
         position_player_1 = (1 + rand()%7) + 10*(1 + rand()%7);
         struct edge_t e[2];
-        e[0].fr = position_player_1;
-        e[0].to = position_player_1 + 10;
-        e[1].fr = position_player_1 + 1;
-        e[1].to = position_player_1 + 11;
+        fill_wall(position_player_1, position_player_1 + 10, position_player_1 + 1, position_player_1 + 11, e);
         place_wall(my_board, e);
         if (is_valid_displacement(my_board, position_player_1 + 10, BLACK))
             FAIL("A player can't jump over a wall");
-
         remove_wall(my_board, e);
+
         position_player_1 = (1 + rand()%7) + 10*(1 + rand()%7);
         position_player_2 = position_player_1 - 1;
         if (is_valid_displacement(my_board, position_player_2, BLACK))
@@ -91,21 +102,55 @@ void test_is_valid_displacement(){
 
         position_player_1 = (2 + rand()%6) + 10*(2 + rand()%6);
         position_player_2 = position_player_1 + 10;
-        e[0].fr = position_player_2;
-        e[0].to = position_player_2 + 10;
-        e[1].fr = position_player_2 + 1;
-        e[1].to = position_player_2 + 11;
+        fill_wall(position_player_2, position_player_2 + 10, position_player_2 + 1, position_player_2 + 11, e);
         place_wall(my_board, e);
         if (!is_valid_displacement(my_board, position_player_1 + 11, BLACK) || !is_valid_displacement(my_board, position_player_1 + 9, BLACK))
             FAIL("A player should have the possibility to jump on the side of a player placed behind him if there is a wall in front of him");
         remove_wall(my_board, e);
-        //display_board(my_board, board_size, position_player_1, position_player_2);
         }
+}
+
+
+
+void test_is_valid_wall(){
+    printf("%s", __func__);
+
+    struct edge_t e[2];
+    size_t fr_1 = rand()%8 + 10*rand()%8;
+    fill_wall(fr_1, fr_1 + 10, fr_1 + 1, fr_1 + 11, e);
+    if (!is_valid_wall(my_board, e))
+        FAIL("An horizontal wall can be placed anywhere in an empty board");
+    
+    fill_wall(fr_1, fr_1 + 1, fr_1 + 10, fr_1 + 11, e);
+    if (!is_valid_wall(my_board, e))
+        FAIL("An vertical wall can be placed anywhere in an empty board");
+
+    fr_1 = 1 + rand()%8 + 10*(1 + rand()%8);
+    fill_wall(fr_1, fr_1 - 10, fr_1 - 1, fr_1 - 11, e);
+    if (!is_valid_wall(my_board, e))
+        FAIL("The order of the vertex given shouldn't matter");
+
+    fr_1 = rand()%7 + 10*(rand()%7);
+    fill_wall(fr_1, fr_1 + 20, fr_1 + 1, fr_1 + 21, e);
+    if (is_valid_wall(my_board, e))
+        FAIL("The vertex separated by a wall should be connexe");
+
+    fr_1 = rand()%7 + 10*(rand()%7);
+    fill_wall(fr_1, fr_1 + 10, fr_1 + 2, fr_1 + 12, e);
+    if (is_valid_wall(my_board, e))
+        FAIL("The vertex separated by a wall should be connexe");
+    
+    fr_1 = rand()%8 + 10*(rand()%8);
+    fill_wall(fr_1, fr_1 + 10, fr_1 + 1, fr_1 + 11, e);
+    place_wall(my_board, e);
+    if (is_valid_wall(my_board, e))
+        FAIL("A wall cannot be placed if another one is there");
+    remove_wall(my_board, e);
 }
 
 
 void test_server_main(void){
     TEST(test_is_valid_displacement);
-
+    TEST(test_is_valid_wall);
     SUMMARY();
 }
