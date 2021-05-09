@@ -128,7 +128,7 @@ void test_is_valid_wall(){
     fr_1 = 1 + rand()%8 + 10*(1 + rand()%8);
     fill_wall(fr_1, fr_1 - 10, fr_1 - 1, fr_1 - 11, e);
     if (!is_valid_wall(my_board, e))
-        FAIL("The order of the vertex given shouldn't matter");
+        FAIL("The order of the vertex given to put a wall shouldn't matter");
 
     fr_1 = rand()%7 + 10*(rand()%7);
     fill_wall(fr_1, fr_1 + 20, fr_1 + 1, fr_1 + 21, e);
