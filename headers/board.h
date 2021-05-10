@@ -1,3 +1,9 @@
+/**
+ * @file board.h
+ *
+ * @brief Board interface
+ */
+
 #ifndef _QUOR_BOARD_H_
 #define _QUOR_BOARD_H_
 
@@ -5,48 +11,51 @@
 #include "graph.h"
 #include <stdbool.h>
 
+ /** @enum Move direction */
 enum direction_t {
 	NO_DIRECTION, NORTH, SOUTH, WEST, EAST, MAX_DIRECTION
 };
 
+/** @enum Wall orientation */
 enum orientation_t {
 	HORIZONTAL, VERTICAL, ERROR_ORIENTATION = -1
 };
 
+/** @brief A special vertex used to specify that there is no vertex */
 static inline size_t no_vertex(void) {
 	return SIZE_MAX;
 }
 
+/** @brief A matcher for the special vertex */
 static inline bool is_no_vertex(const size_t v) {
 	return v == no_vertex();
 }
 
-static inline bool is_vertex(const size_t v) {
-	return v != no_vertex();
-}
+/** @brief Get the adjacent vertex of a vertex in a given direction */
+size_t vertex_from_direction(const struct graph_t* graph, size_t v, enum direction_t d);
 
-// Check if there is an adjacent vertex of v (i.e a vertex linked by an edge) in the direction d
-// Return it if so, else return no_vertex()
-size_t vertex_from_direction(const struct graph_t *graph, size_t v, enum direction_t d);
+/** @brief Check if vertex src is linked to vertex dest (i.e there is an edge between them) */
+bool is_linked(const struct graph_t* graph, size_t src, size_t dest);
 
-// Check if vertex dest is linked to vertex src (i.e there is an edge between them)
-bool is_linked(const struct graph_t *graph, size_t src, size_t dest);
+/** @brief Get all the linked vertices from the vertex v */
+size_t get_linked(const struct graph_t* graph, size_t v, size_t vertices[]);
 
-size_t get_linked(const struct graph_t *graph, size_t v, size_t vertices[]);
+/** @brief Initialize a graph representing the game board with the given size and shape */
+struct graph_t* graph_init(size_t n, enum shape_t shape);
 
-// Initialize a square graph of size n
-struct graph_t *graph_init(size_t n, enum shape_t shape);
+/** @brief Free the memory allocated for a graph */
+void graph_free(struct graph_t* graph);
 
-// Free a graph
-void graph_free(struct graph_t *graph);
+/** @brief Add edges to graph */
+void place_wall(struct graph_t* graph, struct edge_t e[2]);
 
-// Add edges in the graph
-void place_wall(struct graph_t *graph, struct edge_t e[]);
-void remove_wall(struct graph_t *graph, struct edge_t e[]);
+/** @brief Remove edges from graph */
+void remove_wall(struct graph_t* graph, struct edge_t e[2]);
 
-int opposite(int d);
+/** @brief Get the opposite to a direction */
+enum direction_t opposite(enum direction_t d);
 
-void display_board(struct graph_t *board, size_t board_size, size_t position_player_1, size_t position_player_2);
+void display_board(struct graph_t* board, size_t board_size, size_t position_player_1, size_t position_player_2);
 
 void display_adj_matrix(struct graph_t* board, size_t board_size);
 #endif // _QUOR_BOARD_H_
