@@ -4,7 +4,11 @@
 /install/*
 !/install/.keep
 
+/doc/*
+!/doc/Doxyfile
+
+/gsl
+
 /.idea/
-/.vscode/
-/gsl/
+/.vscode
 /vgcore.*
