@@ -7,7 +7,7 @@
 /** TODO
  * Choose first move
  * Make wall placing better
- **/
+ */
 
 char* name = "GoodBoy";
 

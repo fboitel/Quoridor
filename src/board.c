@@ -1,11 +1,24 @@
+/**
+ * @file board.c
+ *
+ * @brief Board initialisation and processing
+ */
+
 #include "board.h"
 #include <gsl/gsl_spmatrix.h>
 #include <string.h>
 #include <math.h>
 
 //// Graph structure manipulation functions
+// TODO Separate graph init and others operations
 
-// Initialize a square graph of size m
+/**
+ * @brief Initialize a square graph
+ *
+ * @param m An integer setting the size of the square sides
+ *
+ * @return A graph representing a square board
+ */
 struct graph_t* square_init(size_t m) {
 	struct graph_t* graph = malloc(sizeof(*graph));
 
@@ -44,6 +57,16 @@ struct graph_t* square_init(size_t m) {
 	return graph;
 }
 
+/**
+ * @brief Initialize a graph representing the game board
+ * with the given size and shape
+ *
+ * @param m An integer setting the size of the board
+ * @param shape A shape enum setting the shape of the board
+ * between `SQUARE`, `TORIC`, `H` and `SNAKE`
+ *
+ * @return A graph representing the game board
+ */
 struct graph_t* graph_init(size_t m, enum shape_t shape) {
 	switch (shape) {
 	case SQUARE:
@@ -53,12 +76,27 @@ struct graph_t* graph_init(size_t m, enum shape_t shape) {
 	}
 }
 
+/**
+ * @brief Free the memory allocated for a graph
+ *
+ * @param graph The graph to free
+ */
+
 void graph_free(struct graph_t* graph) {
 	gsl_spmatrix_uint_free(graph->t);
 	gsl_spmatrix_uint_free(graph->o);
 	free(graph);
 }
 
+/**
+ * @brief Sort the edges representing a wall in increasing order
+ *
+ * @details Sorting is performed in increasing order by comparing vertex index
+ * Each edge are sorted by comparing their source and destination vertex
+ * Then the two edges in the array are sorted by their source vertex
+ *
+ * @param e An array of two edges representing a wall
+ */
 void sort_edges(struct edge_t e[2]) {
 	for (size_t i = 0; i < 2; ++i) {
 		if (e[i].fr > e[i].to) {
@@ -75,28 +113,40 @@ void sort_edges(struct edge_t e[2]) {
 	}
 }
 
-// Graph operations
-void place_wall(struct graph_t* graph, struct edge_t e[]) {
+/**
+ *  @brief Add edges to graph
+ *
+ * @details Add the wall represented by the two edges in `e` in `graph` \n
+ * Change vertices values in the graph matrix
+ * by 5 and 6 for the src and dest edge respectively if the wall is vertical
+ * or by 7 and 8 respectively if the wall is horizontal \n
+ * The wall is supposed to be valid
+ *
+ * @param graph The graph to update
+ * @param e An array of two edges representing a wall
+ */
+void place_wall(struct graph_t* graph, struct edge_t e[2]) {
 	size_t board_size = (size_t)sqrtl(graph->num_vertices);
 
-	// copy values so they can be modified, then sort them
-	e = (struct edge_t[2]) {e[0], e[1]};
+	// Copy values so they can be modified, then sort them
+	e = (struct edge_t[2]){ e[0], e[1] };
 	sort_edges(e);
 
-	// get nodes
+	// Get nodes
 	size_t first_node = e[0].fr;
 	size_t second_node = e[0].to;
 
 	if (first_node + 1 == second_node) {
-		// vertical wall
+		// Vertical wall
 		gsl_spmatrix_uint_set(graph->t, first_node, second_node, 5);
 		gsl_spmatrix_uint_set(graph->t, second_node, first_node, 5);
 
 		gsl_spmatrix_uint_set(graph->t, first_node + board_size, second_node + board_size, 6);
 		gsl_spmatrix_uint_set(graph->t, second_node + board_size, first_node + board_size, 6);
 
-	} else {
-		// horizontal wall
+	}
+	else {
+		// Horizontal wall
 		gsl_spmatrix_uint_set(graph->t, first_node, second_node, 7);
 		gsl_spmatrix_uint_set(graph->t, second_node, first_node, 7);
 
@@ -105,7 +155,16 @@ void place_wall(struct graph_t* graph, struct edge_t e[]) {
 	}
 }
 
-void remove_wall(struct graph_t* graph, struct edge_t e[]){
+/**
+ * @brief Remove edges from graph
+ *
+ * @details Remove the wall represented by the two edges in `e` from `graph` \n
+ * Change vertices values in the graph matrix by their corresponding direction
+ *
+ * @param graph The graph to update
+ * @param e An array of two edges representing a wall
+ */
+void remove_wall(struct graph_t* graph, struct edge_t e[2]) {
 	/*
 	// get nodes
 	size_t first_node = e[0].fr;
@@ -118,41 +177,51 @@ void remove_wall(struct graph_t* graph, struct edge_t e[]){
 		second_node = tmp;
 	}
 	*/
-	if (gsl_spmatrix_uint_get(graph->t, e[0].fr, e[0].to) == 5 || gsl_spmatrix_uint_get(graph->t, e[0].fr, e[0].to) == 6){
-		gsl_spmatrix_uint_set(graph->t, e[0].fr, e[0].to, 4);
-		gsl_spmatrix_uint_set(graph->t, e[0].to, e[0].fr, 3);
+	if (gsl_spmatrix_uint_get(graph->t, e[0].fr, e[0].to) == 5
+		|| gsl_spmatrix_uint_get(graph->t, e[0].fr, e[0].to) == 6) {
+		gsl_spmatrix_uint_set(graph->t, e[0].fr, e[0].to, EAST);
+		gsl_spmatrix_uint_set(graph->t, e[0].to, e[0].fr, WEST);
 
-		gsl_spmatrix_uint_set(graph->t, e[1].fr, e[1].to, 4);
-		gsl_spmatrix_uint_set(graph->t, e[1].to, e[1].fr, 3);
+		gsl_spmatrix_uint_set(graph->t, e[1].fr, e[1].to, EAST);
+		gsl_spmatrix_uint_set(graph->t, e[1].to, e[1].fr, WEST);
 	}
+	else if (gsl_spmatrix_uint_get(graph->t, e[0].fr, e[0].to) == 7
+		|| gsl_spmatrix_uint_get(graph->t, e[0].fr, e[0].to) == 8) {
+		gsl_spmatrix_uint_set(graph->t, e[0].fr, e[0].to, SOUTH);
+		gsl_spmatrix_uint_set(graph->t, e[0].to, e[0].fr, NORTH);
 
-	else if (gsl_spmatrix_uint_get(graph->t, e[0].fr, e[0].to) == 7 || gsl_spmatrix_uint_get(graph->t, e[0].fr, e[0].to) == 8){
-		gsl_spmatrix_uint_set(graph->t, e[0].fr, e[0].to, 2);
-		gsl_spmatrix_uint_set(graph->t, e[0].to, e[0].fr, 1);
-
-		gsl_spmatrix_uint_set(graph->t, e[1].fr, e[1].to, 2);
-		gsl_spmatrix_uint_set(graph->t, e[1].to, e[1].fr, 1);
+		gsl_spmatrix_uint_set(graph->t, e[1].fr, e[1].to, SOUTH);
+		gsl_spmatrix_uint_set(graph->t, e[1].to, e[1].fr, NORTH);
 	}
+	else if (gsl_spmatrix_uint_get(graph->t, e[0].to, e[0].fr) == 5
+		|| gsl_spmatrix_uint_get(graph->t, e[0].to, e[0].fr) == 6) {
+		gsl_spmatrix_uint_set(graph->t, e[0].fr, e[0].to, WEST);
+		gsl_spmatrix_uint_set(graph->t, e[0].to, e[0].fr, EAST);
 
-	else if (gsl_spmatrix_uint_get(graph->t, e[0].to, e[0].fr) == 5 || gsl_spmatrix_uint_get(graph->t, e[0].to, e[0].fr) == 6){
-		gsl_spmatrix_uint_set(graph->t, e[0].fr, e[0].to, 3);
-		gsl_spmatrix_uint_set(graph->t, e[0].to, e[0].fr, 4);
-
-		gsl_spmatrix_uint_set(graph->t, e[1].fr, e[1].to, 3);
-		gsl_spmatrix_uint_set(graph->t, e[1].to, e[1].fr, 4);
+		gsl_spmatrix_uint_set(graph->t, e[1].fr, e[1].to, WEST);
+		gsl_spmatrix_uint_set(graph->t, e[1].to, e[1].fr, EAST);
 	}
+	else if (gsl_spmatrix_uint_get(graph->t, e[0].to, e[0].fr) == 7
+		|| gsl_spmatrix_uint_get(graph->t, e[0].to, e[0].fr) == 8) {
+		gsl_spmatrix_uint_set(graph->t, e[0].fr, e[0].to, NORTH);
+		gsl_spmatrix_uint_set(graph->t, e[0].to, e[0].fr, SOUTH);
 
-	else if (gsl_spmatrix_uint_get(graph->t, e[0].to, e[0].fr) == 7 || gsl_spmatrix_uint_get(graph->t, e[0].to, e[0].fr) == 8){
-		gsl_spmatrix_uint_set(graph->t, e[0].fr, e[0].to, 1);
-		gsl_spmatrix_uint_set(graph->t, e[0].to, e[0].fr, 2);
-
-		gsl_spmatrix_uint_set(graph->t, e[1].fr, e[1].to, 1);
-		gsl_spmatrix_uint_set(graph->t, e[1].to, e[1].fr, 2);
+		gsl_spmatrix_uint_set(graph->t, e[1].fr, e[1].to, NORTH);
+		gsl_spmatrix_uint_set(graph->t, e[1].to, e[1].fr, SOUTH);
 	}
-	else printf("ERRRRROR (%u) (%u)\n", gsl_spmatrix_uint_get(graph->t, e[0].fr, e[0].to), gsl_spmatrix_uint_get(graph->t, e[0].to, e[0].fr));
+	else
+		printf("ERROR (%u) (%u)\n", gsl_spmatrix_uint_get(graph->t, e[0].fr, e[0].to),
+			gsl_spmatrix_uint_get(graph->t, e[0].to, e[0].fr));
 }
 
-int opposite(int d) {
+/**
+ * @brief Get the opposite to a direction
+ *
+ * @param d The direction processed
+ *
+ * @return The opposite direction of `d`
+ */
+enum direction_t opposite(enum direction_t d) {
 	switch (d) {
 	case NORTH:
 		return SOUTH;
@@ -167,15 +236,29 @@ int opposite(int d) {
 	}
 }
 
-// Check if vertex dest is linked to vertex src (i.e there is an edge between
-// them)
+/**
+ * @brief Check if vertex src is linked to vertex dest (i.e there is an edge between them)
+ *
+ * @param graph The graph processed
+ * @param src The source vertex
+ * @param dest The destination vertex
+ */
 bool is_linked(const struct graph_t* graph, size_t src, size_t dest) {
-	return 0 < gsl_spmatrix_uint_get(graph->t, src, dest) && gsl_spmatrix_uint_get(graph->t, src, dest) < 5;
+	return gsl_spmatrix_uint_get(graph->t, src, dest) > 0 && gsl_spmatrix_uint_get(graph->t, src, dest) < 5;
 }
 
-// Check if there is an adjacent vertex of v (i.e a vertex linked by an edge) in
-// the direction d
-// Return it if so, else return no_vertex()
+/**
+ * @brief Get the adjacent vertex of a vertex in a given direction
+ * 
+ * @details Check if there is an adjacent vertex of v (i.e a vertex linked by an edge) in
+ * the direction d
+ * 
+ * @param graph The graph processed
+ * @param v The vertex processed
+ * @param d The direction to search
+ * 
+ * @return The adjacent vertex of `v` in direction `d` vertex if it exists, if not returns no_vertex()
+ */
 size_t vertex_from_direction(const struct graph_t* graph, size_t v, enum direction_t d) {
 	// TODO : this function can be optimised
 
@@ -190,9 +273,16 @@ size_t vertex_from_direction(const struct graph_t* graph, size_t v, enum directi
 	return no_vertex();
 }
 
-// Get all the linked vertices from the vertex v
-// Fill an array with the linked vertices (no_vertex() if there is no vertex in
-// the direction)
+/**
+ * @brief Get all the linked vertices from the vertex v
+ *
+ * @details Fill an array with the linked vertices where indices are directions,
+ * put no_vertex() if there is no vertex in the direction
+ *
+ * @param graph The graph processed
+ * @param v The vertex processed
+ * @param vertices An array of `size_t` of size at least `MAX_DIRECTION`
+ */
 size_t get_linked(const struct graph_t* graph, size_t v, size_t vertices[]) {
 	size_t linked = 0;
 	vertices[NO_DIRECTION] = v; // First one is himself
@@ -204,6 +294,12 @@ size_t get_linked(const struct graph_t* graph, size_t v, size_t vertices[]) {
 	return linked;
 }
 
+/**
+ * @brief Display the adjacent matrix of a board
+ * 
+ * @param board The board processed
+ * @param board_size The size of the board
+ */
 void display_adj_matrix(struct graph_t* board, size_t board_size) {
 	size_t nbCells = board_size * board_size;
 	for (size_t i = 0; i < nbCells; ++i) {
@@ -214,6 +310,16 @@ void display_adj_matrix(struct graph_t* board, size_t board_size) {
 	}
 }
 
+/**
+ * @brief Display a board
+ *
+ * @details Display a board by printing vertices, edges, wall, and players
+ *
+ * @param board The board processed
+ * @param board_size The size of the board
+ * @param position_player_1 The position of the first player
+ * @param position_player_2 The position of the second player
+ */
 void display_board(struct graph_t* board, size_t board_size, size_t position_player_1, size_t position_player_2) {
 	/*
 	 5 = wall on east + next line
@@ -223,7 +329,7 @@ void display_board(struct graph_t* board, size_t board_size, size_t position_pla
 	 8 = wall on south
 	*/
 
-	// care about out of tab
+	// Care about out of tab
 	char next_line[24 * board_size + 1];
 	next_line[0] = '\0';
 
@@ -236,15 +342,10 @@ void display_board(struct graph_t* board, size_t board_size, size_t position_pla
 			strcpy(next_line, "");
 		}
 
-		if (i == position_player_1) {
-			printf("\033[31m1\033[m");
-		}
-		else if (i == position_player_2) {
-			printf("\033[34m1\033[m");
-		}
-		else {
-			printf("0");
-		}
+		printf("%s", i == position_player_1 ? "\033[31m1\033[m" :
+			i == position_player_2 ? "\033[34m1\033[m" :
+			"0");
+
 		int end_pattern = 0;
 
 		unsigned int matrix_state_1 = 0;
@@ -256,33 +357,33 @@ void display_board(struct graph_t* board, size_t board_size, size_t position_pla
 		if (i + board_size < board_size * board_size) {
 			matrix_state_2 = gsl_spmatrix_uint_get(board->t, i, i + board_size);
 		}
-		
-		// south connection
+
+		// South connection
 		if (matrix_state_2 == 2) {
 			strcat(next_line, "| ");
 		}
 		else if (matrix_state_2 == 7) {
-		  	strcat(next_line, "\033[33m──\033[m");
-		  	end_pattern = 1;
+			strcat(next_line, "\033[33m──\033[m");
+			end_pattern = 1;
 		}
 		else if (matrix_state_2 == 8) {
-		 	strcat(next_line, "\033[33m─\033[m ");
+			strcat(next_line, "\033[33m─\033[m ");
 		}
 		else {
 			strcat(next_line, "  ");
 		}
-	
+
 		// east connection
 		if (matrix_state_1 == 4) {
 			printf(" - ");
 		}
 		else if (matrix_state_1 == 5) {
 			printf(" \033[33m│\033[m ");
-		 	strcat(next_line, "\033[33m│\033[m ");
-		 	end_pattern = 2;
+			strcat(next_line, "\033[33m│\033[m ");
+			end_pattern = 2;
 		}
 		else if (matrix_state_1 == 6) {
-		 	printf(" \033[33m│\033[m ");
+			printf(" \033[33m│\033[m ");
 		}
 		else {
 			printf("   ");

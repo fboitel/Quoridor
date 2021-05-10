@@ -1,3 +1,14 @@
+/**
+ * @file opt.c
+ * 
+ * @brief Command line options manager
+ * 
+ * @details Available arguments are:
+ * - board size (-m): a positive integer representing the width of the board
+ * - board shape (-t): a character representing the board shape,
+ * available shapes are `c` (SQUARE), `t` (TORIC), `h` (H), `s` (SNAKE)
+ */
+
 #include "opt.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -12,6 +23,40 @@ char *player_1_path = NULL;
 char *player_2_path = NULL;
 
 
+/**
+ * @brief Print error message and usage
+ * 
+ * @param exec_path Path of the executable
+ * @param message Error message
+ */
+void usage(char *exec_path, char *message) {
+	if (message != NULL) {
+		fprintf(stderr, "%s\n\n", message);
+	}
+	fprintf(stderr, "Usage: %s [-m SIZE] [-t SHAPE] <PLAYER_1_PATH> <PLAYER_2_PATH>\n", exec_path);
+}
+
+/**
+ * @brief Assert a condition, print usage and exit if failed
+ * 
+ * @param condition Condition to assert
+ * @param exec_path Path of the executable
+ * @param message Error message
+ */
+void assert(bool condition, char *exec_path, char *message) {
+	if (!condition) {
+		usage(exec_path, message);
+		exit(EXIT_FAILURE);
+	}
+}
+
+/**
+ * @brief Parse the board shape argument
+ * 
+ * @param t Character representing the first letter of the wanted shape
+ * 
+ * @return The enum representing the given board shape
+ */
 enum shape_t parse_board_shape(char *t) {
 	if (strlen(t) != 1) {
 		return INVALID_SHAPE;
@@ -35,20 +80,12 @@ enum shape_t parse_board_shape(char *t) {
 	}
 }
 
-void usage(char *exec_path, char *message) {
-	if (message != NULL) {
-		fprintf(stderr, "%s\n\n", message);
-	}
-	fprintf(stderr, "Usage: %s [-m SIZE] [-t SHAPE] <PLAYER_1_PATH> <PLAYER_2_PATH>\n", exec_path);
-}
-
-void assert(bool condition, char *exec_path, char *message) {
-	if (!condition) {
-		usage(exec_path, message);
-		exit(EXIT_FAILURE);
-	}
-}
-
+/**
+ * @brief Parse command line arguments
+ * 
+ * @param argc Argument count
+ * @param argv Argument vector
+ */
 void parse_args(int argc, char **argv) {
 	for (int i = 1; i < argc; ++i) {
 		char *arg = argv[i];
