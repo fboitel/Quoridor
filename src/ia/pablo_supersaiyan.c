@@ -176,14 +176,17 @@ void remove_wall_opti(struct graph_t *graph, struct edge_t wall[2], enum directi
 size_t get_the_better_wall_id(struct game_state_t game, struct edge_t posswall[MAX_POSSIBLE_WALLS][2], size_t nb_wall) {
 	size_t opp_dist = dijkstra(game.graph, game.opponent.pos, game.opponent.color);
 	size_t self_dist = dijkstra(game.graph, game.self.pos, game.self.color);
+	long long int diff = self_dist - opp_dist;
 	size_t wall_id = IMPOSSIBLE_ID;
+	printf("FJFJFJFJJFJFJFJFJFJFJFJFJFJJF");
 	for (size_t i = 0; i < nb_wall; i++) {
 		size_t dir = gsl_spmatrix_uint_get(game.graph->t, posswall[i][0].fr, posswall[i][0].to);
 		put_wall_opti(game.graph, posswall[i]);
 		size_t new_opp_dist = dijkstra(game.graph, game.opponent.pos, game.opponent.color);
 		size_t new_self_dist = dijkstra(game.graph, game.self.pos, game.self.color);
+		long long int new_diff = new_self_dist - new_opp_dist;
 		if (new_opp_dist < IMPOSSIBLE_DISTANCE && new_self_dist < IMPOSSIBLE_DISTANCE){
-			if (new_self_dist - new_opp_dist < self_dist - opp_dist) {
+			if (new_diff < diff) {
 				opp_dist = new_opp_dist;
 				self_dist = new_self_dist;
 				wall_id = i;
@@ -276,8 +279,8 @@ struct move_t make_move(struct game_state_t game) {
 	struct edge_t poss_walls[MAX_POSSIBLE_WALLS][2];
 	size_t self_dist = dijkstra(game.graph, game.self.pos, game.self.color);
 	size_t opp_dist = dijkstra(game.graph, game.opponent.pos, game.opponent.color);
-	//size_t size_board = sqrt(game.graph->num_vertices);
-	if ((opp_dist > 5 && game.opponent.num_walls > 0) || self_dist < opp_dist || self_dist == 1 || game.self.num_walls == 0){
+	size_t size_board = sqrt(game.graph->num_vertices);
+	if ((opp_dist > size_board/2 && game.opponent.num_walls > 0) || self_dist < opp_dist || self_dist == 1 || game.self.num_walls == 0){
 		move.m = move_forward(game);
 		move.t = MOVE;
 	}
