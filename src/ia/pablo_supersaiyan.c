@@ -134,25 +134,18 @@ void remove_wall_opti(struct graph_t *graph, struct edge_t wall[2], enum directi
 
 //Returns the best place to put a wall in order to delay the opponent
 size_t get_the_better_wall_id(struct game_state_t game, struct edge_t posswall[MAX_POSSIBLE_WALLS][2], size_t nb_wall) {
-	size_t dist = dijkstra(game.graph, game.opponent.pos, game.opponent.color);
+	size_t opp_dist = dijkstra(game.graph, game.opponent.pos, game.opponent.color);
+	size_t self_dist = dijkstra(game.graph, game.self.pos, game.self.color);
 	size_t wall_id = IMPOSSIBLE_ID;
-	size_t closest = dist;
-	bool dist_upgraded = false;
 	for (size_t i = 0; i < nb_wall; i++) {
 		size_t dir = gsl_spmatrix_uint_get(game.graph->t, posswall[i][0].fr, posswall[i][0].to);
 		put_wall_opti(game.graph, posswall[i]);
-		size_t new_dist = dijkstra(game.graph, game.opponent.pos, game.opponent.color);
-		size_t new_closest = dijkstra(game.graph, posswall[i][0].fr, game.opponent.color);
-		if (dijkstra(game.graph, game.self.pos, game.self.color) < IMPOSSIBLE_DISTANCE){
-			if (new_dist > dist && new_dist < IMPOSSIBLE_DISTANCE) {
-				dist_upgraded = true;
-				dist = new_dist;
-				closest = new_closest;
-				wall_id = i;
-			}
-			if (new_dist == dist && new_dist < IMPOSSIBLE_DISTANCE && new_closest > closest && dist_upgraded){
-				dist = new_dist;
-				closest = new_closest;
+		size_t new_opp_dist = dijkstra(game.graph, game.opponent.pos, game.opponent.color);
+		size_t new_self_dist = dijkstra(game.graph, game.self.pos, game.self.color);
+		if (new_opp_dist < IMPOSSIBLE_DISTANCE && new_self_dist < IMPOSSIBLE_DISTANCE){
+			if (new_self_dist - new_opp_dist < self_dist - opp_dist) {
+				opp_dist = new_opp_dist;
+				self_dist = new_self_dist;
 				wall_id = i;
 			}
 		}
@@ -219,16 +212,18 @@ struct move_t make_first_move(struct game_state_t game) {
 	return make_default_first_move(game);
 }
 
+
 // Compute the move
 struct move_t make_move(struct game_state_t game) {
 	struct move_t move;
 	struct edge_t poss_walls[MAX_POSSIBLE_WALLS][2];
+	size_t self_dist = dijkstra(game.graph, game.self.pos, game.self.color);
+	size_t opp_dist = dijkstra(game.graph, game.opponent.pos, game.opponent.color);
 	//size_t size_board = sqrt(game.graph->num_vertices);
-	if (dijkstra(game.graph, game.opponent.pos, game.opponent.color) >= dijkstra(game.graph, game.self.pos, game.self.color) ||
-		dijkstra(game.graph, game.self.pos, game.self.color) == 1 || game.self.num_walls == 0){
+	if ((opp_dist > 5 && game.opponent.num_walls > 0) || self_dist < opp_dist || self_dist == 1 || game.self.num_walls == 0){
 		move.m = move_forward(game);
 		move.t = MOVE;
-		}
+	}
 	else {
 		size_t nb_of_walls = get_possible_walls(game, poss_walls);
 		size_t id_wall = get_the_better_wall_id(game, poss_walls, nb_of_walls);
