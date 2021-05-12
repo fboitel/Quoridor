@@ -1,3 +1,10 @@
+/**
+ * @file pablo_supersaiyan.c
+ *
+ * @brief Used to bild the dynamic library pablo_supersaiyan.so. This player intelligence is based principally on the Dijkstra algorithm
+ */
+
+
 #include "ia.h"
 #include "ia_utils.h"
 #include "board.h"
@@ -10,18 +17,12 @@
 char *name = "Pablo Super Saiyan";
 
 
-//Pablo always does everything possible to lengthen the path of his opponents
-
-
-//Returns the number of vertices owned by each player
-size_t vertices_owned(struct graph_t *graph){
-	int i = 0;
-	while (gsl_spmatrix_uint_get(graph->o, 0, i) == 1 || gsl_spmatrix_uint_get(graph->o, 1, i) == 1)
-		i++;
-	return i;
-}
-
-//init the array d of the distance and v of the vertices
+/**
+ * @brief Init the array d of the distance and v of the vertices to be able to apply Dijkstra algorithm
+ * @param d An array that will contain the distance of each vertex to the source. When the Dijkstra algorithm will be apllied, the distance between the source and the vertex i will be d[i]
+ * @param v An array that will contain the vertices remaining to be traversed
+ * @param length The number of vertices
+ */
 void release_init(size_t d[], size_t v[], size_t pos, size_t length){
 		for (size_t i = 0; i < length; i++) {
 		d[i] = IMPOSSIBLE_DISTANCE;
@@ -30,6 +31,13 @@ void release_init(size_t d[], size_t v[], size_t pos, size_t length){
 	d[pos] = 0;
 }
 
+/**
+ * @brief Used to know what vertex is the next to be release the Dijkstra algorithm context. This vextex is removed from the array v : it is replaced by the last element of v and the size of v decreases by one. 
+ * @param d The array containing the distances between vertices and the source.
+ * @param v The array containing the remaining vertex
+ * @param length The number of remaining params
+ * @returns The index of a vertex
+ */ 
 //Returns the vertex that have the smallest distance, and make it desapear of the array v.
 size_t extract_min(size_t d[], size_t v[],size_t length){
 	size_t ind = length+1;
@@ -44,7 +52,11 @@ size_t extract_min(size_t d[], size_t v[],size_t length){
 	return vertex;
 }
 
-//Returns true if elem belong to arr
+/**
+ * @brief Used to know if an element is in an array
+ * 
+ *
+ */ 
 bool belong(size_t elem, size_t arr[], size_t length){
 	for (size_t i = 0; i < length; i++)
 		if (elem == arr[i])
@@ -52,12 +64,23 @@ bool belong(size_t elem, size_t arr[], size_t length){
 	return false;
 }
 
-//Releases the edge between vertex u and vertex v
+/**
+ * @brief Release the edge between vertex u and vertex v in the Dijkstra algorithm context
+ * @param d The array that contains the distances
+ *
+ */ 
+
 void release_dijk(size_t u, size_t v, size_t d[]){
 	if (d[v] > d[u] + 1)
 		d[v] = d[u] + 1;
 }
 
+
+/**
+ * @brief Get the shortest distance between the source and a vertex among the target line vertices
+ * @param color The color of the player that we want to know his distance to reach to the arrival line.
+ *
+ */ 
 //Returns the shortest distance in array d under condition that the vertes is a target vertex.
 size_t get_shortest(size_t d[], struct graph_t *graph, enum color_t color){
 	size_t min = IMPOSSIBLE_DISTANCE;
@@ -67,7 +90,10 @@ size_t get_shortest(size_t d[], struct graph_t *graph, enum color_t color){
 		}
 	return min;
 }
-
+/**
+ * @returns The distance between the position pos and the target line for the right player using the Dijkstra algorithm
+ * 
+ */
 size_t dijkstra(struct graph_t *graph, size_t pos, enum color_t color){
 	size_t nb_v = graph->num_vertices;
 	size_t d[nb_v];
@@ -85,7 +111,12 @@ size_t dijkstra(struct graph_t *graph, size_t pos, enum color_t color){
 	return get_shortest(d, graph, color);
 }
 
-//Gather all the place where a wall can be set and returns its number
+/**
+ * @brief Gather all the emplacements that can receive a wall
+ * @param walls A 2-dimension array that will be filled by walls
+ * @param game To have necessary information on the graph
+ * @returns The number of possible walls
+ */ 
 size_t get_possible_walls(struct game_state_t game, struct edge_t walls[MAX_POSSIBLE_WALLS][2]) {
 	size_t nb_wall = 0;
 	for (size_t i = 0; i < game.graph->num_vertices; i++) {
@@ -117,7 +148,9 @@ size_t get_possible_walls(struct game_state_t game, struct edge_t walls[MAX_POSS
 	return nb_wall;
 }
 
-//Put a wall on the graph
+/**
+ * @brief Put a wall on the graph in order to know if it is a good play or not
+ */ 
 void put_wall_opti(struct graph_t *graph, struct edge_t wall[2]) {
 	gsl_spmatrix_uint_set(graph->t, wall[0].fr, wall[0].to, 0);
 	gsl_spmatrix_uint_set(graph->t, wall[0].to, wall[0].fr, 0);
@@ -125,6 +158,10 @@ void put_wall_opti(struct graph_t *graph, struct edge_t wall[2]) {
 	gsl_spmatrix_uint_set(graph->t, wall[1].to, wall[1].fr, 0);
 }
 
+/**
+ * @brief Remove a wall placed by put_wall
+ * @param dir The direction of the second vertex relative to the first, in order to restore correctly the graph
+ */ 
 void remove_wall_opti(struct graph_t *graph, struct edge_t wall[2], enum direction_t dir) {
 	gsl_spmatrix_uint_set(graph->t, wall[0].fr, wall[0].to, dir);
 	gsl_spmatrix_uint_set(graph->t, wall[0].to, wall[0].fr, opposite(dir));
@@ -132,7 +169,10 @@ void remove_wall_opti(struct graph_t *graph, struct edge_t wall[2], enum directi
 	gsl_spmatrix_uint_set(graph->t, wall[1].to, wall[1].fr, opposite(dir));
 }
 
-//Returns the best place to put a wall in order to delay the opponent
+/**
+ * @brief Get the better wall basing on Dijkstra algorithm
+ * @returns The index of the wall in the array posswall, if there is no good wall, returns IMPOSSIBLE_ID
+ */ 
 size_t get_the_better_wall_id(struct game_state_t game, struct edge_t posswall[MAX_POSSIBLE_WALLS][2], size_t nb_wall) {
 	size_t opp_dist = dijkstra(game.graph, game.opponent.pos, game.opponent.color);
 	size_t self_dist = dijkstra(game.graph, game.self.pos, game.self.color);
@@ -157,6 +197,13 @@ size_t get_the_better_wall_id(struct game_state_t game, struct edge_t posswall[M
 	return wall_id;
 }
 
+/**
+ * @brief Add to an array the vertex where Pablo can eventually move
+ * @param self_pos The position of Pablo
+ * @param opp_pos The position of the opponent 
+ * @param linked An array that contains the vertices in contact : at north, south, east and west. On this array will be added valid positions 
+ * @returns The number of possible places 
+ */ 
 size_t get_linked_for_move(struct graph_t *graph, size_t self_pos, size_t opp_pos, size_t linked[]){
 	size_t num = get_linked(graph, self_pos, linked);
 	int ind = MAX_DIRECTION;
@@ -183,7 +230,12 @@ size_t get_linked_for_move(struct graph_t *graph, size_t self_pos, size_t opp_po
 	return num;
 }
 
-//Moves forward
+/**
+ * @brief Get the best edge where Pablo can move to get as close to the finish line as possible. 
+ * @param game Gather all the info we need to get the best move
+ * @returns The id of a vertex
+ */ 
+
 size_t move_forward(struct game_state_t game) {
 	size_t linked[MAX_MOVE_PLACES];
 	size_t num = get_linked_for_move(game.graph, game.self.pos, game.opponent.pos, linked);
@@ -213,7 +265,12 @@ struct move_t make_first_move(struct game_state_t game) {
 }
 
 
-// Compute the move
+/**
+ * @brief Get the best move : If Pablo is closest to the arrival than his opponent, he will advance. Then, Pablo will wait until the opponent has placed as much wall as possible before playing a wall. Else, he will place a wall to keep the opponent furthest of the arrival line, by prolonging as little as possible his own path
+ * @param game Gather all the info we need to get the best move
+ * @returns A struct move_t containing the move of pablo
+ */ 
+
 struct move_t make_move(struct game_state_t game) {
 	struct move_t move;
 	struct edge_t poss_walls[MAX_POSSIBLE_WALLS][2];
