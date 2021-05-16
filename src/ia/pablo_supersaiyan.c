@@ -11,105 +11,11 @@
 #include "move.h"
 
 #define MAX_POSSIBLE_WALLS 500
-#define IMPOSSIBLE_DISTANCE 500000
 #define IMPOSSIBLE_ID 1234500
 #define MAX_MOVE_PLACES 7
 char *name = "Pablo Super Saiyan";
 
 
-/**
- * @brief Init the array d of the distance and v of the vertices to be able to apply Dijkstra algorithm
- * @param d An array that will contain the distance of each vertex to the source. When the Dijkstra algorithm will be apllied, the distance between the source and the vertex i will be d[i]
- * @param v An array that will contain the vertices remaining to be traversed
- * @param length The number of vertices
- */
-void release_init(size_t d[], size_t v[], size_t pos, size_t length){
-		for (size_t i = 0; i < length; i++) {
-		d[i] = IMPOSSIBLE_DISTANCE;
-		v[i] = i;
-	}
-	d[pos] = 0;
-}
-
-/**
- * @brief Used to know what vertex is the next to be release the Dijkstra algorithm context. This vextex is removed from the array v : it is replaced by the last element of v and the size of v decreases by one. 
- * @param d The array containing the distances between vertices and the source.
- * @param v The array containing the remaining vertex
- * @param length The number of remaining params
- * @returns The index of a vertex
- */ 
-//Returns the vertex that have the smallest distance, and make it desapear of the array v.
-size_t extract_min(size_t d[], size_t v[],size_t length){
-	size_t ind = length+1;
-	size_t min = length*4;
-	for(size_t i = 0; i < length; i++)
-		if(d[v[i]] < min){
-			min = d[v[i]];
-			ind = i;
-		}
-	size_t vertex = v[ind];
-	v[ind] = v[length - 1];
-	return vertex;
-}
-
-/**
- * @brief Used to know if an element is in an array
- * 
- *
- */ 
-bool belong(size_t elem, size_t arr[], size_t length){
-	for (size_t i = 0; i < length; i++)
-		if (elem == arr[i])
-			return true;
-	return false;
-}
-
-/**
- * @brief Release the edge between vertex u and vertex v in the Dijkstra algorithm context
- * @param d The array that contains the distances
- *
- */ 
-
-void release_dijk(size_t u, size_t v, size_t d[]){
-	if (d[v] > d[u] + 1)
-		d[v] = d[u] + 1;
-}
-
-
-/**
- * @brief Get the shortest distance between the source and a vertex among the target line vertices
- * @param color The color of the player that we want to know his distance to reach to the arrival line.
- *
- */ 
-//Returns the shortest distance in array d under condition that the vertes is a target vertex.
-size_t get_shortest(size_t d[], struct graph_t *graph, enum color_t color){
-	size_t min = IMPOSSIBLE_DISTANCE;
-	for (size_t i = 0; i < graph->num_vertices; i++)
-		if (d[i] < min && gsl_spmatrix_uint_get(graph->o, 1 - color, i)){
-			min = d[i];
-		}
-	return min;
-}
-/**
- * @returns The distance between the position pos and the target line for the right player using the Dijkstra algorithm
- * 
- */
-size_t dijkstra(struct graph_t *graph, size_t pos, enum color_t color){
-	size_t nb_v = graph->num_vertices;
-	size_t d[nb_v];
-	size_t v[nb_v];
-	release_init(d, v, pos, nb_v);
-	while (nb_v){
-		size_t u = extract_min(d, v, nb_v);
-		nb_v--;
-		size_t succ[MAX_DIRECTION];
-		get_linked(graph, u, succ);
-		for (size_t i = 0; i < MAX_DIRECTION; i++)
-			if (belong(succ[i], v, nb_v))
-				release_dijk(u, succ[i], d);
-	}
-	return get_shortest(d, graph, color);
-}
 
 /**
  * @brief Gather all the emplacements that can receive a wall
@@ -178,7 +84,6 @@ size_t get_the_better_wall_id(struct game_state_t game, struct edge_t posswall[M
 	size_t self_dist = dijkstra(game.graph, game.self.pos, game.self.color);
 	long long int diff = self_dist - opp_dist;
 	size_t wall_id = IMPOSSIBLE_ID;
-	printf("FJFJFJFJJFJFJFJFJFJFJFJFJFJJF");
 	for (size_t i = 0; i < nb_wall; i++) {
 		size_t dir = gsl_spmatrix_uint_get(game.graph->t, posswall[i][0].fr, posswall[i][0].to);
 		put_wall_opti(game.graph, posswall[i]);

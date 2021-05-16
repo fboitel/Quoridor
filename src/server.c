@@ -228,11 +228,16 @@ bool is_valid_wall(struct graph_t* board, struct edge_t e[]) {
 
 	// sort verticies
 
-	size_t e0fr = e[0].fr < e[0].to ? e[0].fr : e[0].to;
-	size_t e0to = e[0].fr > e[0].to ? e[0].fr : e[0].to;
-	size_t e1fr = e[1].fr < e[1].to ? e[1].fr : e[1].to;
-	size_t e1to = e[1].fr > e[1].to ? e[1].fr : e[1].to;
+	size_t e0fr_tmp = e[0].fr < e[0].to ? e[0].fr : e[0].to;
+	size_t e0to_tmp = e[0].fr > e[0].to ? e[0].fr : e[0].to;
+	size_t e1fr_tmp = e[1].fr < e[1].to ? e[1].fr : e[1].to;
+	size_t e1to_tmp = e[1].fr > e[1].to ? e[1].fr : e[1].to;
 
+	size_t e0fr = e0fr_tmp < e1fr_tmp ? e0fr_tmp : e1fr_tmp;
+	size_t e1fr = e0fr_tmp > e1fr_tmp ? e0fr_tmp : e1fr_tmp;
+	size_t e0to = e0to_tmp < e1to_tmp ? e0to_tmp : e1to_tmp;
+	size_t e1to = e0to_tmp > e1to_tmp ? e0to_tmp : e1to_tmp;
+	
 	// check if the wall cut valid edges
 	if (!(is_linked(board, e0fr, e0to) && is_linked(board, e1fr, e1to))) {
 		return false;
@@ -257,8 +262,18 @@ bool is_valid_wall(struct graph_t* board, struct edge_t e[]) {
 		return false;
 	}
 
-	// TODO : opposent or player can't win 
-
+	// ckeck if nobody is lock in
+	struct edge_t edge[2];
+	edge[0].fr = e0fr;
+	edge[0].to = e0to;
+	edge[1].fr = e1fr;
+	edge[1].to = e1to;
+	place_wall(board, edge);
+	if (dijkstra(board, position_player_1, BLACK) == IMPOSSIBLE_DISTANCE || dijkstra(board, position_player_2, WHITE) == IMPOSSIBLE_DISTANCE){
+		remove_wall(board, edge);
+		return false;
+	}
+	remove_wall(board, edge);
 	return true;
 }
 

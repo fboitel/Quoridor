@@ -11,6 +11,10 @@
 #include "graph.h"
 #include <stdbool.h>
 
+
+#define IMPOSSIBLE_DISTANCE 500000
+
+
  /** @enum Move direction */
 enum direction_t {
 	NO_DIRECTION, NORTH, SOUTH, WEST, EAST, MAX_DIRECTION
@@ -58,4 +62,8 @@ enum direction_t opposite(enum direction_t d);
 void display_board(struct graph_t* board, size_t board_size, size_t position_player_1, size_t position_player_2);
 
 void display_adj_matrix(struct graph_t* board, size_t board_size);
+
+/** @brief Dijkstra algorithm to get the closest path */
+size_t dijkstra(struct graph_t *graph, size_t pos, enum color_t color);
+
 #endif // _QUOR_BOARD_H_
