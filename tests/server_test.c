@@ -339,7 +339,7 @@ void test_move_is_valid(){
     for (size_t pos = 0; pos < 100; pos+=2) {
         position_player_1 = pos;
         position_player_2 = pos+1;
-        for (size_t i = 0; i < 100; i++)
+        for (size_t i = 0; i < 1000; i++)
             if (!error){
                 size_t base_wall = rand()%90;
                 struct move_t move;
