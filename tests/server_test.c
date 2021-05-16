@@ -27,6 +27,7 @@ extern char *name;
 extern size_t board_size;
 extern size_t edges;
 struct graph_t *my_board;
+struct graph_t *my_smaller_board;
 
 extern size_t position_player_1;
 extern size_t position_player_2;
@@ -45,6 +46,7 @@ extern char* (*P2_name)(void);
 static void setup(void){
     board_size = 10;
     my_board = graph_init(board_size, SQUARE);
+    my_smaller_board = graph_init(6, SQUARE);
     edges = ceil(board_size * board_size * (board_size - 1) * (board_size - 1) * 2)/15;
     initialize(BLACK, my_board, edges);
   //  active_player_s = BLACK;
@@ -65,6 +67,7 @@ void fill_wall(size_t fr_1, size_t to_1, size_t fr_2, size_t to_2, struct edge_t
 
 void test_is_valid_displacement(){
     printf("%s", __func__);
+    board_size = 10;
     for (size_t i = 0; i < my_board->num_vertices - 1; i++){
         position_player_1 = i;
         if (is_valid_displacement(my_board, -1, BLACK) || is_valid_displacement(my_board, 100, BLACK))
@@ -150,6 +153,7 @@ void test_is_valid_displacement(){
 
 void test_is_valid_wall(){
     printf("%s", __func__);
+    board_size = 10;
     bool error = false;
     for (int iter = 0; iter < 10; iter++)
             if(!error){
@@ -265,6 +269,7 @@ void test_is_valid_wall(){
 
 void test_update_board(){
     printf("%s", __func__);
+    board_size = 10;
     struct move_t move1 = {
         .m = 5, 
         .e = {{-1, -1}, {-1, -1}},
@@ -293,6 +298,7 @@ void test_update_board(){
 
 void test_is_winning(){
     printf("%s", __func__);
+    board_size = 10;
     //player_1 = WHITE, his vertices are at the top
     //player_2 = BLACK, his vertices are at the bottom
    
@@ -320,38 +326,41 @@ void test_is_winning(){
 }
 void test_move_is_valid(){
     printf("%s", __func__);
+    board_size = 6;
     P1_lib = dlopen("build/crashboy.so", RTLD_NOW);
     P2_lib = dlopen("build/crashboy.so", RTLD_LAZY);
     P1_name = dlsym(P1_lib, "get_player_name");
     P2_name = dlsym(P2_lib, "get_player_name");
     freopen("/dev/null", "r", stderr);
-    struct edge_t bw1[2] = {{30, 40}, {31, 41}};
-    struct edge_t bw2[2] = {{12, 22}, {13, 23}};
-    struct edge_t bw3[2] = {{64, 74}, {65, 75}};
-    struct edge_t bw4[2] = {{6, 16}, {7, 17}};
-    struct edge_t bw5[2] = {{78, 79}, {88, 89}};
-    place_wall(my_board, bw1);
-    place_wall(my_board, bw2);
-    place_wall(my_board, bw3);
-    place_wall(my_board, bw4);
-    place_wall(my_board, bw5);
+    struct edge_t bw1[2] = {{6, 12}, {7, 13}};
+    struct edge_t bw2[2] = {{13, 14}, {19, 20}};
+    struct edge_t bw3[2] = {{20, 26}, {21, 27}};
+    struct edge_t bw4[2] = {{10, 16}, {11, 17}};
+    struct edge_t bw5[2] = {{16, 17}, {22, 23}};
+    place_wall(my_smaller_board, bw1);
+    place_wall(my_smaller_board, bw2);
+    place_wall(my_smaller_board, bw3);
+    place_wall(my_smaller_board, bw4);
+    place_wall(my_smaller_board, bw5);
     bool error = false;
-    for (size_t pos = 0; pos < 100; pos+=2) {
-        position_player_1 = pos;
-        position_player_2 = pos+1;
-        for (size_t i = 0; i < 1000; i++)
+    for (size_t pos = 0; pos < 10; pos++) {
+        position_player_1 = rand()%36;
+        position_player_2 = rand()%36;
+        while (position_player_2 == position_player_1)
+            position_player_2 = rand()%36;
+        for (size_t i = 0; i < 50; i++)
             if (!error){
-                size_t base_wall = rand()%90;
+                size_t base_wall = rand()%28;
                 struct move_t move;
-                move.m = rand()%100;  
+                move.m = rand()%36;  
                 move.e[0].fr = base_wall;
-                move.e[0].to = base_wall + 1;
-                move.e[1].fr = base_wall + 10;
-                move.e[1].to = base_wall + 11;
+                move.e[0].to = base_wall + 6;
+                move.e[1].fr = base_wall + 1;
+                move.e[1].to = base_wall + 7;
                 move.t = MOVE;
                 move.c = rand()%2;
-                bool val_disp = is_valid_displacement(my_board, move.m, move.c);
-                bool mov_val = move_is_valid(&move, my_board, move.c);
+                bool val_disp = is_valid_displacement(my_smaller_board, move.m, move.c);
+                bool mov_val = move_is_valid(&move, my_smaller_board, move.c);
                 if (val_disp && !mov_val){
                     FAIL("!move_is_valid but found is_valid_displacement");
                     error = true;
@@ -362,8 +371,8 @@ void test_move_is_valid(){
                 }
 
                 move.t = WALL;
-                bool val_wall = is_valid_wall(my_board, move.e);
-                mov_val = move_is_valid(&move, my_board, move.c);
+                bool val_wall = is_valid_wall(my_smaller_board, move.e);
+                mov_val = move_is_valid(&move, my_smaller_board, move.c);
                 if (val_wall && !mov_val){
                     FAIL("!move_is_valid but found is_valid_wall");
                     error = true;
@@ -374,6 +383,11 @@ void test_move_is_valid(){
                 }
             }
     }
+    remove_wall(my_smaller_board, bw1);
+    remove_wall(my_smaller_board, bw2);
+    remove_wall(my_smaller_board, bw3);
+    remove_wall(my_smaller_board, bw4);
+    remove_wall(my_smaller_board, bw5);
     dlclose(P1_lib);
     dlclose(P2_lib);
     freopen("/dev/tty","r",stderr);
