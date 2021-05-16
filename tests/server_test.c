@@ -320,11 +320,11 @@ void test_is_winning(){
 }
 void test_move_is_valid(){
     printf("%s", __func__);
-    P1_lib = dlopen("../build.crashboy.so", RTLD_NOW);
-    P2_lib = dlopen("../build.crashboy.so", RTLD_LAZY);
+    P1_lib = dlopen("build/crashboy.so", RTLD_NOW);
+    P2_lib = dlopen("build/crashboy.so", RTLD_LAZY);
     P1_name = dlsym(P1_lib, "get_player_name");
     P2_name = dlsym(P2_lib, "get_player_name");
-    freopen("/dev/null","r",stderr);
+    freopen("/dev/null", "r", stderr);
     struct edge_t bw1[2] = {{30, 40}, {31, 41}};
     struct edge_t bw2[2] = {{12, 22}, {13, 23}};
     struct edge_t bw3[2] = {{64, 74}, {65, 75}};
@@ -371,10 +371,12 @@ void test_move_is_valid(){
                 if (!val_wall && mov_val){
                     FAIL("move_is_valid but found !is_valid_wall");
                     error = true;
-                freopen("/dev/tty","r",stderr);
                 }
             }
     }
+    dlclose(P1_lib);
+    dlclose(P2_lib);
+    freopen("/dev/tty","r",stderr);
 }
 void test_server_main(void){
     TEST(test_is_winning);
