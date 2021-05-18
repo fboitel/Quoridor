@@ -1,5 +1,5 @@
 GSL_PATH ?= gsl
-CFLAGS = --std=c99 -Wall -Wextra -g -Iheaders -I$(GSL_PATH)/include
+CFLAGS = --std=c99 -Wall -Wextra -g -03 -Iheaders -I$(GSL_PATH)/include
 LFLAGS = -L$(GSL_PATH)/lib -lgsl -lgslcblas -ldl -lm
 CC = gcc
 
