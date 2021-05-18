@@ -5,10 +5,30 @@
 struct game_state_t game;
 extern char *name;
 
+/** 
+ * @brief Access to player information
+ *  
+ * @return The player name as an [a-zA-Z0-9 -_]* string
+ */
 char const *get_player_name(void) {
 	return name;
 }
 
+/**
+ * @brief Initialize the player
+ * 
+ * @details Preconditions:
+ * - `id` is either `BLACK` or `WHITE`
+ * - `graph` is a heap-allocated copy of the graph where the game is
+ *   played, that must be freed in the end
+ * - `num_walls` is the number of edges of `graph` divided by 15,
+	 rounded up
+ * - `initialize()` has never been called before
+ * 
+ * @param id The color assigned to the player
+ * @param graph The graph where the game is played
+ * @param num_walls The number of walls assigned to the player
+ */
 void initialize(enum color_t id, struct graph_t *graph, size_t num_walls) {
 	game.graph = graph;
 
@@ -25,6 +45,14 @@ void initialize(enum color_t id, struct graph_t *graph, size_t num_walls) {
 	};
 }
 
+/** 
+ * @brief Update the player graph with the given move
+ * 
+ * @details Update player position if move is a displacement
+ * or place the wall in the current player graph
+ * 
+ * @param move The last game move 
+ */
 void update_graph(struct move_t move) {
 	struct player_state_t *player = move.c == game.self.color ? &game.self : &game.opponent;
 
@@ -43,6 +71,11 @@ void update_graph(struct move_t move) {
 	}
 }
 
+/**
+ * @brief Print informations of a move
+ * 
+ * @param move The move to print
+ */
 void print_move(struct move_t move) {
 	printf("\n\nMove from %u (%s):\n", move.c, get_player_name());
 	printf("vertex: %zu\n", move.m);
@@ -66,6 +99,13 @@ void print_move(struct move_t move) {
 	printf("move type: %s\n\n\n", move.t == 0 ? "WALL" : "MOVE");
 }
 
+/** 
+ * @brief Computes next move
+ *
+ * @param previous_move The move from the previous player
+ * 
+ * @return The next move for the player
+ */
 struct move_t play(struct move_t previous_move) {
 	update_graph(previous_move);
 
@@ -84,6 +124,12 @@ struct move_t play(struct move_t previous_move) {
 	return move;
 }
 
+/**
+ * @brief Clean up the memory using by the player
+ * 
+ * @details Every allocation done during the calls to initialize and play
+ * functions will be freed
+ */
 void finalize(void) {
 	graph_free(game.graph);
 }
