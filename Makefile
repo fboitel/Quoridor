@@ -1,11 +1,11 @@
 GSL_PATH ?= gsl
-CFLAGS = --std=c99 -Wall -Wextra -g -03 -Iheaders -I$(GSL_PATH)/include
+CFLAGS = --std=c99 -Wall -Wextra -Iheaders -I$(GSL_PATH)/include
 LFLAGS = -L$(GSL_PATH)/lib -lgsl -lgslcblas -ldl -lm
 CC = gcc
 
 .PHONY: build test run_server run_tests install clean
 
-all: build test
+all: build
 
 # SCRIPTS
 
@@ -27,7 +27,7 @@ install: build/server build/alltests build/jerry.so build/pablo_supersaiyan.so b
 clean:
 	find build install -type f -not -name .keep | xargs rm -rf
 
-build: build/server build/tom.so build/jerry.so build/pablo.so build/pablo_supersaiyan.so build/geralt.so build/goodboy.so
+build: build/server build/jerry.so build/pablo.so build/pablo_supersaiyan.so build/geralt.so build/goodboy.so
 
 build/server: build/main.o build/server.o build/opt.o build/board.o
 	$(CC) $^ -o $@ $(LFLAGS)
