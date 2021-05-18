@@ -15,8 +15,8 @@ run-server: build/server
 run-tests: build/alltests
 	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/alltests
 
-run-game: build/server build/jerry.so build/pablo.so
-	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/server ./build/jerry.so ./build/pablo.so -m 5
+run-game: build/server build/jerry.so build/jump.so
+	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/server ./build/jerry.so ./build/jump.so -m 5
 
 
 install: build/server build/alltests build/tom.so build/jerry.so build/pablo.so build/pablo_supersaiyan.so
@@ -78,6 +78,9 @@ build/pablo_supersaiyan.o: src/ia/pablo_supersaiyan.c
 build/goodboy.o: src/ia/goodboy.c
 	$(CC) -c -fPIC $< -o $@ $(CFLAGS)
 
+build/jump.o: src/ia/jump.c
+	$(CC) -c -fPIC $< -o $@ $(CFLAGS)
+
 # DYNAMIC LIBS
 
 build/tom.so: build/tom.o build/player.o build/board.o build/ia_utils.o
@@ -93,4 +96,7 @@ build/pablo_supersaiyan.so: build/pablo_supersaiyan.o build/player.o build/board
 	$(CC) -shared $^ -o $@ $(LFLAGS)
 
 build/goodboy.so: build/goodboy.o build/player.o build/board.o build/ia_utils.o
+	$(CC) -shared $^ -o $@ $(LFLAGS)
+
+build/jump.so: build/jump.o build/player.o build/board.o build/ia_utils.o
 	$(CC) -shared $^ -o $@ $(LFLAGS)
