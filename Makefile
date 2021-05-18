@@ -1,5 +1,5 @@
 GSL_PATH ?= gsl
-CFLAGS = --std=c99 -Wall -Wextra -g -Iheaders -I$(GSL_PATH)/include
+CFLAGS = --std=c99 -Wall -Wextra -g -03 -Iheaders -I$(GSL_PATH)/include
 LFLAGS = -L$(GSL_PATH)/lib -lgsl -lgslcblas -ldl -lm
 CC = gcc
 
@@ -15,8 +15,8 @@ run-server: build/server
 run-tests: build/alltests
 	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/alltests
 
-run-game: build/server build/jerry.so build/geralt.so
-	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/server ./build/jerry.so ./build/geralt.so -m 8
+run-game: build/server build/jerry.so build/jump.so
+	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/server ./build/jerry.so ./build/jump.so -m 5
 
 test: build/alltests
 	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/alltests
@@ -54,7 +54,13 @@ build/%.o: tests/%.c
 build/crashboy.o: tests/crashboy.c
 	$(CC) -c -fPIC $< -o $@ $(CFLAGS)
 
+build/jump.o: src/ia/jump.c
+	$(CC) -c -fPIC $< -o $@ $(CFLAGS)
+
 # DYNAMIC LIBS
 
 build/%.so: build/%.o build/player.o build/board.o build/ia_utils.o 
+	$(CC) -shared $^ -o $@ $(LFLAGS)
+
+build/jump.so: build/jump.o build/player.o build/board.o build/ia_utils.o
 	$(CC) -shared $^ -o $@ $(LFLAGS)
