@@ -1,25 +1,33 @@
+/**
+ * @file ia.h
+ *
+ * @brief IA interface
+ */
+
 #ifndef _QUOR_IA_H_
 #define _QUOR_IA_H_
 
 #include "graph.h"
 #include "move.h"
 
+/** @struct Struct representing the current player state */
 struct player_state_t {
-	enum color_t color;
-	size_t pos;
-	size_t num_walls;
+	enum color_t color; /**< Player color */
+	size_t pos; 		/**< Current position */
+	size_t num_walls; 	/**< Number of walls remaining */
 };
 
+/** @struct Struct representing a game state */
 struct game_state_t {
-	struct graph_t *graph;
-	struct player_state_t self;
-	struct player_state_t opponent;
+	struct graph_t* graph; 			/**< Graph representing the game board */
+	struct player_state_t self; 	/**< State of the current player */
+	struct player_state_t opponent; /**< State of the opponent */
 };
 
-// Return a first move based on the IA strategy
+/** @brief Return a first move based on the IA strategy */
 struct move_t make_first_move(struct game_state_t game);
 
-// Return a move based on the IA strategy
+/** @brief Return a move based on the IA strategy */
 struct move_t make_move(struct game_state_t game);
 
 #endif // _QUOR_IA_H_

@@ -18,64 +18,40 @@ run-tests: build/alltests
 run-game: build/server build/jerry.so build/jump.so
 	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/server ./build/jerry.so ./build/jump.so -m 5
 
+test: build/alltests
+	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/alltests
 
-install: build/server build/alltests build/tom.so build/jerry.so build/pablo.so build/pablo_supersaiyan.so
+install: build/server build/alltests build/jerry.so build/pablo_supersaiyan.so build/geralt.so
 	cp $^ install
 
 clean:
 	find build install -type f -not -name .keep | xargs rm -rf
 
-build: build/server build/tom.so build/jerry.so build/pablo.so build/pablo_supersaiyan.so
+build: build/server build/tom.so build/jerry.so build/pablo.so build/pablo_supersaiyan.so build/geralt.so build/goodboy.so
 
-test: build/alltests
-
-build/server: build/server.o build/opt.o build/board.o
+build/server: build/main.o build/server.o build/opt.o build/board.o
 	$(CC) $^ -o $@ $(LFLAGS)
 
-build/alltests: build/tests.o build/player_test.o build/dummy.o build/ia_utils.o build/player.o build/board.o build/opt.o
+build/alltests: build/tests.o build/player_test.o build/server_test.o build/crashboy.so build/ia_utils.o build/player.o build/board.o build/opt.o  build/server.o
 	$(CC) $^ -o $@ --coverage $(LFLAGS)
-
-# TSTOBJ
-
-build/tests.o: tests/tests.c
-	$(CC) -c $< -o $@ --coverage $(CFLAGS)
-
-build/player_test.o: tests/player_test.c
-	$(CC) -c $< -o $@ --coverage $(CFLAGS)
 
 # OBJ
 
-build/server.o: src/server.c
+build/%.o: src/%.c
 	$(CC) -c $< -o $@ $(CFLAGS)
 
-build/opt.o: src/opt.c headers/opt.h
-	$(CC) -c $< -o $@ $(CFLAGS)
-
-build/board.o: src/board.c headers/board.h
-	$(CC) -c $< -o $@ $(CFLAGS)
-
-build/ia_utils.o: src/ia_utils.c headers/ia_utils.h
-	$(CC) -c $< -o $@ $(CFLAGS)
-
-build/player.o: src/player.c headers/player.h
+build/%.o: src/ia/%.c
 	$(CC) -c -fPIC $< -o $@ $(CFLAGS)
 
-build/dummy.o: tests/dummy.c
+build/player.o: src/player.c
 	$(CC) -c -fPIC $< -o $@ $(CFLAGS)
 
-build/tom.o: src/ia/tom.c
-	$(CC) -c -fPIC $< -o $@ $(CFLAGS)
+# TSTOBJ
 
-build/jerry.o: src/ia/jerry.c
-	$(CC) -c -fPIC $< -o $@ $(CFLAGS)
+build/%.o: tests/%.c
+	$(CC) -c $< -o $@ --coverage $(CFLAGS)
 
-build/pablo.o: src/ia/pablo.c
-	$(CC) -c -fPIC $< -o $@ $(CFLAGS)
-
-build/pablo_supersaiyan.o: src/ia/pablo_supersaiyan.c
-	$(CC) -c -fPIC $< -o $@ $(CFLAGS)
-
-build/goodboy.o: src/ia/goodboy.c
+build/crashboy.o: tests/crashboy.c
 	$(CC) -c -fPIC $< -o $@ $(CFLAGS)
 
 build/jump.o: src/ia/jump.c
@@ -83,19 +59,7 @@ build/jump.o: src/ia/jump.c
 
 # DYNAMIC LIBS
 
-build/tom.so: build/tom.o build/player.o build/board.o build/ia_utils.o
-	$(CC) -shared $^ -o $@ $(LFLAGS)
-
-build/jerry.so: build/jerry.o build/player.o build/board.o build/ia_utils.o
-	$(CC) -shared $^ -o $@ $(LFLAGS)
-
-build/pablo.so: build/pablo.o build/player.o build/board.o build/ia_utils.o
-	$(CC) -shared $^ -o $@ $(LFLAGS)
-
-build/pablo_supersaiyan.so: build/pablo_supersaiyan.o build/player.o build/board.o build/ia_utils.o
-	$(CC) -shared $^ -o $@ $(LFLAGS)
-
-build/goodboy.so: build/goodboy.o build/player.o build/board.o build/ia_utils.o
+build/%.so: build/%.o build/player.o build/board.o build/ia_utils.o 
 	$(CC) -shared $^ -o $@ $(LFLAGS)
 
 build/jump.so: build/jump.o build/player.o build/board.o build/ia_utils.o

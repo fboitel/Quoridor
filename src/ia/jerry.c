@@ -19,7 +19,7 @@ size_t move_forward(struct game_state_t game) {
 	enum direction_t directions[] = { GOAL, WEST, EAST, linked[opposite(GOAL)] };
 
 	for (int i = 0; i < 4; ++i) {
-		if (is_vertex(linked[directions[i]]) && linked[directions[i]] != game.opponent.pos) {
+		if (!is_no_vertex(linked[directions[i]]) && linked[directions[i]] != game.opponent.pos) {
 			return linked[directions[i]];
 		}
 	}

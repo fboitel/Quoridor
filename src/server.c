@@ -90,7 +90,6 @@ bool is_valid_displacement(struct graph_t* board, size_t destination, enum color
 	size_t position_player = player == BLACK ? position_player_1 : position_player_2;
 
 	size_t position_opposent = player == BLACK ? position_player_2 : position_player_1;
-
 	// destination is in the board and destination is not on a player cell
 	if (board->num_vertices <= destination || position_player == destination || position_opposent == destination) {
 		return false;
@@ -222,18 +221,23 @@ bool is_valid_displacement(struct graph_t* board, size_t destination, enum color
 
 	//gsl_spmatrix_uint_set(board->t, position_player, destination, 5);
 
-	return true;
+	return false;
 }
 
 bool is_valid_wall(struct graph_t* board, struct edge_t e[]) {
 
 	// sort verticies
 
-	size_t e0fr = e[0].fr < e[0].to ? e[0].fr : e[0].to;
-	size_t e0to = e[0].fr > e[0].to ? e[0].fr : e[0].to;
-	size_t e1fr = e[1].fr < e[1].to ? e[1].fr : e[1].to;
-	size_t e1to = e[1].fr > e[1].to ? e[1].fr : e[1].to;
+	size_t e0fr_tmp = e[0].fr < e[0].to ? e[0].fr : e[0].to;
+	size_t e0to_tmp = e[0].fr > e[0].to ? e[0].fr : e[0].to;
+	size_t e1fr_tmp = e[1].fr < e[1].to ? e[1].fr : e[1].to;
+	size_t e1to_tmp = e[1].fr > e[1].to ? e[1].fr : e[1].to;
 
+	size_t e0fr = e0fr_tmp < e1fr_tmp ? e0fr_tmp : e1fr_tmp;
+	size_t e1fr = e0fr_tmp > e1fr_tmp ? e0fr_tmp : e1fr_tmp;
+	size_t e0to = e0to_tmp < e1to_tmp ? e0to_tmp : e1to_tmp;
+	size_t e1to = e0to_tmp > e1to_tmp ? e0to_tmp : e1to_tmp;
+	
 	// check if the wall cut valid edges
 	if (!(is_linked(board, e0fr, e0to) && is_linked(board, e1fr, e1to))) {
 		return false;
@@ -258,8 +262,18 @@ bool is_valid_wall(struct graph_t* board, struct edge_t e[]) {
 		return false;
 	}
 
-	// TODO : opposent or player can't win 
-
+	// ckeck if nobody is lock in
+	struct edge_t edge[2];
+	edge[0].fr = e0fr;
+	edge[0].to = e0to;
+	edge[1].fr = e1fr;
+	edge[1].to = e1to;
+	place_wall(board, edge);
+	if (dijkstra(board, position_player_1, BLACK) == IMPOSSIBLE_DISTANCE || dijkstra(board, position_player_2, WHITE) == IMPOSSIBLE_DISTANCE){
+		remove_wall(board, edge);
+		return false;
+	}
+	remove_wall(board, edge);
 	return true;
 }
 
@@ -316,7 +330,7 @@ void update_board(struct graph_t* board, struct move_t* last_move) {
 	}
 	else {
 		// Update the board if a player has put a wall
-		placeWall(board, last_move->e);
+		place_wall(board, last_move->e);
 	}
 }
 
@@ -328,13 +342,15 @@ void close_server(struct graph_t* board) {
 	dlclose(P2_lib);
 }
 
-int main(int argc, char* argv[]) {
+int play_game(int a, char* b[]) {
 	// Parse arguments
-	parse_args(argc, argv);
+	parse_args(a, b);
 	printf("Args parsed\n");
 
 	// Init random generator
-	srand(time(NULL));
+	time_t seed = time(NULL);
+	srand(seed);
+	printf("Seed: %ld\n", seed);
 
 	// Load players
 	load_libs();
@@ -362,7 +378,7 @@ int main(int argc, char* argv[]) {
 	printf("%s vs %s\n", P1_name(), P2_name());
 	printf("%s begins\n", active_player == BLACK ? P1_name() : P2_name());
 
-	// Initialize the first move as a move to the intial place
+	// Initialize the first move as a move to the initial place
 	struct move_t last_move = (struct move_t){
 			.m = SIZE_MAX,
 			.c = active_player,
@@ -373,7 +389,6 @@ int main(int argc, char* argv[]) {
 	// Game loop
 	while (!game_over) {
 		turn++;
-
 		// Plays the active player
 		last_move = active_player == BLACK ? P1_play(last_move) : P2_play(last_move);
 
@@ -384,8 +399,10 @@ int main(int argc, char* argv[]) {
 
 		update_board(board, &last_move);
 
+		printf("\n\n%s:\n", active_player == BLACK ? P1_name() : P2_name());
 		display_board(board, m, position_player_1, position_player_2);
-		//	printf("wall : %ld:%ld - %ld:%ld \n", last_move.e[0].fr,  last_move.e[0].to,  last_move.e[1].fr,  last_move.e[1].to);
+
+		//printf("wall : %ld:%ld - %ld:%ld \n", last_move.e[0].fr,  last_move.e[0].to,  last_move.e[1].fr,  last_move.e[1].to);
 
 		// Check if a player has won
 		if (is_winning(board, active_player, active_player == BLACK ? position_player_1 : position_player_2)) {

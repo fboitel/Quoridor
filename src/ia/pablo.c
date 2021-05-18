@@ -107,33 +107,34 @@ size_t get_possible_walls(struct graph_t *graph, struct edge_t walls[MAX_POSSIBL
 }
 
 //Put a wall on the graph
-void put_wall(struct graph_t *graph, struct edge_t wall[2]) {
+void put_wall_opti(struct graph_t *graph, struct edge_t wall[2]) {
 	gsl_spmatrix_uint_set(graph->t, wall[0].fr, wall[0].to, 0);
 	gsl_spmatrix_uint_set(graph->t, wall[0].to, wall[0].fr, 0);
 	gsl_spmatrix_uint_set(graph->t, wall[1].fr, wall[1].to, 0);
 	gsl_spmatrix_uint_set(graph->t, wall[1].to, wall[1].fr, 0);
 }
 
-void remove_wall(struct graph_t *graph, struct edge_t wall[2], enum direction_t dir) {
+void remove_wall_opti(struct graph_t *graph, struct edge_t wall[2], enum direction_t dir) {
 	gsl_spmatrix_uint_set(graph->t, wall[0].fr, wall[0].to, dir);
 	gsl_spmatrix_uint_set(graph->t, wall[0].to, wall[0].fr, opposite(dir));
 	gsl_spmatrix_uint_set(graph->t, wall[1].fr, wall[1].to, dir);
 	gsl_spmatrix_uint_set(graph->t, wall[1].to, wall[1].fr, opposite(dir));
 }
 
+
 //Returns the best place to put a wall in order to delay the opponent
 size_t get_the_better_wall_id(struct graph_t *graph, struct edge_t posswall[MAX_POSSIBLE_WALLS][2], size_t nb_wall, size_t pos, enum color_t color) {
 	size_t dist = get_distance(graph, pos, color);
 	size_t wall_id = IMPOSSIBLE_ID;
-	for (size_t i = 0; i < nb_wall; i++) {
-		enum direction_t dir = gsl_spmatrix_uint_get(graph->t, posswall[i][0].fr, posswall[i][0].to);
-		put_wall(graph, posswall[i]);
+	for (size_t i = 0; i < nb_wall; i++) {		
+		size_t dir = gsl_spmatrix_uint_get(graph->t, posswall[i][0].fr, posswall[i][0].to);
+		put_wall_opti(graph, posswall[i]);
 		size_t new_dist = get_distance(graph, pos, color);
 		if (new_dist > dist && new_dist < 2 * (graph->num_vertices)) {
 			dist = new_dist;
 			wall_id = i;
 		}
-		remove_wall(graph, posswall[i], dir);
+		remove_wall_opti(graph, posswall[i], dir);
 	}
 	printf("(%zu %zu)", 2 * (graph->num_vertices) + 5, dist + 5);
 	return wall_id;
@@ -144,12 +145,12 @@ size_t get_a_good_wall_id(struct graph_t *graph, struct edge_t posswall[MAX_POSS
 	size_t dist = get_distance(graph, pos, color);
 
 	for (size_t i = 0; i < nb_wall; i++) {
-		enum direction_t dir = gsl_spmatrix_uint_get(graph->t, posswall[i][0].fr, posswall[i][0].to);
-		put_wall(graph, posswall[i]);
+		size_t dir = gsl_spmatrix_uint_get(graph->t, posswall[i][0].fr, posswall[i][0].to);
+		put_wall_opti(graph, posswall[i]);
 		size_t new_dist = get_distance(graph, pos, color);
-		remove_wall(graph, posswall[i], dir);
 		if (new_dist > dist && new_dist < 2 * (graph->num_vertices)) 
 			return i;	
+		remove_wall_opti(graph, posswall[i], dir);
 	}
 	printf("(%zu %zu)", 2 * (graph->num_vertices) + 5, dist + 5);
 	return IMPOSSIBLE_ID;
@@ -167,10 +168,12 @@ size_t move_forward(struct game_state_t game) {
 	size_t shortest = 2 * (game.graph->num_vertices);
 	for (int i = 1; i < MAX_DIRECTION; i++) {
 		if (!is_no_vertex(linked[i])) {
-			size_t dist_tmp = get_distance(game.graph, linked[i], game.self.color);
-			if (dist_tmp < shortest) {
-				shortest = dist_tmp;
-				dir = i;
+			if (linked[i] != game.opponent.pos){
+				size_t dist_tmp = get_distance(game.graph, linked[i], game.self.color);
+				if (dist_tmp < shortest) {
+					shortest = dist_tmp;
+					dir = i;
+				}
 			}
 		}
 	}
@@ -201,6 +204,7 @@ struct move_t make_move(struct game_state_t game) {
 			move.e[0].to = poss_walls[id_wall][0].to;
 			move.e[1].fr = poss_walls[id_wall][1].fr;
 			move.e[1].to = poss_walls[id_wall][1].to;
+			printf("wall : %ld:%ld - %ld:%ld \n", move.e[0].fr,  move.e[0].to,  move.e[1].fr,  move.e[1].to);
 			move.t = WALL;
 		} else {
 			// Move forward
