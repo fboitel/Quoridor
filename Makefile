@@ -21,13 +21,13 @@ run-game: build/server build/jerry.so build/jump.so
 test: build/alltests
 	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/alltests
 
-install: build/server build/alltests build/jerry.so build/pablo_supersaiyan.so build/geralt.so
+install: build/server build/alltests build/jump.so build/pablo_supersaiyan.so build/geralt.so
 	cp $^ install
 
 clean:
 	find build install -type f -not -name .keep | xargs rm -rf
 
-build: build/server build/tom.so build/jerry.so build/pablo.so build/pablo_supersaiyan.so build/geralt.so build/goodboy.so
+build: build/server build/jump.so build/tom.so build/jerry.so build/pablo.so build/pablo_supersaiyan.so build/geralt.so build/goodboy.so
 
 build/server: build/main.o build/server.o build/opt.o build/board.o
 	$(CC) $^ -o $@ $(LFLAGS)
