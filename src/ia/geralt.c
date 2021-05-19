@@ -361,7 +361,7 @@ bool is_game_terminated(SimpleGameState *game) {
 	}
 }
 
-int search_best_move(SimpleGameState *game, int depth, SimpleMove *best_move) {
+int search_best_move(SimpleGameState *game, int depth, int alpha, int beta, SimpleMove *best_move) {
 	if (depth == 0 || is_game_terminated(game)) {
 		return evaluate(game);
 	}
@@ -369,28 +369,31 @@ int search_best_move(SimpleGameState *game, int depth, SimpleMove *best_move) {
 	int nb_of_moves;
 	SimpleMove *moves = get_possible_moves(game, &nb_of_moves);
 
-	int best_score = INT_MIN;
-	int score;
-
 	for (int i = 0; i < nb_of_moves; ++i) {
 		SimpleMove move = moves[i];
 
 		apply_move(game, move);
+		int score = -search_best_move(game, depth - 1, -beta, -alpha, NULL);
+		undo_move(game, move);
 
-		score = -search_best_move(game, depth - 1, NULL);
+		if (score == -INVALID_MOVE_SCORE) {
+			continue;
+		}
 
-		if (score != -INVALID_MOVE_SCORE && score > best_score) {
-			best_score = score;
+		if (score >= beta) {
+			return beta;
+		}
+
+		if (score > alpha) {
+			alpha = score;
 			if (best_move) {
 				*best_move = move;
 			}
 		}
-
-		undo_move(game, move);
 	}
 
 	free(moves);
-	return best_score;
+	return alpha;
 }
 
 SimpleGameState compress_game(struct game_state_t game) {
@@ -440,7 +443,7 @@ struct move_t make_move(struct game_state_t game) {
 	SimpleGameState compressed_game = compress_game(game);
 
 	SimpleMove best_move;
-	search_best_move(&compressed_game, 3, &best_move);
+	search_best_move(&compressed_game, 3, INVALID_MOVE_SCORE, -INVALID_MOVE_SCORE, &best_move);
 
 	free(compressed_game.graph);
 	return expand_move(game, best_move);
