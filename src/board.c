@@ -10,9 +10,6 @@
 #include <math.h>
 
 
-#define IMPOSSIBLE_DISTANCE 500000
-#define IMPOSSIBLE_ID 1234500
-
 //// Graph structure manipulation functions
 // TODO Separate graph init and others operations
 
@@ -482,6 +479,7 @@ size_t get_shortest(size_t d[], struct graph_t *graph, enum color_t color){
 	return min;
 }
 /**
+ * @brief Dijkstra algorithm to get the closest path
  * @returns The distance between the position pos and the target line for the right player using the Dijkstra algorithm
  * 
  */

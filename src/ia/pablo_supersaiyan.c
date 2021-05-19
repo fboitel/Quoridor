@@ -94,6 +94,7 @@ size_t get_the_better_wall_id(struct game_state_t game, struct edge_t posswall[M
 			if (new_diff < diff) {
 				opp_dist = new_opp_dist;
 				self_dist = new_self_dist;
+				diff = new_diff;
 				wall_id = i;
 			}
 		}
@@ -184,8 +185,8 @@ struct move_t make_move(struct game_state_t game) {
 	struct edge_t poss_walls[MAX_POSSIBLE_WALLS][2];
 	size_t self_dist = dijkstra(game.graph, game.self.pos, game.self.color);
 	size_t opp_dist = dijkstra(game.graph, game.opponent.pos, game.opponent.color);
-	size_t size_board = sqrt(game.graph->num_vertices);
-	if ((opp_dist > size_board/2 && game.opponent.num_walls > 0) || self_dist <= opp_dist || self_dist == 1 || game.self.num_walls == 0){
+//	size_t size_board = sqrt(game.graph->num_vertices);
+	if (self_dist <= opp_dist || self_dist == 1 || game.self.num_walls == 0){
 		move.m = move_forward(game);
 		move.t = MOVE;
 	}

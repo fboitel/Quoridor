@@ -100,7 +100,7 @@ bool is_valid_displacement(struct graph_t* board, size_t destination, enum color
 		if (player == BLACK) {
 			return destination < (long unsigned int) board_size;
 		}
-		return board->num_vertices - board_size < destination&& destination < board->num_vertices;
+		return (board->num_vertices - board_size <= destination) && (destination < board->num_vertices);
 	}
 
 	// check destination is in the 4 near cells :

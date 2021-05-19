@@ -1,11 +1,11 @@
 GSL_PATH ?= gsl
-CFLAGS = --std=c99 -Wall -Wextra -g -03 -Iheaders -I$(GSL_PATH)/include
+CFLAGS = --std=c99 -Wall -Wextra -Iheaders -I$(GSL_PATH)/include
 LFLAGS = -L$(GSL_PATH)/lib -lgsl -lgslcblas -ldl -lm
 CC = gcc
 
 .PHONY: build test run_server run_tests install clean
 
-all: build test
+all: build
 
 # SCRIPTS
 
@@ -15,19 +15,19 @@ run-server: build/server
 run-tests: build/alltests
 	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/alltests
 
-run-game: build/server build/jerry.so build/jump.so
-	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/server ./build/jerry.so ./build/jump.so -m 5
+run-game: build/server build/geralt.so build/jump.so
+	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/server ./build/geralt.so ./build/jump.so -m 5
 
 test: build/alltests
 	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/alltests
 
-install: build/server build/alltests build/jump.so build/pablo_supersaiyan.so build/geralt.so
+install: build/server build/alltests build/pablo_supersaiyan.so build/geralt.so
 	cp $^ install
 
 clean:
 	find build install -type f -not -name .keep | xargs rm -rf
 
-build: build/server build/jump.so build/tom.so build/jerry.so build/pablo.so build/pablo_supersaiyan.so build/geralt.so build/goodboy.so
+build: build/server build/pablo.so build/pablo_supersaiyan.so build/geralt.so build/goodboy.so
 
 build/server: build/main.o build/server.o build/opt.o build/board.o
 	$(CC) $^ -o $@ $(LFLAGS)
