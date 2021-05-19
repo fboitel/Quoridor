@@ -6,7 +6,7 @@
 
 #define EDGE(graph, i, j) ((graph)[(i) * n2 + (j)])
 
-#define DISPLACEMENT_MOVE(dest) ((SimpleMove) {MOVE, {.displacement = (dest)}})
+#define DISPLACEMENT_MOVE(inc) ((SimpleMove) {MOVE, {.displacement = (inc)}})
 #define WALL_MOVE(a, b, c, d)   ((SimpleMove) {WALL, {.wall = {(a), (b), (c), (d)}}})
 
 #define QUEUE_ADD(array, capacity, start, size, value) ((array)[((start) + (size)++) % (capacity)] = (value))
@@ -52,24 +52,24 @@ void add_displacement_moves(const char *graph, SimpleMove *moves, int *nb_of_mov
 	}
 
 	if (step_1 != opponent_pos) {
-		moves[(*nb_of_moves)++] = DISPLACEMENT_MOVE(step_1);
+		moves[(*nb_of_moves)++] = DISPLACEMENT_MOVE(main_direction);
 		return;
 	}
 
 	int step_2 = step_1 + main_direction;
 	if (step_2 >= 0 && step_2 < n2 && (edge = EDGE(graph, step_1, step_2)) >= 1 && edge <= 4) {
-		moves[(*nb_of_moves)++] = DISPLACEMENT_MOVE(step_2);
+		moves[(*nb_of_moves)++] = DISPLACEMENT_MOVE(step_2 - player_pos);
 		return;
 	}
 
 	step_2 = step_1 + secondary_direction;
 	if (step_2 >= 0 && step_2 < n2 && (edge = EDGE(graph, step_1, step_2)) >= 1 && edge <= 4) {
-		moves[(*nb_of_moves)++] = DISPLACEMENT_MOVE(step_2);
+		moves[(*nb_of_moves)++] = DISPLACEMENT_MOVE(step_2 - player_pos);
 	}
 
 	step_2 = step_1 - secondary_direction;
 	if (step_2 >= 0 && step_2 < n2 && (edge = EDGE(graph, step_1, step_2)) >= 1 && edge <= 4) {
-		moves[(*nb_of_moves)++] = DISPLACEMENT_MOVE(step_2);
+		moves[(*nb_of_moves)++] = DISPLACEMENT_MOVE(step_2 - player_pos);
 	}
 }
 
@@ -109,7 +109,7 @@ SimpleMove *get_possible_moves(SimpleGameState *game, int *nb_of_moves) {
 	if (game->pos == -1) {
 		moves = malloc(nb_of_start_pos * sizeof(SimpleMove));
 		for (int i = 0; i < nb_of_start_pos; ++i) {
-			moves[i] = DISPLACEMENT_MOVE(start_pos[i]);
+			moves[i] = DISPLACEMENT_MOVE(start_pos[i] - game->pos);
 		}
 		*nb_of_moves = nb_of_start_pos;
 		return moves;
@@ -241,20 +241,14 @@ int evaluate(const char *graph, int pos, int opponent_pos) {
 	return score;
 }
 
-void apply_move(SimpleGameState *dest, SimpleGameState *src, SimpleMove move) {
-	memcpy(dest->graph, src->graph, n4);
-	dest->opponent_pos = src->opponent_pos;
-	dest->opponent_num_walls = src->opponent_num_walls;
-
+void apply_move(SimpleGameState *state, SimpleMove move) {
 	switch (move.type) {
 		case MOVE:
-			dest->pos = move.action.displacement;
-			dest->num_walls = src->num_walls;
+			state->pos += move.action.displacement;
 			break;
 
 		case WALL:
-			dest->pos = src->pos;
-			dest->num_walls = src->num_walls - 1;
+			--(state->num_walls);
 
 			// get nodes
 			int first_node = move.action.wall[0];
@@ -262,18 +256,18 @@ void apply_move(SimpleGameState *dest, SimpleGameState *src, SimpleMove move) {
 
 			if (first_node + 1 == second_node) {
 				// vertical wall
-				EDGE(dest->graph, first_node, second_node) = 5;
-				EDGE(dest->graph, second_node, first_node) = 5;
+				EDGE(state->graph, first_node, second_node) = 5;
+				EDGE(state->graph, second_node, first_node) = 5;
 
-				EDGE(dest->graph, first_node + n, second_node + n) = 6;
-				EDGE(dest->graph, second_node + n, first_node + n) = 6;
+				EDGE(state->graph, first_node + n, second_node + n) = 6;
+				EDGE(state->graph, second_node + n, first_node + n) = 6;
 			} else {
 				// horizontal wall
-				EDGE(dest->graph, first_node, second_node) = 7;
-				EDGE(dest->graph, second_node, first_node) = 7;
+				EDGE(state->graph, first_node, second_node) = 7;
+				EDGE(state->graph, second_node, first_node) = 7;
 
-				EDGE(dest->graph, first_node + 1, second_node + 1) = 8;
-				EDGE(dest->graph, second_node + 1, first_node + 1) = 8;
+				EDGE(state->graph, first_node + 1, second_node + 1) = 8;
+				EDGE(state->graph, second_node + 1, first_node + 1) = 8;
 			}
 
 			break;
@@ -283,7 +277,43 @@ void apply_move(SimpleGameState *dest, SimpleGameState *src, SimpleMove move) {
 	}
 }
 
-SimpleMove get_best_move(SimpleGameState *game) {
+void undo_move(SimpleGameState *state, SimpleMove move) {
+	switch (move.type) {
+		case MOVE:
+			state->pos -= move.action.displacement;
+			break;
+
+		case WALL:
+			++(state->num_walls);
+
+			// get nodes
+			int first_node = move.action.wall[0];
+			int second_node = move.action.wall[1];
+
+			if (first_node + 1 == second_node) {
+				// vertical wall
+				EDGE(state->graph, first_node, second_node) = 4;
+				EDGE(state->graph, second_node, first_node) = 3;
+
+				EDGE(state->graph, first_node + n, second_node + n) = 4;
+				EDGE(state->graph, second_node + n, first_node + n) = 3;
+			} else {
+				// horizontal wall
+				EDGE(state->graph, first_node, second_node) = 2;
+				EDGE(state->graph, second_node, first_node) = 1;
+
+				EDGE(state->graph, first_node + 1, second_node + 1) = 2;
+				EDGE(state->graph, second_node + 1, first_node + 1) = 1;
+			}
+
+			break;
+
+		default:
+			break;
+	}
+}
+
+SimpleMove get_best_move(SimpleGameState *game, bool self, int rec) {
 	int nb_of_moves;
 	SimpleMove *moves = get_possible_moves(game, &nb_of_moves);
 
@@ -293,15 +323,15 @@ SimpleMove get_best_move(SimpleGameState *game) {
 	for (int i = 0; i < nb_of_moves; ++i) {
 		SimpleMove move = moves[i];
 
-		char new_graph[n4];
-		SimpleGameState new_state = { .graph = new_graph };
-		apply_move(&new_state, game, move);
+		apply_move(game, move);
 
-		int score = evaluate(new_state.graph, new_state.pos, new_state.opponent_pos);
+		int score = evaluate(game->graph, game->pos, game->opponent_pos);
 		if (score > best_score) {
 			best_score = score;
 			best_move = move;
 		}
+
+		undo_move(game, move);
 	}
 
 	free(moves);
@@ -330,7 +360,7 @@ struct move_t expand_move(struct game_state_t game, SimpleMove move) {
 	struct move_t expanded = {
 			.c = game.self.color,
 			.t = move.type,
-			.m = move.type == MOVE ? (size_t) move.action.displacement : game.self.pos
+			.m = move.type == MOVE ? (game.self.pos + move.action.displacement) : game.self.pos
 	};
 
 	switch (move.type) {
@@ -350,7 +380,7 @@ struct move_t expand_move(struct game_state_t game, SimpleMove move) {
 
 struct move_t make_move(struct game_state_t game) {
 	SimpleGameState compressed_game = compress_game(game);
-	SimpleMove move = get_best_move(&compressed_game);
+	SimpleMove move = get_best_move(&compressed_game, true, 0);
 	free(compressed_game.graph);
 	return expand_move(game, move);
 }
