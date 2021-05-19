@@ -9,6 +9,14 @@
 
 /gsl
 
+*.aux
+*.fls
+*.fdb_latexmk
+*.log
+*.out
+*.synctex.gz
+*.toc
+
 /.idea/
 /.vscode
 /vgcore.*

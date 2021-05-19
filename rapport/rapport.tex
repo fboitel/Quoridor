@@ -1,0 +1,85 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}  
+\usepackage[french]{babel}
+\usepackage[pdftex]{graphicx} % Figures
+\usepackage{amsmath} % Accolades
+\usepackage{amssymb} % pour N
+\graphicspath{{images/}}
+\usepackage{float} % Placement des images
+\usepackage{geometry} %Marges
+\geometry{
+    hmargin=2.5cm,
+    vmargin=2.5cm
+}
+\usepackage[onehalfspacing]{setspace} % Interlignes
+\usepackage{calc}
+\usepackage{caption} % Légende
+\usepackage{hyperref} % Hyperliens
+\usepackage{fancyhdr} % En-têtes
+\setlength{\headheight}{13pt}
+\usepackage{listings} % Insertion de code
+
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+
+\pagestyle{fancy}
+\lhead{}
+\rhead{}
+
+\title{Génération procédurale}
+\author{}
+\date{}
+
+\begin{document}
+
+
+\begin{titlepage}
+    \begin{center}
+         %Logo
+	    \includegraphics[scale=0.5]{logo.jpg}
+
+        \textsc{\LARGE\\[0.5cm]ENSEIRB-MATMECA}
+        \\[0.5cm]
+        \textsc{\LARGE Filière informatique}
+        \\[2cm]
+
+        % Titre
+        \textbf{\LARGE \textsc{--Projet de programmation impérative--}}
+        \\
+        \textbf{\LARGE \textsc{--Semestre 6--}}
+        
+        \HRule
+        { \huge \textbf{Rapport de projet\\Quoridor}}
+        \\[0.25cm]
+        \HRule
+        \\[1.5cm]
+    
+        % Auteur
+    	\textsc{\Large Théo GOMICHON\qquad}
+    	\textsc{\Large Clément SACCOCCIO}\\[0.5cm]
+    	\textsc{\Large Hugo LANGLAIS\qquad}
+    	\textsc{\Large Faustin BOITEL}\\[0.5cm]
+    	\textsc{\large Encadré par Mr. Méaux Eric}
+        \vfill
+       
+    	% Pied de page
+        {\large \textsc{2020 — 2021}}
+    \end{center}
+\end{titlepage}
+
+\section*{Introduction}
+\paragraph{}
+Ce rapport est le document explicatif du projet de programmation impérative de semestre 6 réalisé par l'équipe composée de Théo Gomichon, Clément Saccoccio, Hugo Langlais et Faustin Boitel. \\
+Il porte sur le développement du jeu de société \textsl{Quoridor} en langage \textsf{C}.
+
+\newpage
+\tableofcontents
+\fancyhead[L]{\slshape \leftmark}
+\newpage
+
+\section{Description du projet et son organisation}
+\subsection{Le jeu du Quoridor}
+
+DESCRIPTION DU JEU
+
+\end{document}
