@@ -225,7 +225,15 @@ int evaluate(const char *graph, int pos, int opponent_pos) {
 		return -INT_MAX; // we can't use INT_MIN because it must be invertible
 	}
 
-	int score = (int) (n * (1.2 * opponent_dist - dist));
+	if (dist == 0) {
+		return INT_MAX - 1;
+	}
+
+	if (opponent_dist == 0) {
+		return -INT_MAX + 1; // we can't use INT_MIN because it must be invertible
+	}
+
+	int score = (int) (n2 * (1.2 * opponent_dist - dist));
 	score -= abs(pos%n - n/2);
 
 	return score;
