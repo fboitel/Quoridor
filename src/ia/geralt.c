@@ -12,6 +12,9 @@
 #define QUEUE_ADD(array, capacity, start, size, value) ((array)[((start) + (size)++) % (capacity)] = (value))
 #define QUEUE_REMOVE(array, capacity, start, size) ((array)[(start)++ % (capacity)]); --(size)
 
+#define INVALID_MOVE_SCORE (-INT_MAX)
+#define WIN_SCORE (INT_MAX - 1)
+#define LOOSE_SCORE (-(INT_MAX - 1))
 
 // define simplified structures to gain efficiency
 
@@ -29,6 +32,9 @@ typedef struct {
 	int num_walls;
 	int opponent_pos;
 	int opponent_num_walls;
+	int *start_pos;
+	int *opponent_start_pos;
+	bool target_is_up;
 } SimpleGameState;
 
 
@@ -109,7 +115,7 @@ SimpleMove *get_possible_moves(SimpleGameState *game, int *nb_of_moves) {
 	if (game->pos == -1) {
 		moves = malloc(nb_of_start_pos * sizeof(SimpleMove));
 		for (int i = 0; i < nb_of_start_pos; ++i) {
-			moves[i] = DISPLACEMENT_MOVE(start_pos[i] - game->pos);
+			moves[i] = DISPLACEMENT_MOVE(game->start_pos[i] - game->pos);
 		}
 		*nb_of_moves = nb_of_start_pos;
 		return moves;
@@ -131,8 +137,8 @@ SimpleMove *get_possible_moves(SimpleGameState *game, int *nb_of_moves) {
 	return moves;
 }
 
-int distance(const char *graph, int pos, bool self) {
-	bool current_target_is_up = self == target_is_up;
+int distance(SimpleGameState *game, int pos, bool self) {
+	bool current_target_is_up = self == game->target_is_up;
 	int dist;
 
 	bool flags[n2];
@@ -152,7 +158,7 @@ int distance(const char *graph, int pos, bool self) {
 		queue_size = nb_of_start_pos;
 
 		for (int i = 0; i < nb_of_start_pos; ++i) {
-			queue[i] = (self ? start_pos : opponent_start_pos)[i];
+			queue[i] = (self ? game->start_pos : game->opponent_start_pos)[i];
 		}
 
 	} else {
@@ -174,7 +180,7 @@ int distance(const char *graph, int pos, bool self) {
 
 		// north
 		new_pos = current_pos - n;
-		if (new_pos >= 0 && flags[new_pos] && (edge = EDGE(graph, current_pos, new_pos)) >= 1 && edge <= 4) {
+		if (new_pos >= 0 && flags[new_pos] && (edge = EDGE(game->graph, current_pos, new_pos)) >= 1 && edge <= 4) {
 			flags[new_pos] = false;
 			QUEUE_ADD(queue, n2, queue_start, queue_size, new_pos);
 			++next_iteration_length;
@@ -182,7 +188,7 @@ int distance(const char *graph, int pos, bool self) {
 
 		// south
 		new_pos = current_pos + n;
-		if (new_pos < n2 && flags[new_pos] && (edge = EDGE(graph, current_pos, new_pos)) >= 1 && edge <= 4) {
+		if (new_pos < n2 && flags[new_pos] && (edge = EDGE(game->graph, current_pos, new_pos)) >= 1 && edge <= 4) {
 			flags[new_pos] = false;
 			QUEUE_ADD(queue, n2, queue_start, queue_size, new_pos);
 			++next_iteration_length;
@@ -190,7 +196,7 @@ int distance(const char *graph, int pos, bool self) {
 
 		// west
 		new_pos = current_pos - 1;
-		if (new_pos >= 0 && flags[new_pos] && (edge = EDGE(graph, current_pos, new_pos)) >= 1 && edge <= 4) {
+		if (new_pos >= 0 && flags[new_pos] && (edge = EDGE(game->graph, current_pos, new_pos)) >= 1 && edge <= 4) {
 			flags[new_pos] = false;
 			QUEUE_ADD(queue, n2, queue_start, queue_size, new_pos);
 			++next_iteration_length;
@@ -198,7 +204,7 @@ int distance(const char *graph, int pos, bool self) {
 
 		// east
 		new_pos = current_pos + 1;
-		if (new_pos < n2 && flags[new_pos] && (edge = EDGE(graph, current_pos, new_pos)) >= 1 && edge <= 4) {
+		if (new_pos < n2 && flags[new_pos] && (edge = EDGE(game->graph, current_pos, new_pos)) >= 1 && edge <= 4) {
 			flags[new_pos] = false;
 			QUEUE_ADD(queue, n2, queue_start, queue_size, new_pos);
 			++next_iteration_length;
@@ -216,29 +222,55 @@ int distance(const char *graph, int pos, bool self) {
 	return -1;
 }
 
-int evaluate(const char *graph, int pos, int opponent_pos) {
-	int dist = distance(graph, pos, target_is_up);
-	int opponent_dist = distance(graph, opponent_pos, !target_is_up);
+int evaluate(SimpleGameState *game) {
+	int dist = distance(game, game->pos, true);
+	int opponent_dist = distance(game, game->opponent_pos, false);
 
 	// invalid move (no possible path)
 	if (dist == -1 || opponent_dist == -1) {
-		return -INT_MAX; // we can't use INT_MIN because it must be invertible
+		return INVALID_MOVE_SCORE; // we can't use INT_MIN because it must be invertible
 	}
 
 	// win
 	if (dist == 0) {
-		return INT_MAX - 1;
+		return WIN_SCORE;
 	}
 
 	// loose
 	if (opponent_dist == 0) {
-		return -(INT_MAX - 1);
+		return LOOSE_SCORE;
 	}
 
-	int score = (int) (n2 * (1.2 * opponent_dist - dist));
-	score -= abs(pos%n - n/2);
+	int score = n2 * (opponent_dist - dist);
+
+	if (game->pos != -1) {
+		score -= abs(game->pos%n - n/2);
+	}
+
+	if (game->opponent_pos != -1) {
+		score += abs(game->opponent_pos%n - n/2);
+	}
 
 	return score;
+}
+
+void invert_int(int *a, int *b) {
+	int tmp = *a;
+	*a = *b;
+	*b = tmp;
+}
+
+void invert_ptr(int **a, int **b) {
+	int *tmp = *a;
+	*a = *b;
+	*b = tmp;
+}
+
+void change_side(SimpleGameState *game) {
+	invert_int(&game->pos, &game->opponent_pos);
+	invert_int(&game->num_walls, &game->opponent_num_walls);
+	invert_ptr(&game->start_pos, &game->opponent_start_pos);
+	game->target_is_up = !game->target_is_up;
 }
 
 void apply_move(SimpleGameState *state, SimpleMove move) {
@@ -275,9 +307,13 @@ void apply_move(SimpleGameState *state, SimpleMove move) {
 		default:
 			break;
 	}
+
+	change_side(state);
 }
 
 void undo_move(SimpleGameState *state, SimpleMove move) {
+	change_side(state);
+
 	switch (move.type) {
 		case MOVE:
 			state->pos -= move.action.displacement;
@@ -313,29 +349,48 @@ void undo_move(SimpleGameState *state, SimpleMove move) {
 	}
 }
 
-SimpleMove get_best_move(SimpleGameState *game, bool self, int rec) {
+bool is_game_terminated(SimpleGameState *game) {
+	if (game->pos == -1 || game->opponent_pos == -1) {
+		return false;
+	}
+
+	if (game->target_is_up) {
+		return game->pos < n || game->opponent_pos >= n2 - n;
+	} else {
+		return game->opponent_pos < n || game->pos >= n2 - n;
+	}
+}
+
+int search_best_move(SimpleGameState *game, int depth, SimpleMove *best_move) {
+	if (depth == 0 || is_game_terminated(game)) {
+		return evaluate(game);
+	}
+
 	int nb_of_moves;
 	SimpleMove *moves = get_possible_moves(game, &nb_of_moves);
 
 	int best_score = INT_MIN;
-	SimpleMove best_move;
+	int score;
 
 	for (int i = 0; i < nb_of_moves; ++i) {
 		SimpleMove move = moves[i];
 
 		apply_move(game, move);
 
-		int score = evaluate(game->graph, game->pos, game->opponent_pos);
-		if (score > best_score) {
+		score = -search_best_move(game, depth - 1, NULL);
+
+		if (score != -INVALID_MOVE_SCORE && score > best_score) {
 			best_score = score;
-			best_move = move;
+			if (best_move) {
+				*best_move = move;
+			}
 		}
 
 		undo_move(game, move);
 	}
 
 	free(moves);
-	return best_move;
+	return best_score;
 }
 
 SimpleGameState compress_game(struct game_state_t game) {
@@ -344,7 +399,10 @@ SimpleGameState compress_game(struct game_state_t game) {
 		.pos = game.self.pos == SIZE_MAX ? -1 : (int) game.self.pos,
 		.num_walls = (int) game.self.num_walls,
 		.opponent_pos = game.opponent.pos == SIZE_MAX ? -1 : (int) game.opponent.pos,
-		.opponent_num_walls = (int) game.opponent.num_walls
+		.opponent_num_walls = (int) game.opponent.num_walls,
+		.start_pos = start_pos,
+		.opponent_start_pos = opponent_start_pos,
+		.target_is_up = target_is_up
 	};
 
 	for (int i = 0; i < n2; ++i) {
@@ -380,9 +438,12 @@ struct move_t expand_move(struct game_state_t game, SimpleMove move) {
 
 struct move_t make_move(struct game_state_t game) {
 	SimpleGameState compressed_game = compress_game(game);
-	SimpleMove move = get_best_move(&compressed_game, true, 0);
+
+	SimpleMove best_move;
+	search_best_move(&compressed_game, 3, &best_move);
+
 	free(compressed_game.graph);
-	return expand_move(game, move);
+	return expand_move(game, best_move);
 }
 
 void init_meta(struct game_state_t state) {
@@ -418,7 +479,7 @@ void init_meta(struct game_state_t state) {
 		opponent_start_pos = realloc(opponent_start_pos, sizeof(int) * nb_of_start_pos);
 	}
 
-	target_is_up = start_pos[0] < n;
+	target_is_up = start_pos[0] >= n;
 }
 
 struct move_t make_first_move(struct game_state_t game) {
