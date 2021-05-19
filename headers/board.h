@@ -15,7 +15,7 @@
 #define IMPOSSIBLE_DISTANCE 500000
 
 
- /** @enum Move direction */
+/** @enum Move direction */
 enum direction_t {
 	NO_DIRECTION, NORTH, SOUTH, WEST, EAST, MAX_DIRECTION
 };

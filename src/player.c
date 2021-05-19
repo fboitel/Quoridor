@@ -72,7 +72,7 @@ void update_graph(struct move_t move) {
 }
 
 /**
- * @brief Print informations of a move
+ * @brief Print information of a move
  * 
  * @param move The move to print
  */
@@ -130,6 +130,7 @@ struct move_t play(struct move_t previous_move) {
  * @details Every allocation done during the calls to initialize and play
  * functions will be freed
  */
-void finalize(void) {
+void finalize() {
+	finalize_ia();
 	graph_free(game.graph);
 }

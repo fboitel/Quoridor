@@ -211,3 +211,7 @@ struct move_t make_move(struct game_state_t game) {
 	move.c = game.self.color;
 	return move;
 }
+
+void finalize_ia() {
+	// do nothing
+}

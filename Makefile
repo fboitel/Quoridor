@@ -1,5 +1,5 @@
 GSL_PATH ?= gsl
-CFLAGS = --std=c99 -Wall -Wextra -Iheaders -I$(GSL_PATH)/include
+CFLAGS = --std=c99 -Wall -Wextra -O3 -Iheaders -I$(GSL_PATH)/include
 LFLAGS = -L$(GSL_PATH)/lib -lgsl -lgslcblas -ldl -lm
 CC = gcc
 
@@ -25,7 +25,7 @@ install: build/server build/alltests build/pablo_supersaiyan.so build/geralt.so
 	cp $^ install
 
 clean:
-	find build install -type f -not -name .keep | xargs rm -rf
+	find build install -type f -not -name .keep | xargs rm -f
 
 build: build/server build/pablo.so build/pablo_supersaiyan.so build/geralt.so build/goodboy.so
 
