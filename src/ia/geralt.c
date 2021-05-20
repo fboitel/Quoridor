@@ -12,9 +12,10 @@
 #define QUEUE_ADD(array, capacity, start, size, value) ((array)[((start) + (size)++) % (capacity)] = (value))
 #define QUEUE_REMOVE(array, capacity, start, size) ((array)[(start)++ % (capacity)]); --(size)
 
-#define INVALID_MOVE_SCORE (-INT_MAX)
-#define WIN_SCORE (INT_MAX - 1)
-#define LOOSE_SCORE (-(INT_MAX - 1))
+#define SCORE_LIMIT INT_MAX
+#define INVALID_MOVE_SCORE (-SCORE_LIMIT)
+#define WIN_SCORE (SCORE_LIMIT - 1)
+#define LOOSE_SCORE (-(SCORE_LIMIT - 1))
 
 #define DEPTH 4
 
@@ -233,12 +234,12 @@ int evaluate(SimpleGameState *game, int depth) {
 
 	// win
 	if (dist == 0) {
-		return WIN_SCORE - (DEPTH - depth);
+		return WIN_SCORE - depth;
 	}
 
 	// loose
 	if (opponent_dist == 0) {
-		return LOOSE_SCORE + (DEPTH - depth);
+		return LOOSE_SCORE + depth;
 	}
 
 	int score = n2 * (opponent_dist - dist);
@@ -369,9 +370,9 @@ bool is_game_terminated(SimpleGameState *game) {
 	}
 }
 
-int search_best_move(SimpleGameState *game, int depth, int alpha, int beta, unsigned *best_move) {
-	if (depth == 0 || is_game_terminated(game)) {
-		return evaluate(game, depth);
+int search_best_move(SimpleGameState *game, int current_depth, int final_depth, int alpha, int beta, unsigned *best_move) {
+	if (current_depth == final_depth || is_game_terminated(game)) {
+		return evaluate(game, current_depth);
 	}
 
 	int nb_of_moves;
@@ -381,7 +382,7 @@ int search_best_move(SimpleGameState *game, int depth, int alpha, int beta, unsi
 		unsigned move = moves[i];
 
 		apply_move(game, move);
-		int score = -search_best_move(game, depth - 1, -beta, -alpha, NULL);
+		int score = -search_best_move(game, current_depth + 1, final_depth, -beta, -alpha, NULL);
 		undo_move(game, move);
 
 		if (score == -INVALID_MOVE_SCORE) {
@@ -458,7 +459,7 @@ struct move_t make_move(struct game_state_t game) {
 	SimpleGameState compressed_game = compress_game(game);
 
 	unsigned best_move;
-	search_best_move(&compressed_game, DEPTH, INVALID_MOVE_SCORE, -INVALID_MOVE_SCORE, &best_move);
+	search_best_move(&compressed_game, 0, DEPTH, -SCORE_LIMIT, SCORE_LIMIT, &best_move);
 
 	free(compressed_game.graph);
 	return expand_move(game, best_move);
