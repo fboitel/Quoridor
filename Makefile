@@ -1,6 +1,6 @@
 GSL_PATH ?= gsl
 CFLAGS = --std=c99 -Wall -Wextra -O3 -Iheaders -I$(GSL_PATH)/include
-LFLAGS = -L$(GSL_PATH)/lib -lgsl -lgslcblas -ldl -lm
+LFLAGS = -L$(GSL_PATH)/lib -lgsl -lgslcblas -ldl -lm -lpthread
 CC = gcc
 
 .PHONY: build test run_server run_tests install clean
@@ -15,8 +15,8 @@ run-server: build/server
 run-tests: build/alltests
 	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/alltests
 
-run-game: build/server build/geralt.so build/jump.so
-	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/server ./build/geralt.so ./build/jump.so -m 5
+run-game: build/server build/geralt.OLD.so build/geralt.so
+	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/server ./build/geralt.OLD.so ./build/geralt.so -m 5
 
 test: build/alltests
 	LD_LIBRARY_PATH=$(GSL_PATH)/lib ./build/alltests
