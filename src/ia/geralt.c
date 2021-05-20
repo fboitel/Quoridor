@@ -1,6 +1,10 @@
+#define _DEFAULT_SOURCE
+
 #include <stdbool.h>
 #include <string.h>
 #include <limits.h>
+#include <pthread.h>
+#include <time.h>
 #include "ia.h"
 #include "move.h"
 
@@ -16,8 +20,6 @@
 #define INVALID_MOVE_SCORE (-SCORE_LIMIT)
 #define WIN_SCORE (SCORE_LIMIT - 1)
 #define LOOSE_SCORE (-(SCORE_LIMIT - 1))
-
-#define DEPTH 4
 
 // define simplified structures to gain efficiency
 
@@ -370,7 +372,11 @@ bool is_game_terminated(SimpleGameState *game) {
 	}
 }
 
-int search_best_move(SimpleGameState *game, int current_depth, int final_depth, int alpha, int beta, unsigned *best_move) {
+int alpha_beta(SimpleGameState *game, int current_depth, int final_depth, int alpha, int beta, unsigned *best_move, bool *stop_flag) {
+	if (*stop_flag) {
+		return 0;
+	}
+
 	if (current_depth == final_depth || is_game_terminated(game)) {
 		return evaluate(game, current_depth);
 	}
@@ -382,7 +388,7 @@ int search_best_move(SimpleGameState *game, int current_depth, int final_depth, 
 		unsigned move = moves[i];
 
 		apply_move(game, move);
-		int score = -search_best_move(game, current_depth + 1, final_depth, -beta, -alpha, NULL);
+		int score = -alpha_beta(game, current_depth + 1, final_depth, -beta, -alpha, NULL, stop_flag);
 		undo_move(game, move);
 
 		if (score == -INVALID_MOVE_SCORE) {
@@ -404,6 +410,44 @@ int search_best_move(SimpleGameState *game, int current_depth, int final_depth, 
 
 	free(moves);
 	return alpha;
+}
+
+void *timer(void *stop_flag) {
+	struct timespec ts = {
+		.tv_sec = 0,
+		.tv_nsec = 250000000
+	};
+	nanosleep(&ts, &ts);
+	*((bool *) stop_flag) = true;
+	return NULL;
+}
+
+unsigned search_best_move(SimpleGameState *game) {
+	int best_score = 0;
+	unsigned best_move = 0;
+
+	int depth = 1;
+	bool stop_flag = false;
+
+	pthread_t timer_thread;
+	pthread_create(&timer_thread, NULL, timer, (void *) &stop_flag);
+
+	while (true) {
+		unsigned best_move_for_current_depth;
+		int best_score_for_current_depth = alpha_beta(game, 0, depth, -SCORE_LIMIT, SCORE_LIMIT, &best_move_for_current_depth, &stop_flag);
+
+		if (stop_flag) {
+			printf("FINAL DEPTH: %d SCORE: %d LOOSE: %d\n", depth - 1, best_score, LOOSE_SCORE);
+			break;
+		}
+
+		best_score = best_score_for_current_depth;
+		best_move = best_move_for_current_depth;
+		++depth;
+	}
+
+	pthread_join(timer_thread, NULL);
+	return best_move;
 }
 
 SimpleGameState compress_game(struct game_state_t game) {
@@ -457,10 +501,7 @@ struct move_t expand_move(struct game_state_t game, unsigned move) {
 
 struct move_t make_move(struct game_state_t game) {
 	SimpleGameState compressed_game = compress_game(game);
-
-	unsigned best_move;
-	search_best_move(&compressed_game, 0, DEPTH, -SCORE_LIMIT, SCORE_LIMIT, &best_move);
-
+	unsigned best_move = search_best_move(&compressed_game);
 	free(compressed_game.graph);
 	return expand_move(game, best_move);
 }
