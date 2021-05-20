@@ -16,6 +16,8 @@
 #define WIN_SCORE (INT_MAX - 1)
 #define LOOSE_SCORE (-(INT_MAX - 1))
 
+#define DEPTH 3
+
 // define simplified structures to gain efficiency
 
 typedef struct {
@@ -222,23 +224,29 @@ int distance(SimpleGameState *game, int pos, bool self) {
 	return -1;
 }
 
-int evaluate(SimpleGameState *game) {
+int evaluate(SimpleGameState *game, int depth) {
 	int dist = distance(game, game->pos, true);
+
+	// invalid move (no possible path)
+	if (dist == -1) {
+		return INVALID_MOVE_SCORE;
+	}
+
 	int opponent_dist = distance(game, game->opponent_pos, false);
 
 	// invalid move (no possible path)
-	if (dist == -1 || opponent_dist == -1) {
-		return INVALID_MOVE_SCORE; // we can't use INT_MIN because it must be invertible
+	if (opponent_dist == -1) {
+		return INVALID_MOVE_SCORE;
 	}
 
 	// win
 	if (dist == 0) {
-		return WIN_SCORE;
+		return WIN_SCORE - (DEPTH - depth);
 	}
 
 	// loose
 	if (opponent_dist == 0) {
-		return LOOSE_SCORE;
+		return LOOSE_SCORE + (DEPTH - depth);
 	}
 
 	int score = n2 * (opponent_dist - dist);
@@ -363,7 +371,7 @@ bool is_game_terminated(SimpleGameState *game) {
 
 int search_best_move(SimpleGameState *game, int depth, int alpha, int beta, SimpleMove *best_move) {
 	if (depth == 0 || is_game_terminated(game)) {
-		return evaluate(game);
+		return evaluate(game, depth);
 	}
 
 	int nb_of_moves;
@@ -381,6 +389,7 @@ int search_best_move(SimpleGameState *game, int depth, int alpha, int beta, Simp
 		}
 
 		if (score >= beta) {
+			free(moves);
 			return beta;
 		}
 
@@ -443,7 +452,7 @@ struct move_t make_move(struct game_state_t game) {
 	SimpleGameState compressed_game = compress_game(game);
 
 	SimpleMove best_move;
-	search_best_move(&compressed_game, 3, INVALID_MOVE_SCORE, -INVALID_MOVE_SCORE, &best_move);
+	search_best_move(&compressed_game, DEPTH, INVALID_MOVE_SCORE, -INVALID_MOVE_SCORE, &best_move);
 
 	free(compressed_game.graph);
 	return expand_move(game, best_move);
