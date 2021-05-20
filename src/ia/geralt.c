@@ -6,8 +6,8 @@
 
 #define EDGE(graph, i, j) ((graph)[(i) * n2 + (j)])
 
-#define DISPLACEMENT_MOVE(inc) ((SimpleMove) {MOVE, {.displacement = (inc)}})
-#define WALL_MOVE(a, b, c, d)   ((SimpleMove) {WALL, {.wall = {(a), (b), (c), (d)}}})
+#define DISPLACEMENT_MOVE(inc)        (MOVE << 24 | ((inc) & 0xFFFF))
+#define WALL_MOVE(corner, horizontal) (WALL << 24 | (horizontal) << 16 | ((corner) & 0xFFFF))
 
 #define QUEUE_ADD(array, capacity, start, size, value) ((array)[((start) + (size)++) % (capacity)] = (value))
 #define QUEUE_REMOVE(array, capacity, start, size) ((array)[(start)++ % (capacity)]); --(size)
@@ -16,17 +16,9 @@
 #define WIN_SCORE (INT_MAX - 1)
 #define LOOSE_SCORE (-(INT_MAX - 1))
 
-#define DEPTH 3
+#define DEPTH 4
 
 // define simplified structures to gain efficiency
-
-typedef struct {
-	enum movetype_t type;
-	union {
-		int displacement;
-		int wall[4];
-	} action;
-} SimpleMove;
 
 typedef struct {
 	char *graph;
@@ -51,7 +43,7 @@ int *start_pos;
 int *opponent_start_pos;
 bool target_is_up;
 
-void add_displacement_moves(const char *graph, SimpleMove *moves, int *nb_of_moves, int player_pos, int opponent_pos, char main_direction, char secondary_direction) {
+void add_displacement_moves(const char *graph, unsigned *moves, int *nb_of_moves, int player_pos, int opponent_pos, char main_direction, char secondary_direction) {
 	char edge;
 
 	int step_1 = player_pos + main_direction;
@@ -81,7 +73,7 @@ void add_displacement_moves(const char *graph, SimpleMove *moves, int *nb_of_mov
 	}
 }
 
-void add_wall_moves(const char *graph, SimpleMove *moves, int *nb_of_moves) {
+void add_wall_moves(const char *graph, unsigned *moves, int *nb_of_moves) {
 	for (int i = 0; i < n - 1; ++i) {
 		for (int j = 0; j < n - 1; ++j) {
 			/*
@@ -101,21 +93,21 @@ void add_wall_moves(const char *graph, SimpleMove *moves, int *nb_of_moves) {
 			char h = EDGE(graph, b, d);
 
 			if (e >= 1 && e <= 4 && f >= 1 && f <= 4 && g != 7) {
-				moves[(*nb_of_moves)++] = WALL_MOVE(a, b, c, d);
+				moves[(*nb_of_moves)++] = WALL_MOVE(a, false);
 			}
 
 			if (g >= 1 && g <= 4 && h >= 1 && h <= 4 && e != 5) {
-				moves[(*nb_of_moves)++] = WALL_MOVE(a, c, b, d);
+				moves[(*nb_of_moves)++] = WALL_MOVE(a, true);
 			}
 		}
 	}
 }
 
-SimpleMove *get_possible_moves(SimpleGameState *game, int *nb_of_moves) {
-	SimpleMove *moves;
+unsigned *get_possible_moves(SimpleGameState *game, int *nb_of_moves) {
+	unsigned *moves;
 
 	if (game->pos == -1) {
-		moves = malloc(nb_of_start_pos * sizeof(SimpleMove));
+		moves = malloc(nb_of_start_pos * sizeof(unsigned));
 		for (int i = 0; i < nb_of_start_pos; ++i) {
 			moves[i] = DISPLACEMENT_MOVE(game->start_pos[i] - game->pos);
 		}
@@ -123,7 +115,7 @@ SimpleMove *get_possible_moves(SimpleGameState *game, int *nb_of_moves) {
 		return moves;
 	}
 
-	moves = malloc((2 * (n - 1) * (n - 1) + 5) * sizeof(SimpleMove));
+	moves = malloc((2 * (n - 1) * (n - 1) + 5) * sizeof(unsigned));
 	*nb_of_moves = 0;
 
 	add_displacement_moves(game->graph, moves, nb_of_moves, game->pos, game->opponent_pos, 1, (char) n);
@@ -135,7 +127,7 @@ SimpleMove *get_possible_moves(SimpleGameState *game, int *nb_of_moves) {
 		add_wall_moves(game->graph, moves, nb_of_moves);
 	}
 
-	moves = realloc(moves, *nb_of_moves * sizeof(SimpleMove));
+	moves = realloc(moves, *nb_of_moves * sizeof(unsigned));
 	return moves;
 }
 
@@ -281,18 +273,22 @@ void change_side(SimpleGameState *game) {
 	game->target_is_up = !game->target_is_up;
 }
 
-void apply_move(SimpleGameState *state, SimpleMove move) {
-	switch (move.type) {
+void apply_move(SimpleGameState *state, unsigned move) {
+	enum movetype_t move_type = move >> 24;
+	int embed_int = (int) (move & 0x8000 ? move | 0xFFFF0000 : move & 0xFFFF);
+	bool embed_bool = move >> 16 & 0xFF;
+
+	switch (move_type) {
 		case MOVE:
-			state->pos += move.action.displacement;
+			state->pos += embed_int;
 			break;
 
 		case WALL:
 			--(state->num_walls);
 
 			// get nodes
-			int first_node = move.action.wall[0];
-			int second_node = move.action.wall[1];
+			int first_node = embed_int;
+			int second_node = first_node + (embed_bool ? n : 1);
 
 			if (first_node + 1 == second_node) {
 				// vertical wall
@@ -319,20 +315,24 @@ void apply_move(SimpleGameState *state, SimpleMove move) {
 	change_side(state);
 }
 
-void undo_move(SimpleGameState *state, SimpleMove move) {
+void undo_move(SimpleGameState *state, unsigned move) {
 	change_side(state);
 
-	switch (move.type) {
+	enum movetype_t move_type = move >> 24;
+	int embed_int = (int) (move & 0x8000 ? move | 0xFFFF0000 : move & 0xFFFF);
+	bool embed_bool = move >> 16 & 0xFF;
+
+	switch (move_type) {
 		case MOVE:
-			state->pos -= move.action.displacement;
+			state->pos -= embed_int;
 			break;
 
 		case WALL:
 			++(state->num_walls);
 
 			// get nodes
-			int first_node = move.action.wall[0];
-			int second_node = move.action.wall[1];
+			int first_node = (short) (move & 0xFF);
+			int second_node = first_node + (embed_bool ? n : 1);
 
 			if (first_node + 1 == second_node) {
 				// vertical wall
@@ -369,16 +369,16 @@ bool is_game_terminated(SimpleGameState *game) {
 	}
 }
 
-int search_best_move(SimpleGameState *game, int depth, int alpha, int beta, SimpleMove *best_move) {
+int search_best_move(SimpleGameState *game, int depth, int alpha, int beta, unsigned *best_move) {
 	if (depth == 0 || is_game_terminated(game)) {
 		return evaluate(game, depth);
 	}
 
 	int nb_of_moves;
-	SimpleMove *moves = get_possible_moves(game, &nb_of_moves);
+	unsigned *moves = get_possible_moves(game, &nb_of_moves);
 
 	for (int i = 0; i < nb_of_moves; ++i) {
-		SimpleMove move = moves[i];
+		unsigned move = moves[i];
 
 		apply_move(game, move);
 		int score = -search_best_move(game, depth - 1, -beta, -alpha, NULL);
@@ -426,23 +426,29 @@ SimpleGameState compress_game(struct game_state_t game) {
 	return compressed;
 }
 
-struct move_t expand_move(struct game_state_t game, SimpleMove move) {
+struct move_t expand_move(struct game_state_t game, unsigned move) {
+	enum movetype_t move_type = move >> 24;
+	int embed_int = (int) (move & 0x8000 ? move | 0xFFFF0000 : move & 0xFFFF);
+	bool embed_bool = move >> 16 & 0xFF;
+
 	struct move_t expanded = {
 			.c = game.self.color,
-			.t = move.type,
-			.m = move.type == MOVE ? (game.self.pos + move.action.displacement) : game.self.pos
+			.t = move_type,
+			.m = move_type == MOVE ? (game.self.pos + embed_int) : game.self.pos
 	};
 
-	switch (move.type) {
-		case WALL:
-			expanded.e[0] = (struct edge_t) {move.action.wall[0], move.action.wall[1]};
-			expanded.e[1] = (struct edge_t) {move.action.wall[2], move.action.wall[3]};
-			break;
+	if (move_type == WALL) {
+		if (embed_bool) {
+			expanded.e[0] = (struct edge_t) {embed_int, embed_int + n};
+			expanded.e[1] = (struct edge_t) {embed_int + 1, embed_int + 1 + n};
+		} else {
+			expanded.e[0] = (struct edge_t) {embed_int, embed_int + 1};
+			expanded.e[1] = (struct edge_t) {embed_int + n, embed_int + n + 1};
+		}
 
-		default:
-			expanded.e[0] = no_edge();
-			expanded.e[1] = no_edge();
-			break;
+	} else {
+		expanded.e[0] = no_edge();
+		expanded.e[1] = no_edge();
 	}
 
 	return expanded;
@@ -451,7 +457,7 @@ struct move_t expand_move(struct game_state_t game, SimpleMove move) {
 struct move_t make_move(struct game_state_t game) {
 	SimpleGameState compressed_game = compress_game(game);
 
-	SimpleMove best_move;
+	unsigned best_move;
 	search_best_move(&compressed_game, DEPTH, INVALID_MOVE_SCORE, -INVALID_MOVE_SCORE, &best_move);
 
 	free(compressed_game.graph);
