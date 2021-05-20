@@ -411,12 +411,13 @@ void display_board(struct graph_t* board, size_t board_size, size_t position_pla
  * @param v An array that will contain the vertices remaining to be traversed
  * @param length The number of vertices
  */
-void release_init(size_t d[], size_t v[], size_t pos, size_t length){
+void dijkstra_init(size_t d[], size_t v[], size_t pos, size_t length){
 		for (size_t i = 0; i < length; i++) {
 		d[i] = IMPOSSIBLE_DISTANCE;
 		v[i] = i;
 	}
 	d[pos] = 0;
+	
 }
 
 /**
@@ -426,7 +427,6 @@ void release_init(size_t d[], size_t v[], size_t pos, size_t length){
  * @param length The number of remaining params
  * @returns The index of a vertex
  */ 
-//Returns the vertex that have the smallest distance, and make it desapear of the array v.
 size_t extract_min(size_t d[], size_t v[],size_t length){
 	size_t ind = length+1;
 	size_t min = length*4;
@@ -487,7 +487,7 @@ size_t dijkstra(struct graph_t *graph, size_t pos, enum color_t color){
 	size_t nb_v = graph->num_vertices;
 	size_t d[nb_v];
 	size_t v[nb_v];
-	release_init(d, v, pos, nb_v);
+	dijkstra_init(d, v, pos, nb_v);
 	while (nb_v){
 		size_t u = extract_min(d, v, nb_v);
 		nb_v--;

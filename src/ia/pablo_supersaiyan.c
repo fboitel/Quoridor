@@ -163,9 +163,6 @@ size_t move_forward(struct game_state_t game) {
 			}
 		}
 	}
-	fprintf(stderr, "%ld\n", game.self.pos);
-	for (int i = 0; i < 6; i++)
-		fprintf(stderr, "(%zu, dist : %zu) ", linked[i], dijkstra(game.graph, linked[i], game.self.color));
 	return linked[dir];
 }
 
