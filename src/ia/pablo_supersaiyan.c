@@ -1,7 +1,7 @@
 /**
  * @file pablo_supersaiyan.c
  *
- * @brief Used to bild the dynamic library pablo_supersaiyan.so. This player intelligence is based principally on the Dijkstra algorithm
+ * @brief Implementation of the player Pablo Supersaiyan. This player intelligence is based principally on the Dijkstra algorithm
  */
 
 

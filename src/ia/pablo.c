@@ -1,7 +1,7 @@
 /**
  * @file pablo.c
  *
- * @brief Used to bild the dynamic library pablo.so. This player intelligence is based principally on the Bellman-ford algorithm
+ * @brief Implementation of the player Pablo. This player intelligence is based principally on the Bellman-ford algorithm
  */
 
 #include "ia.h"
