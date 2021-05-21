@@ -69,7 +69,7 @@ size_t shorter(struct graph_t *graph, size_t weight[], enum color_t color, size_
 /**
  * @brief Returns the shortest distance between a position on the graph and the target zone using Bellman-Ford algorithm
  */ 
-size_t bellman_for(struct graph_t *graph, size_t pos, enum color_t color) {
+size_t bellman_ford(struct graph_t *graph, size_t pos, enum color_t color) {
 	size_t weight[graph->num_vertices];
 	init_w_arrays(weight, pos, graph->num_vertices);
 	for (size_t i = 0; i < graph->num_vertices; i++) {
@@ -148,12 +148,12 @@ void remove_wall_opti(struct graph_t *graph, struct edge_t wall[2], enum directi
  * @brief Returns the best place to put a wall in order to delay the opponent
  */
 size_t get_the_better_wall_id(struct graph_t *graph, struct edge_t posswall[MAX_POSSIBLE_WALLS][2], size_t nb_wall, size_t pos, enum color_t color) {
-	size_t dist = get_distance(graph, pos, color);
+	size_t dist = bellman_ford(graph, pos, color);
 	size_t wall_id = IMPOSSIBLE_ID;
 	for (size_t i = 0; i < nb_wall; i++) {		
 		size_t dir = gsl_spmatrix_uint_get(graph->t, posswall[i][0].fr, posswall[i][0].to);
 		put_wall_opti(graph, posswall[i]);
-		size_t new_dist = get_distance(graph, pos, color);
+		size_t new_dist = bellman_ford(graph, pos, color);
 		if (new_dist > dist && new_dist < 2 * (graph->num_vertices)) {
 			dist = new_dist;
 			wall_id = i;
@@ -165,15 +165,15 @@ size_t get_the_better_wall_id(struct graph_t *graph, struct edge_t posswall[MAX_
 }
 
 /**
- * Returns a good place to put a wall in order to delay the opponent, not necessarly the best because of complexity
+ * @brief Returns a good place to put a wall in order to delay the opponent, not necessarly the best because of complexity
  */ 
 size_t get_a_good_wall_id(struct graph_t *graph, struct edge_t posswall[MAX_POSSIBLE_WALLS][2], size_t nb_wall, size_t pos, enum color_t color){
-	size_t dist = get_distance(graph, pos, color);
+	size_t dist = bellman_ford(graph, pos, color);
 
 	for (size_t i = 0; i < nb_wall; i++) {
 		size_t dir = gsl_spmatrix_uint_get(graph->t, posswall[i][0].fr, posswall[i][0].to);
 		put_wall_opti(graph, posswall[i]);
-		size_t new_dist = get_distance(graph, pos, color);
+		size_t new_dist = bellman_ford(graph, pos, color);
 		if (new_dist > dist && new_dist < 2 * (graph->num_vertices)) 
 			return i;	
 		remove_wall_opti(graph, posswall[i], dir);
@@ -197,7 +197,7 @@ size_t move_forward(struct game_state_t game) {
 	for (int i = 1; i < MAX_DIRECTION; i++) {
 		if (!is_no_vertex(linked[i])) {
 			if (linked[i] != game.opponent.pos){
-				size_t dist_tmp = get_distance(game.graph, linked[i], game.self.color);
+				size_t dist_tmp = bellman_ford(game.graph, linked[i], game.self.color);
 				if (dist_tmp < shortest) {
 					shortest = dist_tmp;
 					dir = i;
@@ -222,7 +222,7 @@ struct move_t make_move(struct game_state_t game) {
 	struct move_t move;
 	struct edge_t poss_walls[MAX_POSSIBLE_WALLS][2];
 	size_t size_board = sqrt(game.graph->num_vertices);
-	if (get_distance(game.graph, game.opponent.pos, game.opponent.color) > size_board/3){
+	if (bellman_ford(game.graph, game.opponent.pos, game.opponent.color) > size_board/3){
 		move.m = move_forward(game);
 		move.t = MOVE;
 		}
