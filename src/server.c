@@ -33,14 +33,23 @@ char* (*P2_name)(void);
 struct move_t(*P2_play)(struct move_t previous_move);
 void (*P2_finalize)();
 
-// Open players libs
-int load_libs(void) {
-	// TODO : check fails
-	P1_lib = dlopen(player_1_path, RTLD_NOW);
+/**
+ * @brief Load players' dynamics librairies
+ *
+ * @details Load the players' dynamics libraries and stores the adresses
+ *  of the symbols declared in the client interface into variables
+ */
+void load_libs(void) {
+	P1_lib = dlopen(player_1_path, RTLD_LAZY);
 	char* error = dlerror();
 
 	if (error != NULL) {
 		fprintf(stderr, "%s\n", error);
+		exit(EXIT_FAILURE);
+	}
+
+	if (P1_lib == NULL) {
+		printf("Path to first player's library is unreachable.\n");
 		exit(EXIT_FAILURE);
 	}
 
@@ -56,8 +65,9 @@ int load_libs(void) {
 		fprintf(stderr, "%s\n", error);
 		exit(EXIT_FAILURE);
 	}
-	if (P1_lib == NULL) {
-		printf("Path to player's 2 library is unreachable.\n");
+
+	if (P2_lib == NULL) {
+		printf("Path to second player's library is unreachable.\n");
 		exit(EXIT_FAILURE);
 	}
 
@@ -65,17 +75,29 @@ int load_libs(void) {
 	P2_name = dlsym(P2_lib, "get_player_name");
 	P2_play = dlsym(P2_lib, "play");
 	P2_finalize = dlsym(P2_lib, "finalize");
-
-	return EXIT_SUCCESS;
 }
 
-// Check if the player is winning
-// by checking if he is on a vertex owned by the other player
+/**
+ * @brief Tell if a player is winning
+ *
+ * @details Check if the player is winning by checking
+ * if he is on a vertex owned by the other player
+ *
+ * @param board The game board
+ * @param active_player The player to check
+ * @param position The position of the current player
+ *
+ * @return True if the player is winning, else false
+ */
 bool is_winning(struct graph_t* board, enum color_t active_player, size_t position) {
 	return gsl_spmatrix_uint_get(board->o, 1 - active_player, position);
 }
 
-// Compute the next player
+/**
+ * @brief Compute the next player
+ *
+ * @param player Current player
+ */
 enum color_t get_next_player(enum color_t player) { return 1 - player; }
 
 
@@ -84,34 +106,40 @@ void end_game(enum reasons_t reason) {
 	game_over = true;
 }
 
-// Return if the displacement of the player is valid
+/**
+ * @brief Check the validity of a displacement
+ *
+ * @param board The game board
+ * @param destination PLayer destination
+ * @param player Current player
+ *
+ * @returns True if the displacement is valid, else false
+ */
 bool is_valid_displacement(struct graph_t* board, size_t destination, enum color_t player) {
 
 	size_t position_player = player == BLACK ? position_player_1 : position_player_2;
 
 	size_t position_opposent = player == BLACK ? position_player_2 : position_player_1;
-	// destination is in the board and destination is not on a player cell
+	// Destination is in the board and destination is not on a player cell
 	if (board->num_vertices <= destination || position_player == destination || position_opposent == destination) {
 		return false;
 	}
 
-	// check first move
-	if (position_player == (long unsigned int) -1) {
+	// Check first move
+	if (position_player == (long unsigned int) - 1) {
 		if (player == BLACK) {
 			return destination < (long unsigned int) board_size;
 		}
 		return (board->num_vertices - board_size <= destination) && (destination < board->num_vertices);
 	}
 
-	// check destination is in the 4 near cells :
+	// Check destination is in the 4 near cells :
 	if (is_linked(board, position_player, destination)) {
 		return true;
 	}
 
-	// check others destination manually
-	// TODO : try to find something more clean, but it's hard
-
-	// move 2 on the left
+	// Check others destination manually
+	// Move 2 on the left
 	if (position_player % board_size > 1 &&
 		position_player - destination == 2 &&
 		is_linked(board, position_player, position_player - 1) &&
@@ -120,7 +148,7 @@ bool is_valid_displacement(struct graph_t* board, size_t destination, enum color
 		return true;
 	}
 
-	// move 2 on the right
+	// Move 2 on the right
 	if (position_player % board_size < (long unsigned int) board_size - 2 &&
 		destination - position_player == 2 &&
 		is_linked(board, position_player, position_player + 1) &&
@@ -129,7 +157,7 @@ bool is_valid_displacement(struct graph_t* board, size_t destination, enum color
 		return true;
 	}
 
-	// move 2 on the top
+	// Move 2 on the top
 	if (position_player / board_size > 1 &&
 		destination + 2 * board_size == position_player &&
 		is_linked(board, position_player, position_player - board_size) &&
@@ -138,7 +166,7 @@ bool is_valid_displacement(struct graph_t* board, size_t destination, enum color
 		return true;
 	}
 
-	// move 2 on the bottom
+	// Move 2 on the bottom
 	if (position_player / board_size < (long unsigned int) board_size - 2 &&
 		position_player + 2 * board_size == destination &&
 		is_linked(board, position_player, position_player + board_size) &&
@@ -147,7 +175,7 @@ bool is_valid_displacement(struct graph_t* board, size_t destination, enum color
 		return true;
 	}
 
-	// move top + left
+	// Move top + left
 	if (position_player / board_size > 0 &&
 		position_player % board_size > 0 &&
 		position_player - board_size == destination + 1 &&
@@ -165,7 +193,7 @@ bool is_valid_displacement(struct graph_t* board, size_t destination, enum color
 		return true;
 	}
 
-	// move top + right
+	// Move top + right
 	if (position_player / board_size > 0 &&
 		position_player % board_size < (long unsigned int) board_size - 1 &&
 		position_player - board_size == destination - 1 &&
@@ -183,9 +211,9 @@ bool is_valid_displacement(struct graph_t* board, size_t destination, enum color
 		return true;
 	}
 
-	// move bot + right
+	// Move bot + right
 	if (position_player / board_size < (long unsigned int) board_size - 1 &&
-		position_player % board_size <  (long unsigned int) board_size - 1 &&
+		position_player % board_size < (long unsigned int) board_size - 1 &&
 		position_player + board_size == destination - 1 &&
 		(
 			(is_linked(board, position_player, position_player + board_size) &&
@@ -201,7 +229,7 @@ bool is_valid_displacement(struct graph_t* board, size_t destination, enum color
 		return true;
 	}
 
-	// move bot + left
+	// Move bot + left
 	if (position_player / board_size < (long unsigned int) board_size - 1 &&
 		position_player % board_size > 0 &&
 		position_player + board_size == destination + 1 &&
@@ -218,16 +246,25 @@ bool is_valid_displacement(struct graph_t* board, size_t destination, enum color
 		) {
 		return true;
 	}
-
-	//gsl_spmatrix_uint_set(board->t, position_player, destination, 5);
-
 	return false;
 }
 
+/**
+ * @brief Check the validity of a wall placement
+ * 
+ * @details Check if the wall :
+ * - is in the board
+ * - do not cut a existing wall
+ * - do not prevents a player to reach the arrival
+ * 
+ * @param board The game board
+ * @param e An array containing two edges representing a wall
+ * 
+ * @return True if the wall is valid, else False
+ */
 bool is_valid_wall(struct graph_t* board, struct edge_t e[]) {
 
-	// sort verticies
-
+	// Sort verticies
 	size_t e0fr_tmp = e[0].fr < e[0].to ? e[0].fr : e[0].to;
 	size_t e0to_tmp = e[0].fr > e[0].to ? e[0].fr : e[0].to;
 	size_t e1fr_tmp = e[1].fr < e[1].to ? e[1].fr : e[1].to;
@@ -237,22 +274,22 @@ bool is_valid_wall(struct graph_t* board, struct edge_t e[]) {
 	size_t e1fr = e0fr_tmp > e1fr_tmp ? e0fr_tmp : e1fr_tmp;
 	size_t e0to = e0to_tmp < e1to_tmp ? e0to_tmp : e1to_tmp;
 	size_t e1to = e0to_tmp > e1to_tmp ? e0to_tmp : e1to_tmp;
-	
-	// check if the wall cut valid edges
+
+	// Check if the wall cut valid edges
 	if (!(is_linked(board, e0fr, e0to) && is_linked(board, e1fr, e1to))) {
 		return false;
 	}
 
-	// check if verticies form a valid square
+	// Check if vertices form a valid square
 	if ((e0fr % board_size) + 1 == e0to % board_size && (e1fr % board_size) + 1 == e1to % board_size && e0fr + board_size == e1fr) { // vertical wall
-		// check if the wall cut another wall
+		// Check if the wall cut another wall
 		size_t e2 = gsl_spmatrix_uint_get(board->t, e0fr, e1fr);
 		if (e2 == 7) {
 			return false;
 		}
 	}
 	else if (e0fr + board_size == e0to && e1fr + board_size == e1to && (e0fr % board_size) + 1 == e1fr % board_size) { // horizontal wall
-		// check if the wall cut another wall
+		// Check if the wall cut another wall
 		size_t e2 = gsl_spmatrix_uint_get(board->t, e0fr, e1fr);
 		if (e2 == 5) {
 			return false;
@@ -262,14 +299,14 @@ bool is_valid_wall(struct graph_t* board, struct edge_t e[]) {
 		return false;
 	}
 
-	// ckeck if nobody is lock in
+	// Ckeck if nobody is locked in
 	struct edge_t edge[2];
 	edge[0].fr = e0fr;
 	edge[0].to = e0to;
 	edge[1].fr = e1fr;
 	edge[1].to = e1to;
 	place_wall(board, edge);
-	if (dijkstra(board, position_player_1, BLACK) == IMPOSSIBLE_DISTANCE || dijkstra(board, position_player_2, WHITE) == IMPOSSIBLE_DISTANCE){
+	if (dijkstra(board, position_player_1, BLACK) == IMPOSSIBLE_DISTANCE || dijkstra(board, position_player_2, WHITE) == IMPOSSIBLE_DISTANCE) {
 		remove_wall(board, edge);
 		return false;
 	}
@@ -277,7 +314,21 @@ bool is_valid_wall(struct graph_t* board, struct edge_t e[]) {
 	return true;
 }
 
-// Check move validity
+/**
+ * @brief Check the validity of a move
+ * 
+ * @details Check if the move :
+ * - has a valid type
+ * - has a valid color id
+ * - if it is a displacement, check if it respects the displacement rules, i.e only by one vertex
+ * - if it is a wall placement, check if the player has walls remaining and if the wall is valid
+ * 
+ * @param mv A move
+ * @param board The game board
+ * @param player The current player
+ * 
+ * @return True if the move is valid, else False
+ */
 bool move_is_valid(struct move_t* mv, struct graph_t* board, enum color_t player) {
 
 	// Check type
@@ -317,6 +368,14 @@ bool move_is_valid(struct move_t* mv, struct graph_t* board, enum color_t player
 	return true;
 }
 
+/**
+ * @brief Update the player board
+ * 
+ * @details Add the last move in the server graph
+ * 
+ * @param board The game board
+ * @param last_move The last played move to add
+ */
 void update_board(struct graph_t* board, struct move_t* last_move) {
 
 	// Update players positions if they move
@@ -334,6 +393,13 @@ void update_board(struct graph_t* board, struct move_t* last_move) {
 	}
 }
 
+/**
+ * @brief Free all allocated memory during the game
+ * 
+ * @details Finalize the two players, free the board and then close the dynamic librairies
+ * 
+ * @param board The game board
+ */
 void close_server(struct graph_t* board) {
 	P1_finalize();
 	P2_finalize();
@@ -342,12 +408,27 @@ void close_server(struct graph_t* board) {
 	dlclose(P2_lib);
 }
 
-int play_game(int a, char* b[]) {
-	// Parse arguments
-	parse_args(a, b);
-	printf("Args parsed\n");
+/**
+ * @brief Do a game
+ * 
+ * @details Compute a game by doing the following steps :
+ * - Parse the command line arguments
+ * - Load the players' librairies
+ * - Initialize the board
+ * - Do the game loop
+ * - Finalize the game by freeing the allocated memory
+ * 
+ * @param argc Number of command line arguments
+ * @param argv An array of strings containing the command line arguments
+ * 
+ * @returns The exit code of the game
+ */
+int play_game(int argc, char* argv[]) {
 
-	// Init random generator
+	// Parse arguments
+	parse_args(argc, argv);
+
+	// Initialize random generator
 	time_t seed = time(NULL);
 	srand(seed);
 	printf("Seed: %ld\n", seed);
@@ -357,7 +438,6 @@ int play_game(int a, char* b[]) {
 	printf("Libs loaded\n");
 
 	// Initialize a new board of size m and shape t
-	// TODO : init a new board depending on parameters + copy
 	size_t m = board_size;
 	struct graph_t* board = graph_init(m, SQUARE);
 	struct graph_t* boardCopy1 = graph_init(m, SQUARE);
@@ -367,10 +447,10 @@ int play_game(int a, char* b[]) {
 	// TODO : compute num_walls depending on size and board shape
 	int num_walls = 10;
 
-	// Init random starting player
+	// Initialize random starting player
 	active_player = rand() % 2;
 
-	// init players
+	// Initialize players
 	P1_initialize(BLACK, boardCopy1, num_walls);
 	P2_initialize(WHITE, boardCopy2, num_walls);
 	printf("Players initialized\n");
