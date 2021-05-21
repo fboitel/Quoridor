@@ -1,4 +1,8 @@
-// A crash test game for tests
+/**
+ * @file crashboy.c
+ *
+ * @brief A guinea pig used to realize tests
+ */
 
 #include "ia.h"
 #include "ia_utils.h"

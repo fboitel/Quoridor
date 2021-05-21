@@ -1,3 +1,10 @@
+/**
+ * @file server_test.c
+ *
+ * @brief Contains the tests on server.c 
+ */ 
+
+
 #include "tests.h"
 #include "player.h"
 #include "move.h"

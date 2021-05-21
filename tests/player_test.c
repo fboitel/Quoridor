@@ -1,3 +1,11 @@
+/**
+ * @file player_test.c
+ *
+ * @brief Contains the tests on player.c 
+ */ 
+
+
+
 #include "tests.h"
 #include "player.h"
 #include "ia.h"
