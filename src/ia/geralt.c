@@ -17,7 +17,7 @@
 
 #define SCORE_LIMIT INT_MAX
 #define INVALID_MOVE_SCORE (-SCORE_LIMIT)
-#define WIN_SCORE (SCORE_LIMIT - 1)
+#define WIN_SCORE (SCORE_LIMIT)
 #define LOOSE_SCORE (-WIN_SCORE)
 
 #define TOTAL_TIME_AVAILABLE 15000
@@ -221,7 +221,7 @@ int distance(SimpleGameState *game, int pos, bool self) {
 	return -1;
 }
 
-int evaluate(SimpleGameState *game) {
+int evaluate(SimpleGameState *game, int depth) {
 	int dist = distance(game, game->pos, true);
 
 	// invalid move (no possible path)
@@ -238,15 +238,15 @@ int evaluate(SimpleGameState *game) {
 
 	// win
 	if (dist == 0) {
-		return WIN_SCORE;
+		return WIN_SCORE - depth * depth;
 	}
 
 	// loose
 	if (opponent_dist == 0) {
-		return LOOSE_SCORE;
+		return LOOSE_SCORE + depth * depth;
 	}
 
-	int score = n2 * (opponent_dist - dist);
+	int score = opponent_dist * opponent_dist - dist * dist;
 
 	if (game->pos != -1) {
 		score -= abs(game->pos%n - n/2);
@@ -387,7 +387,7 @@ int alpha_beta(SimpleGameState *game, int current_depth, int final_depth, int al
 	}
 
 	if (current_depth == final_depth || is_game_terminated(game)) {
-		return evaluate(game);
+		return evaluate(game, current_depth);
 	}
 
 	int nb_of_moves;
@@ -430,20 +430,10 @@ unsigned search_best_move(SimpleGameState *game) {
 	while (true) {
 		bool aborted = false;
 		unsigned best_move_for_current_depth;
-		int score = alpha_beta(game, 0, depth, -SCORE_LIMIT, SCORE_LIMIT, &best_move_for_current_depth, max_time, &aborted);
+		alpha_beta(game, 0, depth, -SCORE_LIMIT, SCORE_LIMIT, &best_move_for_current_depth, max_time, &aborted);
 
 		if (aborted) {
-			printf("(reached depth: %d, reason: time)", depth - 1);
-			break;
-		}
-
-		if (score == LOOSE_SCORE) {
-			printf("(reached depth: %d, reason: loose)", depth - 1);
-			break;
-		}
-
-		if (score == WIN_SCORE) {
-			printf("(reached depth: %d, reason: win)", depth - 1);
+			printf("(reached depth: %d)", depth - 1);
 			break;
 		}
 
