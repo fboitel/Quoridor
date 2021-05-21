@@ -3,7 +3,6 @@
 #include <stdbool.h>
 #include <string.h>
 #include <limits.h>
-#include <pthread.h>
 #include <time.h>
 #include "ia.h"
 #include "move.h"
@@ -21,7 +20,7 @@
 #define WIN_SCORE (SCORE_LIMIT - 1)
 #define LOOSE_SCORE (-WIN_SCORE)
 
-#define TOTAL_TIME_AVAILABLE 15
+#define TOTAL_TIME_AVAILABLE 15000
 #define AVG_NB_OF_TURN 60
 
 // define simplified structures to gain efficiency
@@ -375,8 +374,15 @@ bool is_game_terminated(SimpleGameState *game) {
 	}
 }
 
-int alpha_beta(SimpleGameState *game, int current_depth, int final_depth, int alpha, int beta, unsigned *best_move, bool *stop_flag) {
-	if (*stop_flag) {
+long get_time() {
+	struct timespec time;
+	clock_gettime(CLOCK_MONOTONIC_RAW, &time);
+	return time.tv_sec * 1000 + time.tv_nsec / 1000000;
+}
+
+int alpha_beta(SimpleGameState *game, int current_depth, int final_depth, int alpha, int beta, unsigned *best_move, long time_limit, bool *aborted) {
+	if (*aborted || (final_depth > 1 && current_depth == 1 && get_time() > time_limit)) {
+		*aborted = true;
 		return 0;
 	}
 
@@ -391,7 +397,7 @@ int alpha_beta(SimpleGameState *game, int current_depth, int final_depth, int al
 		unsigned move = moves[i];
 
 		apply_move(game, move);
-		int score = -alpha_beta(game, current_depth + 1, final_depth, -beta, -alpha, NULL, stop_flag);
+		int score = -alpha_beta(game, current_depth + 1, final_depth, -beta, -alpha, NULL, time_limit, aborted);
 		undo_move(game, move);
 
 		if (score == -INVALID_MOVE_SCORE) {
@@ -415,49 +421,29 @@ int alpha_beta(SimpleGameState *game, int current_depth, int final_depth, int al
 	return alpha;
 }
 
-void *timer(void *stop_flag) {
-	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
-	struct timespec ts = {
-		.tv_sec = 0,
-		.tv_nsec = TOTAL_TIME_AVAILABLE * 1000000000L / AVG_NB_OF_TURN
-	};
-	nanosleep(&ts, &ts);
-	*((bool *) stop_flag) = true;
-	return NULL;
-}
-
 unsigned search_best_move(SimpleGameState *game) {
 	unsigned best_move = 0;
 
 	int depth = 1;
-	bool stop_flag = false;
-
-	pthread_t timer_thread;
-	pthread_create(&timer_thread, NULL, timer, (void *) &stop_flag);
+	long max_time = get_time() + TOTAL_TIME_AVAILABLE / AVG_NB_OF_TURN;
 
 	while (true) {
+		bool aborted = false;
 		unsigned best_move_for_current_depth;
-		int score = alpha_beta(game, 0, depth, -SCORE_LIMIT, SCORE_LIMIT, &best_move_for_current_depth, &stop_flag);
+		int score = alpha_beta(game, 0, depth, -SCORE_LIMIT, SCORE_LIMIT, &best_move_for_current_depth, max_time, &aborted);
 
-		if (!stop_flag && (score == LOOSE_SCORE || score == WIN_SCORE)) {
-			stop_flag = true;
-			pthread_cancel(timer_thread);
+		if (aborted) {
+			printf("(reached depth: %d, reason: time)", depth - 1);
+			break;
 		}
 
-		if (stop_flag) {
-			char* reason = malloc(6);
+		if (score == LOOSE_SCORE) {
+			printf("(reached depth: %d, reason: loose)", depth - 1);
+			break;
+		}
 
-			if (score == LOOSE_SCORE) {
-				strcpy(reason, "loose");
-			} else if (score == WIN_SCORE) {
-				strcpy(reason, "win");
-			} else {
-				strcpy(reason, "time");
-			}
-
-			printf("(reached depth: %d, reason: %s)", depth - 1, reason);
-			free(reason);
-
+		if (score == WIN_SCORE) {
+			printf("(reached depth: %d, reason: win)", depth - 1);
 			break;
 		}
 
@@ -465,7 +451,6 @@ unsigned search_best_move(SimpleGameState *game) {
 		++depth;
 	}
 
-	pthread_join(timer_thread, NULL);
 	return best_move;
 }
 

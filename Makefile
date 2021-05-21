@@ -1,6 +1,6 @@
 GSL_PATH ?= gsl
 CFLAGS = --std=c99 -Wall -Wextra -O3 -Iheaders -I$(GSL_PATH)/include
-LFLAGS = -L$(GSL_PATH)/lib -lgsl -lgslcblas -ldl -lm -lpthread
+LFLAGS = -L$(GSL_PATH)/lib -lgsl -lgslcblas -ldl -lm
 CC = gcc
 
 .PHONY: build test run_server run_tests install clean
