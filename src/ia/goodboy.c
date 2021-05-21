@@ -195,7 +195,7 @@ void get_wall(struct game_state_t game, struct edge_t edges[]) {
 
         printf("\nTop left corner vertex ?\n");
         printf("(0-%zu): ", game.graph->num_vertices - 1);
-        scanf("%zu", &vertex);
+        (void) scanf("%zu", &vertex);
         fflush(stdin);
 
         if (vertex >= game.graph->num_vertices)
