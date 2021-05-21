@@ -21,7 +21,7 @@
 #define LOOSE_SCORE (-WIN_SCORE)
 
 #define TOTAL_TIME_AVAILABLE 15000
-#define AVG_NB_OF_TURN 60
+#define AVG_NB_OF_TURN 100
 
 // define simplified structures to gain efficiency
 
