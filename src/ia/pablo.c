@@ -1,18 +1,23 @@
+/**
+ * @file pablo.c
+ *
+ * @brief Used to bild the dynamic library pablo.so. This player intelligence is based principally on the Bellman-ford algorithm
+ */
+
 #include "ia.h"
 #include "ia_utils.h"
 #include "board.h"
 #include "move.h"
 
 #define MAX_POSSIBLE_WALLS 500
-//#define MAX_DISTANCE 500000
 #define IMPOSSIBLE_ID 1234500
 char *name = "Pablo";
 
+/**
+ * @returns the number of vertices owned by each player
+ * 
+ */
 
-//Pablo always does everything possible to lengthen the path of his opponents
-
-
-//Returns the number of vertices owned by each player
 size_t vertices_owned(struct graph_t *graph){
 	int i = 0;
 	while (gsl_spmatrix_uint_get(graph->o, 0, i) == 1 || gsl_spmatrix_uint_get(graph->o, 1, i) == 1)
@@ -20,7 +25,9 @@ size_t vertices_owned(struct graph_t *graph){
 	return i;
 }
 
-//Initialise the parents and weights arrays
+/**
+ * @brief Initialise the weights arrays in order to run Bellman-ford algorithm
+ */ 
 void init_w_arrays(size_t weight[], size_t pos, size_t length) {
 	for (size_t i = 0; i < length; i++) {
 		weight[i] = 2 * length;
@@ -28,7 +35,10 @@ void init_w_arrays(size_t weight[], size_t pos, size_t length) {
 	weight[pos] = 0;
 }
 
-//Releases arcs linked with position pos in graph and returns the next vertex to visit
+
+/**
+ * @brief Releases arcs linked with position pos in graph and returns the next vertex to visit
+ */
 void release(struct graph_t *graph, size_t weight[], size_t pos) {
 	size_t linked[MAX_DIRECTION];
 	get_linked(graph, pos, linked);
@@ -42,7 +52,9 @@ void release(struct graph_t *graph, size_t weight[], size_t pos) {
 	}
 }
 
-//Returns the smallest value of the tab if it respects some conditions
+/**
+ * @brief find the smallest value of the tab if the vertex belongs to the opponent
+ */ 
 size_t shorter(struct graph_t *graph, size_t weight[], enum color_t color, size_t n) {
 	size_t min = n * n * n;
 	for (size_t i = 0; i < n; i++) {
@@ -53,8 +65,11 @@ size_t shorter(struct graph_t *graph, size_t weight[], enum color_t color, size_
 	return min;
 }
 
-//Returns the shortest distance between a position on the graph and the target zone using Bellman-Ford algorithm
-size_t get_distance(struct graph_t *graph, size_t pos, enum color_t color) {
+
+/**
+ * @brief Returns the shortest distance between a position on the graph and the target zone using Bellman-Ford algorithm
+ */ 
+size_t bellman_for(struct graph_t *graph, size_t pos, enum color_t color) {
 	size_t weight[graph->num_vertices];
 	init_w_arrays(weight, pos, graph->num_vertices);
 	for (size_t i = 0; i < graph->num_vertices; i++) {
@@ -66,7 +81,9 @@ size_t get_distance(struct graph_t *graph, size_t pos, enum color_t color) {
 	return sh;
 }
 
-//Gather all the place where a wall can be set and returns its number
+/**
+ * @brief Gather all the place where a wall can be set and returns its number
+ */ 
 size_t get_possible_walls(struct graph_t *graph, struct edge_t walls[MAX_POSSIBLE_WALLS][2], enum color_t color) {
 	size_t nb_wall = 0;
 	size_t side1 = 0;
@@ -78,11 +95,11 @@ size_t get_possible_walls(struct graph_t *graph, struct edge_t walls[MAX_POSSIBL
 		side2 = board_size*5;
 	printf("(((((%zu, %zu)))))", side1, side2);
 	for (size_t i = 0 + side1; i < graph->num_vertices-side2; i++) {
-		// To verify if a wall can be put on the south of the vertex i and the vertex on right of it
+			// In order to verify if a wall can be put on the south of the vertex i and the vertex on right of it
 			if (vertex_from_direction(graph, i, EAST) != no_vertex()) {
 				if (vertex_from_direction(graph, i, SOUTH) != no_vertex() &&
 					vertex_from_direction(graph, vertex_from_direction(graph, i, EAST), SOUTH) !=
-					no_vertex()) {//Add a wall to the list if the place is free
+					no_vertex()) {//Adds a wall to the list if the place is free
 					walls[nb_wall][0].fr = i;
 					walls[nb_wall][0].to = vertex_from_direction(graph, i, SOUTH);
 					walls[nb_wall][1].fr = vertex_from_direction(graph, i, EAST);
@@ -90,11 +107,11 @@ size_t get_possible_walls(struct graph_t *graph, struct edge_t walls[MAX_POSSIBL
 					nb_wall++;
 				}
 			}
-			// To verify if a wall can be put on the EAST of the vertex i and the vertex below
+			// In order to verify if a wall can be put on the EAST of the vertex i and the vertex below
 			if (vertex_from_direction(graph, i, SOUTH) != no_vertex()) {
 				if (vertex_from_direction(graph, i, EAST) != no_vertex() &&
 					vertex_from_direction(graph, vertex_from_direction(graph, i, SOUTH), EAST) !=
-					no_vertex()) {//Add a wall to the list uf the place is free
+					no_vertex()) {//Adds a wall to the list uf the place is free
 					walls[nb_wall][0].fr = i;
 					walls[nb_wall][0].to = vertex_from_direction(graph, i, EAST);
 					walls[nb_wall][1].fr = vertex_from_direction(graph, i, SOUTH);
@@ -106,7 +123,9 @@ size_t get_possible_walls(struct graph_t *graph, struct edge_t walls[MAX_POSSIBL
 	return nb_wall;
 }
 
-//Put a wall on the graph
+/**
+ * @brief Puts a wall on the graph
+ */ 
 void put_wall_opti(struct graph_t *graph, struct edge_t wall[2]) {
 	gsl_spmatrix_uint_set(graph->t, wall[0].fr, wall[0].to, 0);
 	gsl_spmatrix_uint_set(graph->t, wall[0].to, wall[0].fr, 0);
@@ -114,6 +133,9 @@ void put_wall_opti(struct graph_t *graph, struct edge_t wall[2]) {
 	gsl_spmatrix_uint_set(graph->t, wall[1].to, wall[1].fr, 0);
 }
 
+/**
+ * @brief Removes a wall on the graph
+ */
 void remove_wall_opti(struct graph_t *graph, struct edge_t wall[2], enum direction_t dir) {
 	gsl_spmatrix_uint_set(graph->t, wall[0].fr, wall[0].to, dir);
 	gsl_spmatrix_uint_set(graph->t, wall[0].to, wall[0].fr, opposite(dir));
@@ -122,7 +144,9 @@ void remove_wall_opti(struct graph_t *graph, struct edge_t wall[2], enum directi
 }
 
 
-//Returns the best place to put a wall in order to delay the opponent
+/**
+ * @brief Returns the best place to put a wall in order to delay the opponent
+ */
 size_t get_the_better_wall_id(struct graph_t *graph, struct edge_t posswall[MAX_POSSIBLE_WALLS][2], size_t nb_wall, size_t pos, enum color_t color) {
 	size_t dist = get_distance(graph, pos, color);
 	size_t wall_id = IMPOSSIBLE_ID;
@@ -140,7 +164,9 @@ size_t get_the_better_wall_id(struct graph_t *graph, struct edge_t posswall[MAX_
 	return wall_id;
 }
 
-//Returns the best place to put a wall in order to delay the opponent
+/**
+ * Returns a good place to put a wall in order to delay the opponent, not necessarly the best because of complexity
+ */ 
 size_t get_a_good_wall_id(struct graph_t *graph, struct edge_t posswall[MAX_POSSIBLE_WALLS][2], size_t nb_wall, size_t pos, enum color_t color){
 	size_t dist = get_distance(graph, pos, color);
 
@@ -157,7 +183,9 @@ size_t get_a_good_wall_id(struct graph_t *graph, struct edge_t posswall[MAX_POSS
 }
 
 
-//Moves forward
+/**
+ * @brief Returns the index of the best vertex in order to move
+ */ 
 size_t move_forward(struct game_state_t game) {
 	size_t linked[MAX_DIRECTION];
 	size_t num = get_linked(game.graph, game.self.pos, linked);
@@ -184,7 +212,12 @@ struct move_t make_first_move(struct game_state_t game) {
 	return make_default_first_move(game);
 }
 
-// Compute the move
+/**
+ * @brief Get the best move : If Pablo is closer to the arrival than his opponent, he will advance. Else, he will place a wall to keep the opponent furthest of the arrival line.
+ * @param game Gather all the info we need to get the best move
+ * @returns A struct move_t containing the move of pablo
+ */ 
+
 struct move_t make_move(struct game_state_t game) {
 	struct move_t move;
 	struct edge_t poss_walls[MAX_POSSIBLE_WALLS][2];
@@ -198,7 +231,6 @@ struct move_t make_move(struct game_state_t game) {
 		size_t id_wall = get_a_good_wall_id(game.graph, poss_walls, nb_of_walls, game.opponent.pos, game.opponent.color);
 
 		if (id_wall != IMPOSSIBLE_ID) {
-			// Put a wall if it's possible
 			move.m = game.self.pos;
 			move.e[0].fr = poss_walls[id_wall][0].fr;
 			move.e[0].to = poss_walls[id_wall][0].to;
@@ -207,7 +239,6 @@ struct move_t make_move(struct game_state_t game) {
 			printf("wall : %ld:%ld - %ld:%ld \n", move.e[0].fr,  move.e[0].to,  move.e[1].fr,  move.e[1].to);
 			move.t = WALL;
 		} else {
-			// Move forward
 			move.m = move_forward(game);
 			move.t = MOVE;
 		}
