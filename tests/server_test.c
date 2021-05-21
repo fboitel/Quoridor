@@ -318,7 +318,9 @@ void test_move_is_valid() {
 	P2_lib = dlopen("build/crashboy.so", RTLD_LAZY);
 	P1_name = dlsym(P1_lib, "get_player_name");
 	P2_name = dlsym(P2_lib, "get_player_name");
-	(void)freopen("/dev/null", "r", stderr);
+	FILE* garbage;
+	garbage = freopen("/dev/null", "r", stderr);
+	(void)garbage;
 	struct edge_t bw1[2] = { {6, 12}, {7, 13} };
 	struct edge_t bw2[2] = { {13, 14}, {19, 20} };
 	struct edge_t bw3[2] = { {20, 26}, {21, 27} };
@@ -377,7 +379,8 @@ void test_move_is_valid() {
 	remove_wall(my_board, bw5);
 	dlclose(P1_lib);
 	dlclose(P2_lib);
-	(void)freopen("/dev/tty", "r", stderr);
+	garbage = freopen("/dev/tty", "r", stderr);
+	(void)garbage;
 }
 
 void test_server_main(void) {
